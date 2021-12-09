@@ -1,10 +1,12 @@
-package main
+package api
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/urfave/cli"
 
 	"github.com/0xb10c/memo/config"
 	"github.com/0xb10c/memo/database"
@@ -14,7 +16,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
+var APICommand = cli.Command{
+	Name:   "api",
+	Action: runAPI,
+	Usage:  " run api",
+}
+
+func runAPI(ctx *cli.Context) {
 
 	if config.GetBool("api.production") {
 		gin.SetMode(gin.ReleaseMode)
@@ -86,10 +94,18 @@ func getMempool(c *gin.Context) {
 	// skip the marshalling when writing and unmarshalling when reading
 	// from the database
 	var feerateMap map[int]int
-	json.Unmarshal([]byte(byCount), &feerateMap)
+	err = json.Unmarshal([]byte(byCount), &feerateMap)
+	if err != nil {
+		logger.Error.Println("err in unmarshal feerateMap:", err.Error())
+		return
+	}
 
 	var megabyteMarkers []int
-	json.Unmarshal([]byte(megabyteMarkersJSON), &megabyteMarkers)
+	err = json.Unmarshal([]byte(megabyteMarkersJSON), &megabyteMarkers)
+	if err != nil {
+		logger.Error.Println("err in unmarshal megabyteMarkers:", err.Error())
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"timestamp":       timestamp.Unix(),
@@ -111,13 +127,14 @@ func getRecentBlocks(c *gin.Context) {
 
 	blocks, err := pool.GetRecentBlocks()
 	if err != nil {
+		logger.Error.Println("pool.GetRecentBlocks err:", err)
 		fmt.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Database error",
 		})
 		return
 	}
-
+	logger.Info.Println("Get Recent Blocks:", blocks)
 	c.JSON(http.StatusOK, blocks)
 }
 
@@ -260,7 +277,7 @@ func getCachedMempoolEntries(c *gin.Context) {
 
 	entries, err := pool.GetMempoolEntriesCache()
 	if err != nil {
-		fmt.Println(err.Error())
+		logger.Error.Println("pool.GetMempoolEntriesCache err:", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Database error",
 		})

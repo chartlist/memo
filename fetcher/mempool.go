@@ -5,12 +5,14 @@ package fetcher
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/0xb10c/memo/config"
+	rpcclient "github.com/0xb10c/memo/core-rpc"
 	"github.com/0xb10c/memo/database"
 	"github.com/0xb10c/memo/encoder"
 	"github.com/0xb10c/memo/logger"
@@ -68,7 +70,7 @@ func fetchMempool() (body []byte, err error) {
 
 		body, err := fetchMempoolFromJSONRPC()
 		if err != nil {
-			return nil, fmt.Errorf("Could not fetch mempool from JSON-RPC: %s", err.Error())
+			return nil, errors.New(fmt.Sprintf("Could not fetch mempool from JSON-RPC: %s", err.Error()))
 		}
 
 		return body, nil
@@ -101,49 +103,75 @@ func fetchMempoolFromJSONRPC() ([]byte, error) {
 	defer logger.TrackTime(time.Now(), "fetchMempoolFromJSONRPC()")
 	logger.Trace.Println("Fetching mempool via JSON-RPC")
 
-	rpcURL := getJSONRPCURL()
-
-	timeout := time.Duration(config.GetInt("bitcoind.jsonrpc.responseTimeout")) * time.Second
-	client := http.Client{
-		Timeout: timeout,
+	//rpcURL := getJSONRPCURL()
+	// Connect to local bitcoin core RPC server using HTTP POST mode.
+	connCfg := &rpcclient.ConnConfig{
+		Host: config.GetString("bitcoind.jsonrpc.host") + ":" + config.GetString("bitcoind.jsonrpc.port"),
+		User: config.GetString("bitcoind.jsonrpc.username"),
+		Pass: config.GetString("bitcoind.jsonrpc.password"),
 	}
+	// Notice the notification parameter is nil since notifications are
+	// not supported in HTTP POST mode.
+	client, err := rpcclient.New(connCfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer client.Shutdown()
 
-	bodyReq := strings.NewReader("{\"jsonrpc\": \"1.0\", \"id\":\"memod-via-rpc\", \"method\": \"getrawmempool\", \"params\": [true] }")
-	req, err := http.NewRequest("POST", rpcURL, bodyReq)
+	// Get the current block count.
+	res, err := client.GetRawMempoolBytesVerbose()
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "text/plain")
+	return res, nil
+	/*	timeout := time.Duration(config.GetInt("bitcoind.jsonrpc.responseTimeout")) * time.Second
+		client := http.Client{
+			Timeout: timeout,
+		}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+		bodyReq := strings.NewReader("{\"jsonrpc\": \"1.0\", \"id\":\"memod-via-rpc\", \"method\": \"getrawmempool\", \"params\": [true] }")
+		req, err := http.NewRequest("POST", rpcURL, bodyReq)
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Content-Type", "text/plain")
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("JSON-RPC Request failed with status code %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
-	}
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
 
-	body, err := readResponseBody(resp)
-	if err != nil {
-		return nil, err
-	}
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("JSON-RPC Request failed with status code %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
+		}
 
-	// The JSON-RPC response is encapsulated in a JSON result object
-	// like {"result":{...},"error":null,"id":"memod-via-rpc"}
-	// The REST response isn't. We remove this here.
-	body = body[10 : len(body)-36]
+		body, err := readResponseBody(resp)
+		if err != nil {
+			return nil, err
+		}
 
-	return body, nil
+		// The JSON-RPC response is encapsulated in a JSON result object
+		// like {"result":{...},"error":null,"id":"memod-via-rpc"}
+		// The REST response isn't. We remove this here.
+		body = body[10 : len(body)-36]
+
+		return body, nil
+	*/
 }
 
 func getJSONRPCURL() (rpcURL string) {
-	return config.GetString("bitcoind.jsonrpc.protocol") +
+
+	return config.GetString("bitcoind.jsonrpc.username") +
+		":" + config.GetString("bitcoind.jsonrpc.password") +
+		"@" + config.GetString("bitcoind.jsonrpc.host") +
+		":" + config.GetString("bitcoind.jsonrpc.port")
+	/*	return config.GetString("bitcoind.jsonrpc.protocol") +
 		"://" + config.GetString("bitcoind.jsonrpc.username") +
 		":" + config.GetString("bitcoind.jsonrpc.password") +
 		"@" + config.GetString("bitcoind.jsonrpc.host") +
 		":" + config.GetString("bitcoind.jsonrpc.port")
+	*/
 }
 
 func saveMempoolJSONRPC() (err error) {

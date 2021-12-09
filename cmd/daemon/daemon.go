@@ -1,9 +1,11 @@
-package main
+package daemon
 
 import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/urfave/cli"
 
 	"github.com/0xb10c/memo/config"
 	"github.com/0xb10c/memo/database"
@@ -12,7 +14,13 @@ import (
 	"github.com/0xb10c/memo/zmq"
 )
 
-func main() {
+var DaemonCommand = cli.Command{
+	Name:   "daemon",
+	Action: runDaemon,
+	Usage:  "run daemon",
+}
+
+func runDaemon(ctx *cli.Context) {
 
 	exitSignals := make(chan os.Signal, 1)
 	shouldExit := make(chan bool, 1)
@@ -35,7 +43,11 @@ func main() {
 			shouldExit <- true
 			noError = false
 		}
-		defer sqlDB.Close()
+		defer func() {
+			if err := sqlDB.Close(); err != nil {
+				logger.Error.Println("sqlDB close err:", err.Error())
+			}
+		}()
 	}
 
 	if noError {

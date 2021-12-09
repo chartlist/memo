@@ -21,14 +21,17 @@ const COIN = 100000000
 // ProcessMempool starts various processing functions on the passed mempool map
 func ProcessMempool(mempool map[string]types.PartialTransaction, redisPool *database.RedisPool) {
 	if config.GetBool("mempool.processing.processHistoricalMempool") {
+		logger.Info.Println("go historicalMempool(mempool, redisPool) start...")
 		go historicalMempool(mempool, redisPool)
 	}
 
 	if config.GetBool("mempool.processing.processCurrentMempool") {
+		logger.Info.Println("go currentMempool(mempool, redisPool)...")
 		go currentMempool(mempool, redisPool) // start _current mempool_ stat generation in a goroutine
 	}
 
 	if config.GetBool("mempool.processing.processTransactionStats") {
+		logger.Info.Println("go transactionStatsMempool(mempool, redisPool)...")
 		go transactionStatsMempool(mempool, redisPool)
 	}
 }
@@ -56,6 +59,7 @@ func historicalMempool(mempool map[string]types.PartialTransaction, redisPool *d
 	needsUpdate, err := redisPool.ReadHistoricalMempoolNeedUpdate()
 	if err != nil {
 		logger.Error.Printf("Failed to get Needs Update data from database: %s", err.Error())
+		return
 	}
 
 	if needsUpdate.Update2h || needsUpdate.Update12h || needsUpdate.Update48h || needsUpdate.Update7d || needsUpdate.Update30d || needsUpdate.Update180d {

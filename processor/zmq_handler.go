@@ -11,7 +11,7 @@ import (
 	"github.com/0xb10c/memo/types"
 	"github.com/btcsuite/btcd/wire"
 
-	"github.com/0xb10c/rawtx"
+	"github.com/0xb10c/memo/rawtx"
 )
 
 // This file includes the functions to handle zmq events
@@ -113,6 +113,7 @@ func HandleRawTxWithSizeAndFee(payload string, pool *database.RedisPool) {
 	tx, err := rawtx.DeserializeRawTxBytes([]byte(payload[0 : payloadLength-8]))
 	if err != nil {
 		logger.Error.Printf("Error handling raw tx: %v", err)
+		return
 	}
 
 	feeBytes := []byte(payload[payloadLength-8 : payloadLength])

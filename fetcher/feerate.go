@@ -94,7 +94,10 @@ func getFeerates(pool *database.RedisPool) {
 		MempoolSpace:       respMempoolSpace,
 	}
 
-	pool.WriteFeerateAPIEntry(entry)
+	err := pool.WriteFeerateAPIEntry(entry)
+	if err != nil {
+		return
+	}
 }
 
 func getEarnCom(cEarnCom chan types.FeeAPIResponse3) {
@@ -106,7 +109,7 @@ func getEarnCom(cEarnCom chan types.FeeAPIResponse3) {
 	result := gjson.GetMany(string(body), "fastestFee", "halfHourFee", "hourFee")
 	highFee, medFee, lowFee := result[0].Float(), result[1].Float(), result[2].Float()
 
-	cEarnCom <- types.FeeAPIResponse3{highFee, medFee, lowFee}
+	cEarnCom <- types.FeeAPIResponse3{HighFee: highFee, MedFee: medFee, LowFee: lowFee}
 }
 
 func getBitgoCom(cBitgoCom chan types.FeeAPIResponse3) {
@@ -114,13 +117,13 @@ func getBitgoCom(cBitgoCom chan types.FeeAPIResponse3) {
 	body, err := makeHTTPGETReq(url, 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch bitgo.com: %v", err.Error())
-		cBitgoCom <- types.FeeAPIResponse3{0, 0, 0}
+		cBitgoCom <- types.FeeAPIResponse3{}
 		return
 	}
 	result := gjson.GetMany(string(body), "feeByBlockTarget.2", "feeByBlockTarget.4", "feeByBlockTarget.6")
 	highFee, medFee, lowFee := result[0].Float()/1000, result[1].Float()/1000, result[2].Float()/1000
 
-	cBitgoCom <- types.FeeAPIResponse3{highFee, medFee, lowFee}
+	cBitgoCom <- types.FeeAPIResponse3{HighFee: highFee, MedFee: medFee, LowFee: lowFee}
 }
 
 func getBTCCom(cBTCCom chan types.FeeAPIResponse1) {
@@ -128,13 +131,13 @@ func getBTCCom(cBTCCom chan types.FeeAPIResponse1) {
 	body, err := makeHTTPGETReq(url, 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch btc.com: %v", err.Error())
-		cBTCCom <- types.FeeAPIResponse1{0}
+		cBTCCom <- types.FeeAPIResponse1{}
 		return
 	}
 	result := gjson.Get(string(body), "fees_recommended.one_block_fee")
 	highFee := result.Float()
 
-	cBTCCom <- types.FeeAPIResponse1{highFee}
+	cBTCCom <- types.FeeAPIResponse1{HighFee: highFee}
 }
 
 func getBlockcypherCom(cBlockcypherCom chan types.FeeAPIResponse3) {
@@ -142,13 +145,13 @@ func getBlockcypherCom(cBlockcypherCom chan types.FeeAPIResponse3) {
 	body, err := makeHTTPGETReq(url, 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch api.blockcypher.com: %v", err.Error())
-		cBlockcypherCom <- types.FeeAPIResponse3{0, 0, 0}
+		cBlockcypherCom <- types.FeeAPIResponse3{}
 		return
 	}
 	result := gjson.GetMany(string(body), "high_fee_per_kb", "medium_fee_per_kb", "low_fee_per_kb")
 	highFee, medFee, lowFee := result[0].Float()/1000, result[1].Float()/1000, result[2].Float()/1000
 
-	cBlockcypherCom <- types.FeeAPIResponse3{highFee, medFee, lowFee}
+	cBlockcypherCom <- types.FeeAPIResponse3{HighFee: highFee, MedFee: medFee, LowFee: lowFee}
 }
 
 func getBlockchainInfo(cBlockchainInfo chan types.FeeAPIResponse2) {
@@ -156,13 +159,13 @@ func getBlockchainInfo(cBlockchainInfo chan types.FeeAPIResponse2) {
 	body, err := makeHTTPGETReq(url, 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch api.blockchain.info: %v", err.Error())
-		cBlockchainInfo <- types.FeeAPIResponse2{0, 0}
+		cBlockchainInfo <- types.FeeAPIResponse2{}
 		return
 	}
 	result := gjson.GetMany(string(body), "priority", "regular")
 	highFee, medFee := result[0].Float(), result[1].Float()
 
-	cBlockchainInfo <- types.FeeAPIResponse2{highFee, medFee}
+	cBlockchainInfo <- types.FeeAPIResponse2{HighFee: highFee, MedFee: medFee}
 }
 
 func getBlockchairCom(cBlockchairCom chan types.FeeAPIResponse1) {
@@ -170,12 +173,12 @@ func getBlockchairCom(cBlockchairCom chan types.FeeAPIResponse1) {
 	body, err := makeHTTPGETReq(url, 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch api.blockchair.com: %v", err.Error())
-		cBlockchairCom <- types.FeeAPIResponse1{0}
+		cBlockchairCom <- types.FeeAPIResponse1{}
 	}
 	result := gjson.Get(string(body), "data.suggested_transaction_fee_per_byte_sat")
 	highFee := result.Float()
 
-	cBlockchairCom <- types.FeeAPIResponse1{highFee}
+	cBlockchairCom <- types.FeeAPIResponse1{HighFee: highFee}
 }
 
 func getBitpayCom(cBitpayCom chan types.FeeAPIResponse3) {
@@ -183,12 +186,12 @@ func getBitpayCom(cBitpayCom chan types.FeeAPIResponse3) {
 	body, err := makeHTTPGETReq(url, 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch insight.bitpay.com: %v", err.Error())
-		cBitpayCom <- types.FeeAPIResponse3{0, 0, 0}
+		cBitpayCom <- types.FeeAPIResponse3{}
 		return
 	}
 	result := gjson.GetMany(string(body), "2", "3", "6")
 	highFee, medFee, lowFee := result[0].Float()*100000, result[1].Float()*100000, result[2].Float()*100000
-	cBitpayCom <- types.FeeAPIResponse3{highFee, medFee, lowFee}
+	cBitpayCom <- types.FeeAPIResponse3{HighFee: highFee, MedFee: medFee, LowFee: lowFee}
 }
 
 func getWasabiWalletIo(cWasabiWalletIoEcon chan types.FeeAPIResponse3, cWasabiWalletIoCons chan types.FeeAPIResponse3) {
@@ -196,8 +199,8 @@ func getWasabiWalletIo(cWasabiWalletIoEcon chan types.FeeAPIResponse3, cWasabiWa
 	body, err := makeHTTPGETReq(url, 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch wasabiwallet.io: %v", err.Error())
-		cWasabiWalletIoEcon <- types.FeeAPIResponse3{0, 0, 0}
-		cWasabiWalletIoCons <- types.FeeAPIResponse3{0, 0, 0}
+		cWasabiWalletIoEcon <- types.FeeAPIResponse3{}
+		cWasabiWalletIoCons <- types.FeeAPIResponse3{}
 		return
 	}
 	resultEconomical := gjson.GetMany(string(body), "2.economical", "4.economical", "6.economical")
@@ -205,8 +208,8 @@ func getWasabiWalletIo(cWasabiWalletIoEcon chan types.FeeAPIResponse3, cWasabiWa
 	highFeeEconomical, medFeeEconomical, lowFeeEconomical := resultEconomical[0].Float(), resultEconomical[1].Float(), resultEconomical[2].Float()
 	highFeeConservative, medFeeConservative, lowFeeConservative := resultConservative[0].Float(), resultConservative[1].Float(), resultConservative[2].Float()
 
-	cWasabiWalletIoEcon <- types.FeeAPIResponse3{highFeeEconomical, medFeeEconomical, lowFeeEconomical}
-	cWasabiWalletIoCons <- types.FeeAPIResponse3{highFeeConservative, medFeeConservative, lowFeeConservative}
+	cWasabiWalletIoEcon <- types.FeeAPIResponse3{HighFee: highFeeEconomical, MedFee: medFeeEconomical, LowFee: lowFeeEconomical}
+	cWasabiWalletIoCons <- types.FeeAPIResponse3{HighFee: highFeeConservative, MedFee: medFeeConservative, LowFee: lowFeeConservative}
 }
 
 func getTrezorIo(cTrezorIo chan types.FeeAPIResponse3) {
@@ -219,21 +222,21 @@ func getTrezorIo(cTrezorIo chan types.FeeAPIResponse3) {
 	bodyBlocks2, err := makeHTTPGETReq(urlPrefix+"2", 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch trezor.io: %v", err.Error())
-		cTrezorIo <- types.FeeAPIResponse3{0, 0, 0}
+		cTrezorIo <- types.FeeAPIResponse3{}
 		return
 	}
 
 	bodyBlocks4, err := makeHTTPGETReq(urlPrefix+"4", 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch trezor.io: %v", err.Error())
-		cTrezorIo <- types.FeeAPIResponse3{0, 0, 0}
+		cTrezorIo <- types.FeeAPIResponse3{}
 		return
 	}
 
 	bodyBlocks6, err := makeHTTPGETReq(urlPrefix+"6", 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch trezor.io: %v", err.Error())
-		cTrezorIo <- types.FeeAPIResponse3{0, 0, 0}
+		cTrezorIo <- types.FeeAPIResponse3{}
 		return
 	}
 
@@ -245,7 +248,7 @@ func getTrezorIo(cTrezorIo chan types.FeeAPIResponse3) {
 	medFee := resultBlocks4.Float() * 100000
 	lowFee := resultBlocks6.Float() * 100000
 
-	cTrezorIo <- types.FeeAPIResponse3{highFee, medFee, lowFee}
+	cTrezorIo <- types.FeeAPIResponse3{HighFee: highFee, MedFee: medFee, LowFee: lowFee}
 }
 
 func getMyceliumIo(cMyceliumIo chan types.FeeAPIResponse3) {
@@ -264,7 +267,7 @@ func getMyceliumIo(cMyceliumIo chan types.FeeAPIResponse3) {
 	// Append our cert to a copy of our system cert pool / trust store
 	if ok := rootCAs.AppendCertsFromPEM(getMyceliumFeeAPICert()); !ok {
 		logger.Error.Printf("Could not append Mycelium self-singed cert to trust store.")
-		cMyceliumIo <- types.FeeAPIResponse3{0, 0, 0}
+		cMyceliumIo <- types.FeeAPIResponse3{}
 		return
 	}
 
@@ -279,7 +282,7 @@ func getMyceliumIo(cMyceliumIo chan types.FeeAPIResponse3) {
 	resp, err := client.Post(url, "application/json", nil)
 	if err != nil {
 		logger.Error.Printf("Could not POST to mycelium.com: %v", err.Error())
-		cMyceliumIo <- types.FeeAPIResponse3{0, 0, 0}
+		cMyceliumIo <- types.FeeAPIResponse3{}
 		return
 	}
 	defer resp.Body.Close()
@@ -287,14 +290,14 @@ func getMyceliumIo(cMyceliumIo chan types.FeeAPIResponse3) {
 	body, err := readResponseBody(resp)
 	if err != nil {
 		logger.Error.Printf("Could not read response body from mycelium.com: %v", err.Error())
-		cMyceliumIo <- types.FeeAPIResponse3{0, 0, 0}
+		cMyceliumIo <- types.FeeAPIResponse3{}
 		return
 	}
 
 	result := gjson.GetMany(string(body), "r.feeEstimation.feeForNBlocks.2", "r.feeEstimation.feeForNBlocks.4", "r.feeEstimation.feeForNBlocks.10")
 	highFee, medFee, lowFee := result[0].Float()/1000, result[1].Float()/1000, result[2].Float()/1000
 
-	cMyceliumIo <- types.FeeAPIResponse3{highFee, medFee, lowFee}
+	cMyceliumIo <- types.FeeAPIResponse3{HighFee: highFee, MedFee: medFee, LowFee: lowFee}
 }
 
 func getBitcoinerLive(cBitcoinerLive chan types.FeeAPIResponse3) {
@@ -302,12 +305,12 @@ func getBitcoinerLive(cBitcoinerLive chan types.FeeAPIResponse3) {
 	body, err := makeHTTPGETReq(url, 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch bitcoiner.live: %v", err.Error())
-		cBitcoinerLive <- types.FeeAPIResponse3{0, 0, 0}
+		cBitcoinerLive <- types.FeeAPIResponse3{}
 		return
 	}
 	result := gjson.GetMany(string(body), "estimates.30.sat_per_vbyte", "estimates.60.sat_per_vbyte", "estimates.120.sat_per_vbyte")
 	highFee, medFee, lowFee := result[0].Float(), result[1].Float(), result[2].Float()
-	cBitcoinerLive <- types.FeeAPIResponse3{highFee, medFee, lowFee}
+	cBitcoinerLive <- types.FeeAPIResponse3{HighFee: highFee, MedFee: medFee, LowFee: lowFee}
 }
 
 func getBlockstreamInfo(cBlockstreamInfo chan types.FeeAPIResponse3) {
@@ -315,12 +318,12 @@ func getBlockstreamInfo(cBlockstreamInfo chan types.FeeAPIResponse3) {
 	body, err := makeHTTPGETReq(url, 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch blockstream.info: %v", err.Error())
-		cBlockstreamInfo <- types.FeeAPIResponse3{0, 0, 0}
+		cBlockstreamInfo <- types.FeeAPIResponse3{}
 		return
 	}
 	result := gjson.GetMany(string(body), "2", "3", "6")
 	highFee, medFee, lowFee := result[0].Float(), result[1].Float(), result[2].Float()
-	cBlockstreamInfo <- types.FeeAPIResponse3{highFee, medFee, lowFee}
+	cBlockstreamInfo <- types.FeeAPIResponse3{HighFee: highFee, MedFee: medFee, LowFee: lowFee}
 }
 
 func getLedgerCom(cLedgerCom chan types.FeeAPIResponse3) {
@@ -331,12 +334,12 @@ func getLedgerCom(cLedgerCom chan types.FeeAPIResponse3) {
 	body, err := makeHTTPGETReq(url, 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch ledger.com: %v", err.Error())
-		cLedgerCom <- types.FeeAPIResponse3{0, 0, 0}
+		cLedgerCom <- types.FeeAPIResponse3{}
 		return
 	}
 	result := gjson.GetMany(string(body), "1", "3", "6")
 	highFee, medFee, lowFee := result[0].Float()/1000, result[1].Float()/1000, result[2].Float()/1000
-	cLedgerCom <- types.FeeAPIResponse3{highFee, medFee, lowFee}
+	cLedgerCom <- types.FeeAPIResponse3{HighFee: highFee, MedFee: medFee, LowFee: lowFee}
 }
 
 func getMempoolSpace(cMempoolSpace chan types.FeeAPIResponse3) {
@@ -344,10 +347,10 @@ func getMempoolSpace(cMempoolSpace chan types.FeeAPIResponse3) {
 	body, err := makeHTTPGETReq(url, 5)
 	if err != nil {
 		logger.Error.Printf("Could not fetch mempool.space: %v", err.Error())
-		cMempoolSpace <- types.FeeAPIResponse3{0, 0, 0}
+		cMempoolSpace <- types.FeeAPIResponse3{}
 		return
 	}
 	result := gjson.GetMany(string(body), "fastestFee", "halfHourFee", "hourFee")
 	highFee, medFee, lowFee := result[0].Float(), result[1].Float(), result[2].Float()
-	cMempoolSpace <- types.FeeAPIResponse3{highFee, medFee, lowFee}
+	cMempoolSpace <- types.FeeAPIResponse3{HighFee: highFee, MedFee: medFee, LowFee: lowFee}
 }

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/0xb10c/memo/api/types"
+	"github.com/0xb10c/memo/types"
 	"github.com/gomodule/redigo/redis"
 )
 

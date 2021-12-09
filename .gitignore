@@ -6,3 +6,4 @@ config.toml
 # binarys
 memo-api
 memo-daemon
+bin
