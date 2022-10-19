@@ -12,7 +12,7 @@ import (
 const rawBlock string = "rawblock"
 const hashBlock string = "hashblock"
 const rawTx string = "rawtx"
-const rawTx2 string = "rawtxfee"
+const rawTx2 string = "rawtx2"
 const hashTx string = "hashtx"
 
 func SetupZMQ(pool *database.RedisPool) {

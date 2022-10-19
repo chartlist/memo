@@ -31,7 +31,7 @@ func runAPI(ctx *cli.Context) {
 	router := gin.Default()
 	corsConfig := cors.DefaultConfig()
 	if config.GetBool("api.production") {
-		corsConfig.AllowOrigins = []string{"https://mempool.observer/"}
+		corsConfig.AllowOrigins = []string{"*"}
 	} else {
 		corsConfig.AllowOrigins = []string{"*"}
 	}

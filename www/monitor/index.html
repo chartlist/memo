@@ -55,6 +55,11 @@
               <a class="nav-link" href="/charts">Charts</a>
             </li>
           </ul>
+          <button class="btn my-2 my-sm-0 btn-light btn-outline-white"
+                  onclick="
+          localStorage.setItem('mode', (localStorage.getItem('mode') || 'light') === 'dark' ? 'light' : 'dark');
+          localStorage.getItem('mode') === 'dark' ? $('body').attr('data-theme','dark'): $('body').attr('data-theme','light');">
+            <i class=" fas fa-adjust"></i>
           </button>
         </div>
 
@@ -81,9 +86,6 @@
           Hovering over a transaction reveals more information about that transaction, and clicking opens a new tab with the transaction in a blockchain explorer.
       </p>
 
-      <p>
-        I've written a <a href="https://b10c.me/Bitcoin-Transaction-Monitor-FAQ/">FAQ</a> addressing some additional questions you might have.
-      </p>
     </div>
 
     <div class="container">

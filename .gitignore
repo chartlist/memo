@@ -7,3 +7,7 @@ config.toml
 memo-api
 memo-daemon
 bin
+www/www
+
+dump.rdb
+sqlite.db

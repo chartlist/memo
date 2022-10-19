@@ -22,7 +22,7 @@ import (
 func setupAPP() *cli.App {
 	app := cli.NewApp()
 	app.Usage = "Memo CLI"
-	app.Action = startMemo
+	//app.Action = startMemo
 	app.Copyright = "Copyright in 20/10/2021 The Memo Authors"
 	app.Commands = []cli.Command{
 		tools.SyncCommand,
@@ -46,5 +46,6 @@ func main() {
 	}
 }
 
-func startMemo(ctx *cli.Context) {
+/*func startMemo(ctx *cli.Context) {
 }
+*/
