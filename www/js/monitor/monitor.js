@@ -6,7 +6,7 @@
 
 //const gApiHost = "https://" + window.location.hostname
 // == "mempool.observer" ? "https://mempool.observer" : "https://dev77.mempool.observer"
-const gApiHost = "https://www.openchart.org:4444"
+const gApiHost = "http://127.0.0.1:23485"
 
 async function loadEntryData(){
   if(gData == null){
