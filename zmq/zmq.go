@@ -20,6 +20,7 @@ func SetupZMQ(pool *database.RedisPool) {
 	zmqHost := config.GetString("zmq.host")
 	zmqPort := config.GetString("zmq.port")
 	connectionString := "tcp://" + zmqHost + ":" + zmqPort
+	logger.Info.Println("zmq4.NewSocket connection:", connectionString)
 
 	subscriber, err := zmq4.NewSocket(zmq4.SUB)
 	if err != nil {

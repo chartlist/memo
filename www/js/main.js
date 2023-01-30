@@ -1,7 +1,7 @@
 // Constants
 const NEXT_BLOCK_LABELS = ["1 vMB", "2 vMB", "3 vMB"]
 const updateInterval = 30000
-const apiHost = "http://127.0.0.1:23485"// + window.location.hostname
+const apiHost = "https://openchart.org" // + window.location.hostname
 
 var isTabActive = true;
 

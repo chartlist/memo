@@ -31,7 +31,7 @@ func runAPI(ctx *cli.Context) {
 	router := gin.Default()
 	corsConfig := cors.DefaultConfig()
 	if config.GetBool("api.production") {
-		corsConfig.AllowOrigins = []string{"*"}
+		corsConfig.AllowOrigins = []string{"https://www.openchart.org/","http://10.40.81.103:23485","http://45.43.60.97:23485"}
 	} else {
 		corsConfig.AllowOrigins = []string{"*"}
 	}
