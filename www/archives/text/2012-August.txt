@@ -1,0 +1,2364 @@
+From steve at mistfpga.net  Wed Aug  1 11:38:35 2012
+From: steve at mistfpga.net (steve)
+Date: Wed, 01 Aug 2012 21:38:35 +1000
+Subject: [Bitcoin-development] The Bitcoin Testing Project
+Message-ID: <5019153B.3090001@mistfpga.net>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hi all,
+
+I know most of you have more important things to do, and not enough
+time as it is, but I would really like your feedback on the testing
+project.
+
+Bettermeans seemed ideal, it allowed for leaderless leadership with
+people being able to dip in and out of what they wanted to do.
+however it seems that bettermeans is in no way a finished product and
+is rotting fast.
+
+I would like to move away from bettermeans - whilst retaining the
+voting and sub workstream style of working.  I would like to set
+something up around MantisBT (Mantis Bug Tracker) - this is an
+exceptionally versatile bit of software with plugins and interaction
+with other testing products (everything from test setups and plans to
+test runs and results) I would go as far as saying it is industry
+standard (yeah, i know about bugzilla, etc. mantis beats them all
+hands down.) obviously we would need a wiki and other software - this
+is not a problem.
+
+I am happpy to pay for the VPS' to host this stuff and set it all up.
+
+I have quite a bit of experience with mantis and other opensource
+testing stuff.
+
+I see the testing of bitcoin to be very similar to the testing process
+in the games industry.  for those that do not know how this works it
+is like this:-
+
+A company comes up with a device (xbox/ps),
+They then publish a set of dos and donts for this device (TRC for sony
+and TCRs for microsoft.  - I wrote quite a few of the MS TCR's for the
+original xbox.)
+They (ms/sony) then test your game against these rules and depending
+on how many you pass/fail your game can be released or not.
+
+I see this as mapping to bitcoin very well, the device is the
+blockchain, and the TRC/TCR _tests_ are published so third party
+developers can see how they fair [look at gavins recent blockchain
+edge cases for an example] (ms/sony do not publish their testcases
+only the requirements)
+
+I believe that this will allow the bitcoin testing project to be able
+to cope with the stable builds, bleeding edge builds and 3rd party
+implementations all at the same time.
+
+It doesnt matter what the app is, it is its interaction with the
+blockchain, the safe guarding of the blockchain and compatibility with
+the previous/future versions that are tested.
+
+[for the bitcoin dev list]
+A little about me:-
+The below is more or less a cut and paste of some of the stuff I sent
+gavin in my initial email about wanting to be in on the project.
+
+I can back all of this up with references. I can go into more detail if
+needed.
+
+I was heavily involved with setting up the microsoft xbox european cert
+department
+I set up qa department for europes largest independant games developer
+(although they are no longer)
+
+worked for microsoft secure science designing security automation tools
+
+setup the internal pentest for thales e-security (now TITS [Thales
+Information Technology Solutions (or Trotters Independant Traders ;),
+on thier datacryptors (fpga, crypto and product) - have done full test
+cycles on hsm 8000, payshield 9000, dc2k and thier latest line of
+military spec comms equipment.
+
+Setup and pentested Thales and nCiphers credit control software (to
+fips level 4 standard - This shit bitcoin exchanges need!! I know bank
+is a dirty word in the bitcoin world, but we should be at least as
+secure as them)
+
+I currently find exploits in stuff like office, quicktime, ie, ff, etc
+and sell them to companies like ZDI (3com) iDefense (verisgn) and some
+pentest companies that require zero day exploits.
+
+however I would like to ditch this and get my bitcoin related stuff
+off the ground - with the BTP being top of the list.
+
+my spelling is rubbish, and sometimes i forget to spellcheck before i
+hit send. sorry about that.
+
+any feedback would be really appreciated. please! I feel that this has
+stagnated enough and I want to get my work out there and I want it to
+be useful. (I lost 60 or so testcases because Kev left himself logged
+into bettermeans and I added them under his account... none appeared
+on the wiki, none appeared anywhere...)
+
+There is already lots of stuff on the wiki that outlines how i see
+things holding together - but you cant see who posted what because of
+a bug that has appeared recently [meta info is just displayed as its
+meta tag, {name} on {date} wrote.]
+
+as apposed to Mistfpga on 30/8/2012 wrote...
+
+so the tl;dr
+1 - I want to use something other than bettermeans
+2 - I can admin opensource software to do the same
+3 - I want to take the voting/hiearachy style from bettermeans and
+apply it to mantis and test workflow.
+4 - I want to get some testing done asap.
+5 - I have a full msdn and technet licence
+6 - I have a vast array of machines [nearly 100 cores] that I can use
+to automate testing and to test different setups.
+7 - been mining for 18 months or so.
+
+cheers,
+
+steve
+
+I do not belive this to be related, but I am not ashamed and feel no
+stigma. I have posted this on a public forum. I suffer from fast
+cycling (withing a day) type two bipolar disorder.  This has been and
+is being managed very well by my meds (300mg quetiapine fumerate and
+30mg mirtrazipine at night) I have been well for over a year now. [and
+yes, even with these mental health problems I still hold SCE clearance]
+
+- -- 
+my PGP public key is at pgp.mit.edu id: 0x5016FB50
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQEcBAEBAgAGBQJQGRU7AAoJEFvEB9dQFvtQY9oH/RiNBeWDs+tz0NQgkgtXmxcs
+tDtlLWB91gRtmxvXv+yYHE0WXS/qQ5gwaor8Vek61Cvnhij4AQBf7JVYLj03/7fy
+cMAFJ5k7ZQmH9URo8Jx8xzQ2tLgZ5BqLbP6fTzDstpExNGJlkZvsC6hTx9OFCubU
+bzWuWmcIRzBiMhdz7DPoskOgie5sQRzzO0zrK7NvS1P2hyEhM3eFYFcYecpS8jq9
+SbkH77qnc5pZD2JULq38htVwtI16vxmg/s4GIs3OpEPaMk5xtVc5XHf6gwBZQtYw
+fErwZpNDEAmGidRCB4LAqdSx1Xi0ix7GOyvTxBLWTnfB7wIAQNQpBHB9zN8diiA=
+=am8B
+-----END PGP SIGNATURE-----
+
+
+
+From g.rowe at froot.co.uk  Thu Aug  2 15:07:41 2012
+From: g.rowe at froot.co.uk (Gary Rowe)
+Date: Thu, 2 Aug 2012 16:07:41 +0100
+Subject: [Bitcoin-development] The Bitcoin Testing Project
+In-Reply-To: <5019153B.3090001@mistfpga.net>
+References: <5019153B.3090001@mistfpga.net>
+Message-ID: <CAKm8k+2X8Tode5foBSmVGjbvtL8rkRKqNXKLTnmdnbS6FQxyOg@mail.gmail.com>
+
+Hi Steve,
+
+This looks like a good idea to me. The test suites could act similarly to
+the 100% Pure Java approach that successfully fended off a lot of
+corrupting influences to Java over the years.
+
+Maybe it's worth putting together a small starter suite of tests and
+showing them to the community then providing a suitable process, perhaps
+through BIPs, to allow tests to be created, reviewed and updated before
+getting incorporated into a reference. I imagine a BIP would cover an
+aspect of the blockchain rather than a single test or test suite since
+having that many BIPs would get onerous fast.
+
+Kind regards,
+
+Gary
+
+On 1 August 2012 12:38, steve <steve at mistfpga.net> wrote:
+
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> Hi all,
+>
+> I know most of you have more important things to do, and not enough
+> time as it is, but I would really like your feedback on the testing
+> project.
+>
+> Bettermeans seemed ideal, it allowed for leaderless leadership with
+> people being able to dip in and out of what they wanted to do.
+> however it seems that bettermeans is in no way a finished product and
+> is rotting fast.
+>
+> I would like to move away from bettermeans - whilst retaining the
+> voting and sub workstream style of working.  I would like to set
+> something up around MantisBT (Mantis Bug Tracker) - this is an
+> exceptionally versatile bit of software with plugins and interaction
+> with other testing products (everything from test setups and plans to
+> test runs and results) I would go as far as saying it is industry
+> standard (yeah, i know about bugzilla, etc. mantis beats them all
+> hands down.) obviously we would need a wiki and other software - this
+> is not a problem.
+>
+> I am happpy to pay for the VPS' to host this stuff and set it all up.
+>
+> I have quite a bit of experience with mantis and other opensource
+> testing stuff.
+>
+> I see the testing of bitcoin to be very similar to the testing process
+> in the games industry.  for those that do not know how this works it
+> is like this:-
+>
+> A company comes up with a device (xbox/ps),
+> They then publish a set of dos and donts for this device (TRC for sony
+> and TCRs for microsoft.  - I wrote quite a few of the MS TCR's for the
+> original xbox.)
+> They (ms/sony) then test your game against these rules and depending
+> on how many you pass/fail your game can be released or not.
+>
+> I see this as mapping to bitcoin very well, the device is the
+> blockchain, and the TRC/TCR _tests_ are published so third party
+> developers can see how they fair [look at gavins recent blockchain
+> edge cases for an example] (ms/sony do not publish their testcases
+> only the requirements)
+>
+> I believe that this will allow the bitcoin testing project to be able
+> to cope with the stable builds, bleeding edge builds and 3rd party
+> implementations all at the same time.
+>
+> It doesnt matter what the app is, it is its interaction with the
+> blockchain, the safe guarding of the blockchain and compatibility with
+> the previous/future versions that are tested.
+>
+> [for the bitcoin dev list]
+> A little about me:-
+> The below is more or less a cut and paste of some of the stuff I sent
+> gavin in my initial email about wanting to be in on the project.
+>
+> I can back all of this up with references. I can go into more detail if
+> needed.
+>
+> I was heavily involved with setting up the microsoft xbox european cert
+> department
+> I set up qa department for europes largest independant games developer
+> (although they are no longer)
+>
+> worked for microsoft secure science designing security automation tools
+>
+> setup the internal pentest for thales e-security (now TITS [Thales
+> Information Technology Solutions (or Trotters Independant Traders ;),
+> on thier datacryptors (fpga, crypto and product) - have done full test
+> cycles on hsm 8000, payshield 9000, dc2k and thier latest line of
+> military spec comms equipment.
+>
+> Setup and pentested Thales and nCiphers credit control software (to
+> fips level 4 standard - This shit bitcoin exchanges need!! I know bank
+> is a dirty word in the bitcoin world, but we should be at least as
+> secure as them)
+>
+> I currently find exploits in stuff like office, quicktime, ie, ff, etc
+> and sell them to companies like ZDI (3com) iDefense (verisgn) and some
+> pentest companies that require zero day exploits.
+>
+> however I would like to ditch this and get my bitcoin related stuff
+> off the ground - with the BTP being top of the list.
+>
+> my spelling is rubbish, and sometimes i forget to spellcheck before i
+> hit send. sorry about that.
+>
+> any feedback would be really appreciated. please! I feel that this has
+> stagnated enough and I want to get my work out there and I want it to
+> be useful. (I lost 60 or so testcases because Kev left himself logged
+> into bettermeans and I added them under his account... none appeared
+> on the wiki, none appeared anywhere...)
+>
+> There is already lots of stuff on the wiki that outlines how i see
+> things holding together - but you cant see who posted what because of
+> a bug that has appeared recently [meta info is just displayed as its
+> meta tag, {name} on {date} wrote.]
+>
+> as apposed to Mistfpga on 30/8/2012 wrote...
+>
+> so the tl;dr
+> 1 - I want to use something other than bettermeans
+> 2 - I can admin opensource software to do the same
+> 3 - I want to take the voting/hiearachy style from bettermeans and
+> apply it to mantis and test workflow.
+> 4 - I want to get some testing done asap.
+> 5 - I have a full msdn and technet licence
+> 6 - I have a vast array of machines [nearly 100 cores] that I can use
+> to automate testing and to test different setups.
+> 7 - been mining for 18 months or so.
+>
+> cheers,
+>
+> steve
+>
+> I do not belive this to be related, but I am not ashamed and feel no
+> stigma. I have posted this on a public forum. I suffer from fast
+> cycling (withing a day) type two bipolar disorder.  This has been and
+> is being managed very well by my meds (300mg quetiapine fumerate and
+> 30mg mirtrazipine at night) I have been well for over a year now. [and
+> yes, even with these mental health problems I still hold SCE clearance]
+>
+> - --
+> my PGP public key is at pgp.mit.edu id: 0x5016FB50
+>
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v2.0.17 (MingW32)
+> Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+>
+> iQEcBAEBAgAGBQJQGRU7AAoJEFvEB9dQFvtQY9oH/RiNBeWDs+tz0NQgkgtXmxcs
+> tDtlLWB91gRtmxvXv+yYHE0WXS/qQ5gwaor8Vek61Cvnhij4AQBf7JVYLj03/7fy
+> cMAFJ5k7ZQmH9URo8Jx8xzQ2tLgZ5BqLbP6fTzDstpExNGJlkZvsC6hTx9OFCubU
+> bzWuWmcIRzBiMhdz7DPoskOgie5sQRzzO0zrK7NvS1P2hyEhM3eFYFcYecpS8jq9
+> SbkH77qnc5pZD2JULq38htVwtI16vxmg/s4GIs3OpEPaMk5xtVc5XHf6gwBZQtYw
+> fErwZpNDEAmGidRCB4LAqdSx1Xi0ix7GOyvTxBLWTnfB7wIAQNQpBHB9zN8diiA=
+> =am8B
+> -----END PGP SIGNATURE-----
+>
+>
+> ------------------------------------------------------------------------------
+> Live Security Virtual Conference
+> Exclusive live event will cover all the ways today's security and
+> threat landscape has changed and how IT managers can respond. Discussions
+> will include endpoint security, mobile security and the latest in malware
+> threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120802/c2e5121e/attachment.html>
+
+From jgarzik at exmulti.com  Thu Aug  2 16:43:25 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Thu, 2 Aug 2012 12:43:25 -0400
+Subject: [Bitcoin-development] Version 0.7 release planning
+Message-ID: <CA+8xBpfeoNOte=GFGqAT7+4U+JCa4DP8CkEupe+oKdJL1dMFFQ@mail.gmail.com>
+
+There seems to be consensus that we should go ahead and do a release,
+before leveldb or ultraprune or anything major lands.  There is no
+major landmark feature, but just a useful collection of small changes.
+ It seems like a good time to Release Early, Release Often and make a
+checkpoint release.
+
+Some rough draft release notes were dumped in
+https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes.txt
+
+Opening the floor...  What do we collectively want to happen, before
+0.7 release?  What is the todo list for 0.7?
+
+After cleaning out some pull requests yesterday, and looking at the
+list today, I see
+
+1) CreateNewBlock: Child-pays-for-parent / Add transaction fee later
+luke-jr https://github.com/bitcoin/bitcoin/pull/1647
+
+2) Translations update 2012-08-01 (fetched from Transifex)
+Diapolo https://github.com/bitcoin/bitcoin/pull/1644
+
+3) Add address groupings RPC from coderrr's coincontrol patches.
+gmaxwell https://github.com/bitcoin/bitcoin/pull/1642
+
+4) Add 'mempool' P2P command, and extend 'getdata' behavior
+jgarzik https://github.com/bitcoin/bitcoin/pull/1641
+
+5) PROBABLY NOT, BUT MAYBE: Relay blocks as a "preview" before
+checking the transactions in them
+luke-jr https://github.com/bitcoin/bitcoin/pull/1586
+
+6) JSON-RPC method: prioritisetransaction <txid> <priority delta>
+luke-jr https://github.com/bitcoin/bitcoin/pull/1583
+
+7) HOPEFULLY: Addnode optimization and addnode access via RPC
+BlueMatt https://github.com/bitcoin/bitcoin/pull/1549
+
+8) MAYBE: Transition to requiring block height in block coinbases
+gavinandresen https://github.com/bitcoin/bitcoin/pull/1526
+
+9) WE MUST PICK ONE: RPC: lock push-down, preparing for
+parallelization opportunities
+jgarzik https://github.com/bitcoin/bitcoin/pull/1494
+    or
+RPC: add facility to enable RPCs to run outside cs_main, wallet locks
+jgarzik https://github.com/bitcoin/bitcoin/pull/1493
+
+10) I THINK WE WANT THIS?  Make IPv6 support optional again (defaults
+to enabled)
+luke-jr https://github.com/bitcoin/bitcoin/pull/1431
+
+11) MAYBE: getblocktemplate ('getmemorypool', post IRC debate)
+luke-jr https://github.com/bitcoin/bitcoin/pull/936
+
+
+Devs -- feel free to commit directly to doc/release-notes.txt if there
+is a missing commit, or something that may be better described.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From jgarzik at exmulti.com  Thu Aug  2 16:45:29 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Thu, 2 Aug 2012 12:45:29 -0400
+Subject: [Bitcoin-development] Version 0.7 release planning
+In-Reply-To: <CA+8xBpfeoNOte=GFGqAT7+4U+JCa4DP8CkEupe+oKdJL1dMFFQ@mail.gmail.com>
+References: <CA+8xBpfeoNOte=GFGqAT7+4U+JCa4DP8CkEupe+oKdJL1dMFFQ@mail.gmail.com>
+Message-ID: <CA+8xBpe8-XHaBZ3DRy0JCQ8z12x7NoYhnhoGPMHzY6MA7USz5A@mail.gmail.com>
+
+On Thu, Aug 2, 2012 at 12:43 PM, Jeff Garzik <jgarzik at exmulti.com> wrote:
+> There seems to be consensus that we should go ahead and do a release,
+> before leveldb or ultraprune or anything major lands.  There is no
+> major landmark feature, but just a useful collection of small changes.
+>  It seems like a good time to Release Early, Release Often and make a
+> checkpoint release.
+
+Procedural note:  since Gavin is on vacation, this release obviously
+won't occur for at least a couple weeks.
+
+If Gavin appears on email or IRC, though, I might try to pounce on him
+and convince him to let us go ahead with 0.7-rc1, if the other devs
+are happy.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From luke at dashjr.org  Thu Aug  2 17:17:14 2012
+From: luke at dashjr.org (Luke-Jr)
+Date: Thu, 2 Aug 2012 17:17:14 +0000
+Subject: [Bitcoin-development] Version 0.7 release planning
+In-Reply-To: <CA+8xBpfeoNOte=GFGqAT7+4U+JCa4DP8CkEupe+oKdJL1dMFFQ@mail.gmail.com>
+References: <CA+8xBpfeoNOte=GFGqAT7+4U+JCa4DP8CkEupe+oKdJL1dMFFQ@mail.gmail.com>
+Message-ID: <201208021717.15759.luke@dashjr.org>
+
+On Thursday, August 02, 2012 4:43:25 PM Jeff Garzik wrote:
+> Opening the floor...  What do we collectively want to happen, before
+> 0.7 release?  What is the todo list for 0.7?
+
+Based on pull-capable dev comments, I've personally noted these branches as 
+accepted for 0.7:
+
+> 7) HOPEFULLY: Addnode optimization and addnode access via RPC
+> BlueMatt https://github.com/bitcoin/bitcoin/pull/1549
+> 
+> 8) MAYBE: Transition to requiring block height in block coinbases
+> gavinandresen https://github.com/bitcoin/bitcoin/pull/1526
+> 
+> 10) I THINK WE WANT THIS?  Make IPv6 support optional again (defaults
+> to enabled)
+> luke-jr https://github.com/bitcoin/bitcoin/pull/1431
+>
+> 11) MAYBE: getblocktemplate ('getmemorypool', post IRC debate)
+> luke-jr https://github.com/bitcoin/bitcoin/pull/936
++
++ m) getmemorypool: longpolling support
++ luke-jr https://github.com/bitcoin/bitcoin/pull/1355
++
++ m) Refactor transaction/accounting time
++ luke-jr https://github.com/bitcoin/bitcoin/pull/1393
+
+I also personally feel these are appropriate and ready for 0.7:
+> 4) Add 'mempool' P2P command, and extend 'getdata' behavior
+> jgarzik https://github.com/bitcoin/bitcoin/pull/1641
+> 
+> 6) JSON-RPC method: prioritisetransaction <txid> <priority delta>
+> luke-jr https://github.com/bitcoin/bitcoin/pull/1583
+> 
+> 9) RPC: add facility to enable RPCs to run outside cs_main, wallet locks
+> jgarzik https://github.com/bitcoin/bitcoin/pull/1493
++
++ m) Treat generation (mined) transactions less different from receive
++ transactions
++ luke-jr https://github.com/bitcoin/bitcoin/pull/1409
+
+Also these, but they need testing:
+> 1) CreateNewBlock: Child-pays-for-parent / Add transaction fee later
+> luke-jr https://github.com/bitcoin/bitcoin/pull/1647
+> 
+> 5) PROBABLY NOT, BUT MAYBE: Relay blocks as a "preview" before
+> checking the transactions in them
+> luke-jr https://github.com/bitcoin/bitcoin/pull/1586
++
++ m) Bitcoin-Qt (Windows only): enable DEP for bitcoin-qt.exe
++ diapolo https://github.com/bitcoin/bitcoin/pull/1614
+
+I also feel it is very important that Wumpus/laanwj decide on a name for his 
+client (formerly known as Bitcoin-Qt) and add it to the software instead of 
+simply claiming it is "Bitcoin" as it has for a week or so now - that change 
+is anticompetitive and will confuse new users into thinking Bitcoin is the 
+software too easily.
+
+Luke
+
+
+
+From gavinandresen at gmail.com  Thu Aug  2 18:00:47 2012
+From: gavinandresen at gmail.com (Gavin)
+Date: Thu, 2 Aug 2012 12:00:47 -0600
+Subject: [Bitcoin-development] Version 0.7 release planning
+In-Reply-To: <CA+8xBpe8-XHaBZ3DRy0JCQ8z12x7NoYhnhoGPMHzY6MA7USz5A@mail.gmail.com>
+References: <CA+8xBpfeoNOte=GFGqAT7+4U+JCa4DP8CkEupe+oKdJL1dMFFQ@mail.gmail.com>
+	<CA+8xBpe8-XHaBZ3DRy0JCQ8z12x7NoYhnhoGPMHzY6MA7USz5A@mail.gmail.com>
+Message-ID: <CD11CEA3-F693-48D8-9BFF-1BB4C192007B@gmail.com>
+
+I have no objections to a rc1 happening before I'm back.
+
+--
+Gavin Andresen
+
+
+On Aug 2, 2012, at 10:45 AM, Jeff Garzik <jgarzik at exmulti.com> wrote:
+
+> On Thu, Aug 2, 2012 at 12:43 PM, Jeff Garzik <jgarzik at exmulti.com> wrote:
+>> There seems to be consensus that we should go ahead and do a release,
+>> before leveldb or ultraprune or anything major lands.  There is no
+>> major landmark feature, but just a useful collection of small changes.
+>> It seems like a good time to Release Early, Release Often and make a
+>> checkpoint release.
+> 
+> Procedural note:  since Gavin is on vacation, this release obviously
+> won't occur for at least a couple weeks.
+> 
+> If Gavin appears on email or IRC, though, I might try to pounce on him
+> and convince him to let us go ahead with 0.7-rc1, if the other devs
+> are happy.
+> 
+> -- 
+> Jeff Garzik
+> exMULTI, Inc.
+> jgarzik at exmulti.com
+> 
+> ------------------------------------------------------------------------------
+> Live Security Virtual Conference
+> Exclusive live event will cover all the ways today's security and 
+> threat landscape has changed and how IT managers can respond. Discussions 
+> will include endpoint security, mobile security and the latest in malware 
+> threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+From steve at mistfpga.net  Fri Aug  3 00:19:17 2012
+From: steve at mistfpga.net (steve)
+Date: Fri, 03 Aug 2012 10:19:17 +1000
+Subject: [Bitcoin-development] The Bitcoin Testing Project
+In-Reply-To: <CAKm8k+2X8Tode5foBSmVGjbvtL8rkRKqNXKLTnmdnbS6FQxyOg@mail.gmail.com>
+References: <5019153B.3090001@mistfpga.net>
+	<CAKm8k+2X8Tode5foBSmVGjbvtL8rkRKqNXKLTnmdnbS6FQxyOg@mail.gmail.com>
+Message-ID: <501B1905.4090704@mistfpga.net>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 03/08/2012 01:07, Gary Rowe wrote:
+> Hi Steve,
+> 
+> This looks like a good idea to me. The test suites could act
+> similarly to the 100% Pure Java approach that successfully fended
+> off a lot of corrupting influences to Java over the years.
+> 
+> Maybe it's worth putting together a small starter suite of tests
+> and showing them to the community then providing a suitable
+> process, perhaps through BIPs, to allow tests to be created,
+> reviewed and updated before getting incorporated into a reference.
+> I imagine a BIP would cover an aspect of the blockchain rather than
+> a single test or test suite since having that many BIPs would get
+> onerous fast.
+> 
+> Kind regards,
+> 
+> Gary
+> 
+
+Hi Gary,
+
+Thanks for the response. :)
+
+I have started all this in bettermeans, but lost a lot of work (which
+I am working on how to redo - but I am on holiday at the moment, and
+have restricted access to my test setups)
+
+Here is the discussion thread I had with gavin about acceptance tests.
+
+https://secure.bettermeans.com/boards/4316/topics/7261
+
+Here is the work I have currently done (note, it was losing all the
+General Acceptance Tests and getting no response from bettermeans that
+has lead me to not want to use it)
+
+also note that the terminology I have been using is a little wrong, I
+refer to release 0.7 as testnet release 0.7 - I will tidy it up. - I
+did this before and it looks like it got reverted somehow.
+
+here is the main wiki space that I have been using.
+
+https://secure.bettermeans.com/projects/4256/wiki
+
+For the General Accceptance Tests, check
+
+https://secure.bettermeans.com/projects/4256/wiki/Dev_general_acceptance_tests
+
+These are the basic acceptance tests based off the changelog
+
+https://secure.bettermeans.com/projects/4256/wiki/Dev_acceptance_tests
+
+However, notice no tests are in there yet.
+
+There is plenty more stuff on bettermeans so please go have a poke
+around.  I will try to get at least a wiki setup on a vps I have
+control of (in germany, and provided by CINFU and paid for with
+bitcoins) and get the stuff moved over and put the tests back up.  I
+can do a limited amount of testing if the release is to happen in the
+next week or two, So I will focus my efforts on the installation tests
+and wallet tests. Ideally I would like to get all the GAT's done.
+
+Hopefully this fleshes things out a bit more.
+
+Please feel free to add/edit but remember your stuff might magically
+disappear, it might be better to wait for the wiki move.  I intend on
+doing the wiki move today. but that might not happen.
+
+(I have a feeling that it was me adding stuff from an account that is
+not on the BTP that blew things up, just a feeling though)
+
+I would like to keep tests informal if possible, but that kinda goes
+against the purpose of the tests. this is a bit tricky to explain if
+you have not had a look at bettermeans.  bettermeans kinda has its own
+BIP and voting mechanism, which is quite nice and it is what I want to
+emulate - this should reduce the need for vetting of tests... have a
+look at what is there and see what you think.
+
+:)
+
+cheers,
+
+steve
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQEcBAEBAgAGBQJQGxkFAAoJEFvEB9dQFvtQeD0IAJe9BJz/mv+kZjhk7LH1d7HH
+c46D7s2Y8a+2Yobve4KtRGMoQZQiqqXGIdZ2nHVO77s0zICixqdtcKlRvBZHybw9
+pB8hFYmeBdXvMHj7TR4kMbMKqTJ2z/B6m1qEKFfCRIXQXnyD5qNYhFocyQMwz53A
+dkwhpoiWNVqcgnz51XEnphyohu0TPsPbOOyCrT7ORdyAgLJAs5Ig1sKbTAdSxOux
+flEYKOVk0gse2b8lO2ly+eLwcQgI7jrzy+qkSKmNajRKFdvHUODXo4RraR08qiaJ
+SUpmN/43uQZ4atMdOCZxD5DWKjBO96sj6mkB/po5lzIEEtkhzyp/wmKdHtlvZ/Q=
+=Fonn
+-----END PGP SIGNATURE-----
+
+
+
+From operator at bitminter.com  Sat Aug 11 16:43:28 2012
+From: operator at bitminter.com (Geir Harald Hansen)
+Date: Sat, 11 Aug 2012 18:43:28 +0200
+Subject: [Bitcoin-development] Version 0.7 release planning
+In-Reply-To: <CA+8xBpfeoNOte=GFGqAT7+4U+JCa4DP8CkEupe+oKdJL1dMFFQ@mail.gmail.com>
+References: <CA+8xBpfeoNOte=GFGqAT7+4U+JCa4DP8CkEupe+oKdJL1dMFFQ@mail.gmail.com>
+Message-ID: <50268BB0.8080001@bitminter.com>
+
+On 02.08.2012 18:43, Jeff Garzik wrote:
+> There seems to be consensus that we should go ahead and do a release,
+> before leveldb or ultraprune or anything major lands.  There is no
+> major landmark feature, but just a useful collection of small changes.
+>  It seems like a good time to Release Early, Release Often and make a
+> checkpoint release.
+
+Looks like much goodness in this version. Thanks for all this work.
+
+Any chance that options to limit the size of blocks and prioritize paid
+vs free txes could make it in?
+
+By the way, by far the most common support request I have at my pool is
+users withdrawing coins and not seeing it in their wallet because it's
+not up-to-date with the block chain. Might be worth adding something in
+the bitcoin-qt GUI to make it more obvious that users can't see new
+transactions and why.
+
+> 2) Translations update 2012-08-01 (fetched from Transifex)
+
+I just now updated the Norwegian translation on Transifex, if you'd like
+to do another pull before the release. For some reason there were many
+strings I had already translated that now had no translation and had to
+be done again (even ones that had the same English text). Many languages
+are now only about 50% translated.
+
+Also there were new duplicated strings:
+
+"Verify a message to ensure it was signed with a specified Bitcoin address"
+"Sign a message to prove you own a Bitcoin address"
+"Clear &All"
+
+These two seem odd:
+Use UPnP to map the listening port (default: 0)
+Use UPnP to map the listening port (default: 1 when listening)
+
+Regards,
+Geir H. Hansen, bitminter.com
+
+
+
+From luke at dashjr.org  Sat Aug 11 18:05:07 2012
+From: luke at dashjr.org (Luke-Jr)
+Date: Sat, 11 Aug 2012 18:05:07 +0000
+Subject: [Bitcoin-development] Version 0.7 release planning
+In-Reply-To: <50268BB0.8080001@bitminter.com>
+References: <CA+8xBpfeoNOte=GFGqAT7+4U+JCa4DP8CkEupe+oKdJL1dMFFQ@mail.gmail.com>
+	<50268BB0.8080001@bitminter.com>
+Message-ID: <201208111805.09429.luke@dashjr.org>
+
+On Saturday, August 11, 2012 4:43:28 PM Geir Harald Hansen wrote:
+> By the way, by far the most common support request I have at my pool is
+> users withdrawing coins and not seeing it in their wallet because it's
+> not up-to-date with the block chain. Might be worth adding something in
+> the bitcoin-qt GUI to make it more obvious that users can't see new
+> transactions and why.
+
+Bitcoin-Qt even delays showing generation until 2 confirms.
+
+> These two seem odd:
+> Use UPnP to map the listening port (default: 0)
+> Use UPnP to map the listening port (default: 1 when listening)
+
+The default depends on build options, so that should be correct.
+
+
+
+From laanwj at gmail.com  Sat Aug 11 18:32:46 2012
+From: laanwj at gmail.com (Wladimir)
+Date: Sat, 11 Aug 2012 20:32:46 +0200
+Subject: [Bitcoin-development] Version 0.7 release planning
+In-Reply-To: <50268BB0.8080001@bitminter.com>
+References: <CA+8xBpfeoNOte=GFGqAT7+4U+JCa4DP8CkEupe+oKdJL1dMFFQ@mail.gmail.com>
+	<50268BB0.8080001@bitminter.com>
+Message-ID: <CA+s+GJAooor=aCxt9g65m7Ytiut3WMjmG9838uzqUxwtH=xPHw@mail.gmail.com>
+
+By the way, by far the most common support request I have at my pool is
+
+> users withdrawing coins and not seeing it in their wallet because it's
+> not up-to-date with the block chain. Might be worth adding something in
+> the bitcoin-qt GUI to make it more obvious that users can't see new
+> transactions and why.
+>
+
+For 0.7 we've added a red "(out of sync)" warning to the balances when the
+block chain is out of date.
+
+However, due to the design of the protocol there is a large variance in
+block timings, and it is not possible to determine up-to-date status with
+certainty, so quite a large safety margin is used. To be precise the
+warning is shown when the last received block was generated more than 90
+minutes ago.
+
+Wladimir
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120811/9ff2f611/attachment.html>
+
+From laanwj at gmail.com  Sat Aug 11 18:56:09 2012
+From: laanwj at gmail.com (Wladimir)
+Date: Sat, 11 Aug 2012 20:56:09 +0200
+Subject: [Bitcoin-development] Version 0.7 release planning
+In-Reply-To: <50268BB0.8080001@bitminter.com>
+References: <CA+8xBpfeoNOte=GFGqAT7+4U+JCa4DP8CkEupe+oKdJL1dMFFQ@mail.gmail.com>
+	<50268BB0.8080001@bitminter.com>
+Message-ID: <CA+s+GJDU8Y8TuDVwt6S91Eppps5d_NfbKGgMiFB6ktNHPSHpcw@mail.gmail.com>
+
+Geir,
+
+There were a lot of subtle changes to the English base messages such as
+capitalization or punctuation, I know this is pretty annoying for
+translators. It is a pity that there is no way to update all translations
+when the English base message changes but not significantly enough to
+trigger re-translation. I've looked but Transifex does not have that option.
+
+Also there were new duplicated strings:
+>
+> "Verify a message to ensure it was signed with a specified Bitcoin address"
+> "Sign a message to prove you own a Bitcoin address"
+> "Clear &All"
+>
+
+Duplicate strings are not a problem. Some strings are used multiple times
+in the program, and thus appear multiple times in the translation. This is
+because there are cases in which a string that is the same in English is
+translated differently in another language based on the context.
+
+At least Qt translator fills duplicates in automatically, with the option
+to change them if desired. I'm not sure about Transifex but I've heard it's
+the same there.
+
+
+>
+> These two seem odd:
+> Use UPnP to map the listening port (default: 0)
+> Use UPnP to map the listening port (default: 1 when listening)
+>
+
+The default depends on compiler flags, hence the two messages. I suppose
+the message could be split up, so that "Use UPnP to map the listening port"
+is factored out.
+
+Let's do this after 0.7.0 release though, otherwise all the translations
+for those messages will be broken again. There should be no more message
+changes before the release unless there is a very good reason.
+
+Wladimir
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120811/4f0b8d7c/attachment.html>
+
+From operator at bitminter.com  Sun Aug 12 07:59:56 2012
+From: operator at bitminter.com (Geir Harald Hansen)
+Date: Sun, 12 Aug 2012 09:59:56 +0200
+Subject: [Bitcoin-development] Version 0.7 release planning
+In-Reply-To: <CA+s+GJDU8Y8TuDVwt6S91Eppps5d_NfbKGgMiFB6ktNHPSHpcw@mail.gmail.com>
+References: <CA+8xBpfeoNOte=GFGqAT7+4U+JCa4DP8CkEupe+oKdJL1dMFFQ@mail.gmail.com>
+	<50268BB0.8080001@bitminter.com>
+	<CA+s+GJDU8Y8TuDVwt6S91Eppps5d_NfbKGgMiFB6ktNHPSHpcw@mail.gmail.com>
+Message-ID: <5027627C.3020303@bitminter.com>
+
+On 11.08.2012 20:56, Wladimir wrote:
+> Duplicate strings are not a problem. Some strings are used multiple
+> times in the program, and thus appear multiple times in the translation.
+> This is because there are cases in which a string that is the same in
+> English is translated differently in another language based on the context.
+
+That makes sense. But it's hard to translate when you just see the same
+string twice and don't know the context where it will be used.
+
+> At least Qt translator fills duplicates in automatically, with the
+> option to change them if desired. I'm not sure about Transifex but I've
+> heard it's the same there.
+
+No, I just use copy and paste.
+
+>     Use UPnP to map the listening port (default: 0)
+>     Use UPnP to map the listening port (default: 1 when listening)
+> 
+> The default depends on compiler flags, hence the two messages. I suppose
+> the message could be split up, so that "Use UPnP to map the listening
+> port" is factored out.
+
+Sorry, forgot there was a compiler flag for this. No need to split this
+up. As long as there is no explanation or description for each string I
+think it's easier to translate whole sentences.
+
+On 11.08.2012 20:32, Wladimir wrote:
+> By the way, by far the most common support request I have at my pool is
+>
+>     users withdrawing coins and not seeing it in their wallet because it's
+>     not up-to-date with the block chain. Might be worth adding
+something in
+>     the bitcoin-qt GUI to make it more obvious that users can't see new
+>     transactions and why.
+>
+> For 0.7 we've added a red "(out of sync)" warning to the balances when
+> the block chain is out of date.
+
+Perfect. This will prevent a lot of confusion. Thanks!
+
+Regards,
+Geir H. Hansen, bitminter.com
+
+
+
+From moon at justmoon.de  Mon Aug 13 07:41:50 2012
+From: moon at justmoon.de (Stefan Thomas)
+Date: Mon, 13 Aug 2012 09:41:50 +0200
+Subject: [Bitcoin-development] BIP: Custom Services
+Message-ID: <5028AFBE.8070104@justmoon.de>
+
+Hey everyone,
+
+I was working on some custom protocol extensions for Bitcoin that I
+wanted to experiment with and I noticed that in order to enable nodes to
+announce these services the only mechanism the protocol currently
+provides is to use one of the 64 bits of the services field. This is
+obviously a resource that will run out quickly if we all just help
+ourselves, so I set out to come up with a standardized way to announce
+custom protocol extensions, without using up NODE_* flags.
+
+Please kindly review my solution:
+
+https://en.bitcoin.it/wiki/User:Justmoon/BIP_Draft:_Custom_Services
+
+Thanks to Amir Taaki, Mike Hearn and Pieter Wuille who provided
+invaluable feedback while writing the draft.
+
+Note: Earlier drafts of this BIP contained a description of a mechanism
+for peer exchange for these custom services. However, since that part of
+the BIP was (1) just a recommendation and (2) rather complex, Amir and I
+agreed to split it off into a separate BIP [1] that will be refined some
+more and submitted later.
+
+Cheers,
+
+Stefan
+
+[1]
+https://en.bitcoin.it/wiki/User:Justmoon/BIP_Draft:_Custom_Service_Discovery
+
+
+
+From mike at plan99.net  Mon Aug 13 13:15:12 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Mon, 13 Aug 2012 15:15:12 +0200
+Subject: [Bitcoin-development] BIP: Custom Services
+In-Reply-To: <5028AFBE.8070104@justmoon.de>
+References: <5028AFBE.8070104@justmoon.de>
+Message-ID: <CANEZrP0BqPNQ_rMcb=_0mwV6avnWdokkkJZEb1s=bHku1a=ocg@mail.gmail.com>
+
+I think it's pretty reasonable, although people will want to use node
+flags to get into the addr broadcasts anyway.
+
+That said, I suspect (based on previous discussions) that there would
+be quite some pushback against putting extra functionality into the
+core Bitcoin network. Most likely people will re-use the code with
+different peer discovery seeds and bootstrap similar but unrelated P2P
+networks for doing new applications.
+
+For instance, what if we want to do the language translation app I've
+talked about a few times before? You need a way to floodfill broadcast
+invalid transactions to interested parties. The pubsub mechanism in
+the Bitcoin protocol was an interesting way to do that, but I think it
+got removed. To broadcast to interested nodes now, you'd have to find
+them via addr broadcasts and then connect directly. And if you're
+going to do that, you may as well just form an entirely independent
+network.
+
+More elaboration of the use cases might therefore be useful.
+
+
+
+From jgarzik at exmulti.com  Mon Aug 13 14:24:41 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Mon, 13 Aug 2012 10:24:41 -0400
+Subject: [Bitcoin-development] BIP: Custom Services
+In-Reply-To: <5028AFBE.8070104@justmoon.de>
+References: <5028AFBE.8070104@justmoon.de>
+Message-ID: <CA+8xBpfZzxBgqO6xT6+a_ACgYR=3cV9rmY_kmSovtT3dfjdhDg@mail.gmail.com>
+
+On Mon, Aug 13, 2012 at 3:41 AM, Stefan Thomas <moon at justmoon.de> wrote:
+> I was working on some custom protocol extensions for Bitcoin that I
+> wanted to experiment with and I noticed that in order to enable nodes to
+> announce these services the only mechanism the protocol currently
+> provides is to use one of the 64 bits of the services field. This is
+> obviously a resource that will run out quickly if we all just help
+> ourselves, so I set out to come up with a standardized way to announce
+> custom protocol extensions, without using up NODE_* flags.
+>
+> Please kindly review my solution:
+>
+> https://en.bitcoin.it/wiki/User:Justmoon/BIP_Draft:_Custom_Services
+
+heh, this is not a new idea.  I even implemented a pull request for
+service discovery myself, which simply consisted of querying the list
+of supported commands:
+https://github.com/bitcoin/bitcoin/pull/1471
+
+On IRC, I proposed several alternatives including modifying 'version'
+(which you did) and a new "getcaps" (get capabilities) command to be
+added in protocol_version X.
+
+gmaxwell seems continually unenthused, and made a valid point about
+service advertisement:  these capabilities are not advertised with
+CAddress, so how does one usefully discover and make use of them?
+What are real world use cases, that cannot be solved with nService
+bits?
+
+My only response is a weak one:  inevitability.  It seems likely that
+-somebody- will implement their own P2P commands for their own client
+subset, even if only a simple "use 'getstatus' with strSubVer matching
+/FooClient/"
+
+Therefore, if it is inevitable, we might as well make some basic rules
+about how to extended your P2P command set.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From gmaxwell at gmail.com  Mon Aug 13 15:07:55 2012
+From: gmaxwell at gmail.com (Gregory Maxwell)
+Date: Mon, 13 Aug 2012 11:07:55 -0400
+Subject: [Bitcoin-development] BIP: Custom Services
+In-Reply-To: <CA+8xBpfZzxBgqO6xT6+a_ACgYR=3cV9rmY_kmSovtT3dfjdhDg@mail.gmail.com>
+References: <5028AFBE.8070104@justmoon.de>
+	<CA+8xBpfZzxBgqO6xT6+a_ACgYR=3cV9rmY_kmSovtT3dfjdhDg@mail.gmail.com>
+Message-ID: <CAAS2fgSgE0fOetuJZDPVeEMxbDo91r0w3Hvvn4vDdChCH1zxdA@mail.gmail.com>
+
+On Mon, Aug 13, 2012 at 10:24 AM, Jeff Garzik <jgarzik at exmulti.com> wrote:
+> My only response is a weak one:  inevitability.  It seems likely that
+> -somebody- will implement their own P2P commands for their own client
+> subset, even if only a simple "use 'getstatus' with strSubVer matching
+> /FooClient/"
+>
+> Therefore, if it is inevitable, we might as well make some basic rules
+> about how to extended your P2P command set.
+
+I'm not opposed to that logic.  But for cases where an introduction mechanism
+will be needed... it would be awfully good to have one, and I do think that
+there is harm in making people think that simple services negotiation will
+actually work for their needs for cases where a separate p2p network is
+needed.
+
+
+
+From jgarzik at exmulti.com  Mon Aug 13 15:57:59 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Mon, 13 Aug 2012 11:57:59 -0400
+Subject: [Bitcoin-development] Protocol changes for SPV clients: mempool,
+	getdata commands
+Message-ID: <CA+8xBpevWfyvb7d6dBhMB4s=p4w8GdO7s+WDUo6zoJYGg3+b9A@mail.gmail.com>
+
+A small change to the protocol is proposed for satoshi client v0.7
+(upcoming release):
+
+    Add 'mempool' P2P command, and extend 'getdata' behavior
+    https://github.com/bitcoin/bitcoin/pull/1641
+
+The genesis of this command is to permit SPV clients to access the
+memory pool, but secondary uses include diagnostics and miner download
+(so that miners won't miss lucrative TX's due to node restart).
+"getdata" behavior is extended to include any memory pool transaction,
+relaxing a previous "getdata" restriction.
+
+Didn't feel this warranted a BIP, but can write one if people really want one.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From moon at justmoon.de  Mon Aug 13 20:00:36 2012
+From: moon at justmoon.de (Stefan Thomas)
+Date: Mon, 13 Aug 2012 22:00:36 +0200
+Subject: [Bitcoin-development] BIP: Custom Services
+In-Reply-To: <CANEZrP0BqPNQ_rMcb=_0mwV6avnWdokkkJZEb1s=bHku1a=ocg@mail.gmail.com>
+References: <5028AFBE.8070104@justmoon.de>
+	<CANEZrP0BqPNQ_rMcb=_0mwV6avnWdokkkJZEb1s=bHku1a=ocg@mail.gmail.com>
+Message-ID: <50295CE4.5040606@justmoon.de>
+
+> More elaboration of the use cases might therefore be useful.
+
+I'm implementing a DHT, rather than storing the whole blockchain index
+locally, a future version of BitcoinJS will store only a user defined
+percentage (anywhere from 0-100%.) Any misses will be resolved by
+querying the network.
+
+Thanks to ultraprune, we no longer need a full index for verification.
+And for all the other use cases like lightweight server queries and
+block explorer queries a bit of latency is acceptable in exchange for
+scalability and decentralization. This feature will give people to
+option to run anywhere from a large BitcoinJS node (100% index) to a
+small one (20% index) to a lightweight one (0% index.) All of them are
+equally queryable, so if you're just trying out BitcoinJS you won't have
+to download the block chain just to run the block explorer example. Only
+when your block explorer's traffic grows will you need to contribute
+some query services back to the network in order not to get rate-limited.
+
+
+> these capabilities are not advertised with
+> CAddress, so how does one usefully discover and make use of them?
+
+Pieter brought up this very point when he reviewed an earlier draft.
+This prompted the creation of the second BIP I mentioned:
+
+https://en.bitcoin.it/wiki/User:Justmoon/BIP_Draft:_Custom_Service_Discovery
+
+The basic principle is quite simple - prefix the standard addr message
+with a service-specific message to mark off service support. It's easy
+to implement and very efficient (without compression it's 1.288 bits per
+node, with compression it's quite possibly more efficient than the
+services field.) Because this stuff is a bit more complex and because it
+requires no changes to the Bitcoin protocol, Amir and I chose to split
+it off into a separate BIP and I want to work on it a little more. But
+if you are wondering how peer exchange might work for these custom
+services, please do take a look at it.
+
+
+> you may as well just form an entirely independent network
+
+When I designed the DHT, I did just that. Later I was working on a
+concept for a decentralized pool and I noticed I was solving the same
+problems again. And with all three services running a node might be
+maintaining three separate TCP connections to the exact same peer.
+
+So then I considered making the DHT network extensible, so that the
+decentralized pool protocol could live in there. But, well if I'm doing
+that, why not just make the regular Bitcoin protocol extensible and let
+both extensions live in there.
+
+For a custom service you DO need the following:
+
+- service-specific DNS seeds
+- service announcement (BIP: CS)
+- service-specific messages (BIP: CS)
+- service-specific peer exchange (BIP: CSD)
+
+And those four things cover a lot of what Bitcoin does. But once you're
+thinking about n custom services it starts to look easier to add
+semantics for "some nodes support some things" in one network rather
+than instantiating n networks.
+
+On the opposite end of the spectrum there are very simple services.
+Consider a WebSocket transport. Some nodes might offer
+Bitcoin-over-WebSocket, for example to implement an SPV client in the
+browser. But they don't connect to each other via WebSocket, since they
+prefer plain TCP. So in this case you need peer exchange, but not much
+else. You could create a new P2P network for the sole purpose of
+exchanging peers, but again it seems much easier if there were ways to
+do this on the Bitcoin network.
+
+One final point: A major focus of this BIP is to make it easy to
+canonicalize custom services if we choose to do so. The idea is that
+custom services get to prove themselves in the wild - those that work
+well may be added to the standard protocol. That's a good reason to 1)
+encourage custom services to live in-band and 2) recommend compatibility
+with Bitcoin's standard mechanisms (12 byte command names, 1 bit service
+announcement, 1 bit peer exchange etc.)
+
+On 8/13/2012 3:15 PM, Mike Hearn wrote:
+> I think it's pretty reasonable, although people will want to use node
+> flags to get into the addr broadcasts anyway.
+>
+> That said, I suspect (based on previous discussions) that there would
+> be quite some pushback against putting extra functionality into the
+> core Bitcoin network. Most likely people will re-use the code with
+> different peer discovery seeds and bootstrap similar but unrelated P2P
+> networks for doing new applications.
+>
+> For instance, what if we want to do the language translation app I've
+> talked about a few times before? You need a way to floodfill broadcast
+> invalid transactions to interested parties. The pubsub mechanism in
+> the Bitcoin protocol was an interesting way to do that, but I think it
+> got removed. To broadcast to interested nodes now, you'd have to find
+> them via addr broadcasts and then connect directly. And if you're
+> going to do that, you may as well just form an entirely independent
+> network.
+>
+> More elaboration of the use cases might therefore be useful.
+>
+
+
+
+
+From laanwj at gmail.com  Tue Aug 14 04:55:35 2012
+From: laanwj at gmail.com (Wladimir)
+Date: Tue, 14 Aug 2012 06:55:35 +0200
+Subject: [Bitcoin-development] Protocol changes for SPV clients: mempool,
+ getdata commands
+In-Reply-To: <CA+8xBpevWfyvb7d6dBhMB4s=p4w8GdO7s+WDUo6zoJYGg3+b9A@mail.gmail.com>
+References: <CA+8xBpevWfyvb7d6dBhMB4s=p4w8GdO7s+WDUo6zoJYGg3+b9A@mail.gmail.com>
+Message-ID: <CA+s+GJD=1TOWB6JH9M2KeKv3vMNezPKGTh7RPYfmRbeFxcxstQ@mail.gmail.com>
+
+On Mon, Aug 13, 2012 at 5:57 PM, Jeff Garzik <jgarzik at exmulti.com> wrote:
+
+> A small change to the protocol is proposed for satoshi client v0.7
+> (upcoming release):
+>
+>     Add 'mempool' P2P command, and extend 'getdata' behavior
+>     https://github.com/bitcoin/bitcoin/pull/1641
+
+
+Fully agree with the changes, but I think there should be a small BIP, for
+consistency, and to make it documented for other client developers.
+
+Wladimir
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120814/97ea5023/attachment.html>
+
+From bitcoin-list at bluematt.me  Wed Aug 15 00:26:31 2012
+From: bitcoin-list at bluematt.me (Matt Corallo)
+Date: Wed, 15 Aug 2012 02:26:31 +0200
+Subject: [Bitcoin-development] Bloom Filter Implementation
+Message-ID: <1344990391.4355.21.camel@bmthinkpad.lan.bluematt.me>
+
+I spend some time implementing some of the changes discussed in the
+previous thread "New P2P commands for diagnostics, SPV clients", and
+wanted to field comments before I write up a BIP.
+
+I have implemented a simple bloom filter that works on transactions as
+well as a new block relay type which relays blocks as header+coinbase tx
++vector<tx hash> which allows for faster relay for clients which already
+have transactions in memory pool.
+
+In order to request that all future MSG_TX inv messages and blocks (only
+those relayed in the new format) are filtered, SPV clients will send a
+filterload message with a serialized bloom filter.  Nodes can also send
+filteradd messages which add particular data blocks to the filter (not
+recommended for anonymity) and call filterclear which disables filtering
+on a node's connection until re-enabled.
+
+The filter will match any tx which:
+     1. Has a script data element in either a scriptPubKey or scriptSig
+        which matches the filter.
+     2. Spends an input who's COutPoint is in the filter.
+     3. Has a hash in the filter (see #4 for why this matters).
+     4. Has a script data element in a prevout's scriptPubKey.  This
+        allows for matching pay-to-pubkey transactions without sending a
+        new filter after each transaction which matched (which would
+        cause some nasty timing issues where you may miss transactions
+        if you get transactions back-to-back before you can send a new
+        filter).  Matching of prevouts only occurs on free txes, not
+        those in blocks.  Thus, before requesting a block, SPV clients
+        should update the remote node's filter, if required, to be sure
+        it includes the hash of any transaction which would not
+        otherwise match the filter so that the node knows when its
+        transactions are included in blocks.
+
+I can't say I'm a big fan of requiring SPV nodes constantly update the
+filter when they learn about new transactions (could get nasty during
+IDB, if the node has a lot of transactions, as you could end up
+re-requesting blocks many times), but I really don't think its worth
+loading all prevouts when a node is in IBD to fix it.
+
+The branch can be found at
+https://github.com/TheBlueMatt/bitcoin/compare/master...bloom
+
+Matt
+
+
+
+
+From mike at plan99.net  Wed Aug 15 10:07:14 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Wed, 15 Aug 2012 12:07:14 +0200
+Subject: [Bitcoin-development] Bloom Filter Implementation
+In-Reply-To: <1344990391.4355.21.camel@bmthinkpad.lan.bluematt.me>
+References: <1344990391.4355.21.camel@bmthinkpad.lan.bluematt.me>
+Message-ID: <CANEZrP1BtD6Ps5h2zaxE5ePVhXtT6bXmpRw54+Fg7yWtJFD+=A@mail.gmail.com>
+
+This is great, thanks!
+
+A few remarks:
+
+If you have to update the filter after every block, IBD will require a
+round-trip after every single block download instead of doing bulk
+requests with getblocks. That sounds like it'd kill any performance
+gains won by the feature. There needs to be a way to do bulk getblocks
+on hundreds/thousands of blocks at a time and then have the data
+stream in. Perhaps the server node can update the filter for you, as
+the rules are deterministic?
+
+As you know the remote end will request the transactions given their
+hashes anyway, why not save the bandwidth for the hashes and the
+network round-trip by just providing the transactions immediately in
+the block? I was imagining something like:
+
+// A CMerkleTx without the redundant block hash
+class CLiteMerkleTx : public CTransaction {
+  std::vector<uint256> vBranch;
+  int nIndex;
+}
+
+class CMerkleBlock {
+    int nVersion;
+    uint256 hashPrevBlock;
+    uint256 hashMerkleRoot;
+    unsigned int nTime;
+    unsigned int nBits;
+    unsigned int nNonce;
+
+    std::vector<CLiteMerkleTx> vMatchedTxns;
+}
+
+
+
+From jgarzik at exmulti.com  Thu Aug 16 17:32:04 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Thu, 16 Aug 2012 13:32:04 -0400
+Subject: [Bitcoin-development] BIP 35: add mempool message
+Message-ID: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+
+Consensus was we should do a BIP for all P2P changes, so here it is...
+ feedback requested.
+
+https://en.bitcoin.it/wiki/BIP_0035
+
+Abstract
+-------------------------------------------
+Make a network node's transaction memory pool accessible via a new
+"mempool" message.  Extend the existing "getdata" message behavior to permit
+accessing the transaction memory pool.
+
+
+Motivation
+-------------------------------------------
+Several use cases make it desireable to expore a network node's transaction
+memory pool:
+* SPV clients, wishing to obtain zero-confirmation transactions sent or
+  received.
+* Miners, downloading existing network transactions after a restart.
+* Remote network diagnostics.
+
+
+Specification
+-------------------------------------------
+1) Upon receipt of a "mempool" message, the node will respond
+   with an "inv" message containing MSG_TX hashes of all the
+   transactions in the node's transaction memory pool.
+
+   An "inv" message is always returned, even if empty.
+
+2) The typical node behavior in response to an "inv" is "getdata".
+
+   However, the reference Satoshi implementation ignores requests
+   for transaction hashes outside that which is recently relayed.
+
+   To support "mempool", an implementation must extend its "getdata"
+   message support to querying the memory pool.
+
+3) Feature discovery is enabled by checking two "version" message attributes:
+
+   a) Protocol version >= 60002
+   b) NODE_NETWORK bit set in nServices
+
+
+Backwards compatibility
+-------------------------------------------
+Older clients remain 100% compatible and interoperable after this change.
+
+
+Implementation
+-------------------------------------------
+See https://github.com/bitcoin/bitcoin/pull/1641
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From zgenjix at yahoo.com  Thu Aug 16 17:40:53 2012
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Thu, 16 Aug 2012 10:40:53 -0700 (PDT)
+Subject: [Bitcoin-development] BIP 35: add mempool message
+In-Reply-To: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+References: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+Message-ID: <1345138853.81509.YahooMailNeo@web121006.mail.ne1.yahoo.com>
+
+The format for "mempool" packet is missing. I'm guessing that it is an empty message, right?
+
+Might be good to add that.
+
+
+
+----- Original Message -----
+From: Jeff Garzik <jgarzik at exmulti.com>
+To: Bitcoin Development <bitcoin-development at lists.sourceforge.net>
+Cc: 
+Sent: Thursday, August 16, 2012 6:32 PM
+Subject: [Bitcoin-development] BIP 35: add mempool message
+
+Consensus was we should do a BIP for all P2P changes, so here it is...
+feedback requested.
+
+https://en.bitcoin.it/wiki/BIP_0035
+
+Abstract
+-------------------------------------------
+Make a network node's transaction memory pool accessible via a new
+"mempool" message.? Extend the existing "getdata" message behavior to permit
+accessing the transaction memory pool.
+
+
+Motivation
+-------------------------------------------
+Several use cases make it desireable to expore a network node's transaction
+memory pool:
+* SPV clients, wishing to obtain zero-confirmation transactions sent or
+? received.
+* Miners, downloading existing network transactions after a restart.
+* Remote network diagnostics.
+
+
+Specification
+-------------------------------------------
+1) Upon receipt of a "mempool" message, the node will respond
+?  with an "inv" message containing MSG_TX hashes of all the
+?  transactions in the node's transaction memory pool.
+
+?  An "inv" message is always returned, even if empty.
+
+2) The typical node behavior in response to an "inv" is "getdata".
+
+?  However, the reference Satoshi implementation ignores requests
+?  for transaction hashes outside that which is recently relayed.
+
+?  To support "mempool", an implementation must extend its "getdata"
+?  message support to querying the memory pool.
+
+3) Feature discovery is enabled by checking two "version" message attributes:
+
+?  a) Protocol version >= 60002
+?  b) NODE_NETWORK bit set in nServices
+
+
+Backwards compatibility
+-------------------------------------------
+Older clients remain 100% compatible and interoperable after this change.
+
+
+Implementation
+-------------------------------------------
+See https://github.com/bitcoin/bitcoin/pull/1641
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+------------------------------------------------------------------------------
+Live Security Virtual Conference
+Exclusive live event will cover all the ways today's security and 
+threat landscape has changed and how IT managers can respond. Discussions 
+will include endpoint security, mobile security and the latest in malware 
+threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+_______________________________________________
+Bitcoin-development mailing list
+Bitcoin-development at lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+
+From jgarzik at exmulti.com  Thu Aug 16 17:43:05 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Thu, 16 Aug 2012 13:43:05 -0400
+Subject: [Bitcoin-development] BIP 35: add mempool message
+In-Reply-To: <1345138853.81509.YahooMailNeo@web121006.mail.ne1.yahoo.com>
+References: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+	<1345138853.81509.YahooMailNeo@web121006.mail.ne1.yahoo.com>
+Message-ID: <CA+8xBpfxDDpJ3QJvTmTOkJJFR_jJG6kRk0mNUVAqELLGr3K-Gg@mail.gmail.com>
+
+On Thu, Aug 16, 2012 at 1:40 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+> The format for "mempool" packet is missing. I'm guessing that it is an empty message, right?
+
+Yes, it is an empty message.  BIP updated.
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From jgarzik at exmulti.com  Thu Aug 16 18:04:13 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Thu, 16 Aug 2012 14:04:13 -0400
+Subject: [Bitcoin-development] BIP 35: add mempool message
+In-Reply-To: <20120816175637.GA13454@vps7135.xlshosting.net>
+References: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+	<20120816175637.GA13454@vps7135.xlshosting.net>
+Message-ID: <CA+8xBpc-kSVm__O8MHf6LHJHmFNDR55ZkyUGagdv31f2E_ddBg@mail.gmail.com>
+
+On Thu, Aug 16, 2012 at 1:56 PM, Pieter Wuille <pieter.wuille at gmail.com> wrote:
+> I suppose it is interesting in general for nodes to
+> get a memory pool refill at startup anyway.
+
+Yes.
+
+>>    An "inv" message is always returned, even if empty.
+>
+> I'm not sure about this last. What is it good for? inv packets can always be
+> sent, even not in response to others, so it is not that this gives you an
+> acknowledgement the mempool is updated?
+
+A simple guarantee of 1:1 correspondence between request and response.
+ The bitcoin protocol sometimes simply elides a response when the
+response would be empty, and this makes it difficult to know whether a
+request is timing out or already processed.
+
+Sending a ping(nonce) after each P2P command is another way of achieving same :)
+
+> This seems safe, although it forces other full implementations that want to
+> expose protocol version 60002 (or later) to also implement this. What do they
+> think about this?
+>
+> I would like to suggest to allocate an extra service bit for this. We still
+> have 63 left, and this is a well-defined and useful extra service that was
+> not yet provided by any earlier node. Doing that would also mean that
+> mempool-providing survices may be discovered before connecting to them, as
+> the service bits are carried around in addr messages. Any opinions about that?
+
+An nServices bit would be a better fit for this optional service, but
+nServices bits seemed like a scarce resource, so I elected to be
+conservative.
+
+Absent the scarce-resource concern, I'd vote for an nServices bit.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From pieter.wuille at gmail.com  Thu Aug 16 17:56:39 2012
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Thu, 16 Aug 2012 19:56:39 +0200
+Subject: [Bitcoin-development] BIP 35: add mempool message
+In-Reply-To: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+References: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+Message-ID: <20120816175637.GA13454@vps7135.xlshosting.net>
+
+On Thu, Aug 16, 2012 at 01:32:04PM -0400, Jeff Garzik wrote:
+> Consensus was we should do a BIP for all P2P changes, so here it is...
+>  feedback requested.
+> 
+> https://en.bitcoin.it/wiki/BIP_0035
+
+I like the idea of being able to query the memory pool of a node; the
+implementation is straightforward, which is good. Maybe effectively using the
+command can be added? I suppose it is interesting in general for nodes to
+get a memory pool refill at startup anyway.
+
+> 1) Upon receipt of a "mempool" message, the node will respond
+>    with an "inv" message containing MSG_TX hashes of all the
+>    transactions in the node's transaction memory pool.
+> 
+>    An "inv" message is always returned, even if empty.
+
+I'm not sure about this last. What is it good for? inv packets can always be
+sent, even not in response to others, so it is not that this gives you an
+acknowledgement the mempool is updated?
+
+> 3) Feature discovery is enabled by checking two "version" message attributes:
+> 
+>    a) Protocol version >= 60002
+>    b) NODE_NETWORK bit set in nServices
+
+This seems safe, although it forces other full implementations that want to
+expose protocol version 60002 (or later) to also implement this. What do they
+think about this?
+
+I would like to suggest to allocate an extra service bit for this. We still
+have 63 left, and this is a well-defined and useful extra service that was
+not yet provided by any earlier node. Doing that would also mean that
+mempool-providing survices may be discovered before connecting to them, as
+the service bits are carried around in addr messages. Any opinions about that?
+
+-- 
+Pieter
+
+
+
+From zgenjix at yahoo.com  Thu Aug 16 18:20:55 2012
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Thu, 16 Aug 2012 11:20:55 -0700 (PDT)
+Subject: [Bitcoin-development] BIP 35: add mempool message
+In-Reply-To: <20120816175637.GA13454@vps7135.xlshosting.net>
+References: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+	<20120816175637.GA13454@vps7135.xlshosting.net>
+Message-ID: <1345141255.96175.YahooMailNeo@web121001.mail.ne1.yahoo.com>
+
+My thoughts:
+
+The extension is simple. It's only really useful for the use-cases listed if the majority of nodes implement it. As I view the proposal, it is perfectly simple and uncomplicated. If it's implemented, then I suggest to just increment version and make it part of the protocol.
+
+On the flipside it is another notch in complicating an already diffuse protocol, but it seems a rather benign offense in that regard compared to other changes (past and future).
+
+
+
+----- Original Message -----
+From: Pieter Wuille <pieter.wuille at gmail.com>
+To: Jeff Garzik <jgarzik at exmulti.com>
+Cc: Bitcoin Development <bitcoin-development at lists.sourceforge.net>
+Sent: Thursday, August 16, 2012 6:56 PM
+Subject: Re: [Bitcoin-development] BIP 35: add mempool message
+
+On Thu, Aug 16, 2012 at 01:32:04PM -0400, Jeff Garzik wrote:
+> Consensus was we should do a BIP for all P2P changes, so here it is...
+>? feedback requested.
+> 
+> https://en.bitcoin.it/wiki/BIP_0035
+
+I like the idea of being able to query the memory pool of a node; the
+implementation is straightforward, which is good. Maybe effectively using the
+command can be added? I suppose it is interesting in general for nodes to
+get a memory pool refill at startup anyway.
+
+> 1) Upon receipt of a "mempool" message, the node will respond
+>? ? with an "inv" message containing MSG_TX hashes of all the
+>? ? transactions in the node's transaction memory pool.
+> 
+>? ? An "inv" message is always returned, even if empty.
+
+I'm not sure about this last. What is it good for? inv packets can always be
+sent, even not in response to others, so it is not that this gives you an
+acknowledgement the mempool is updated?
+
+> 3) Feature discovery is enabled by checking two "version" message attributes:
+> 
+>? ? a) Protocol version >= 60002
+>? ? b) NODE_NETWORK bit set in nServices
+
+This seems safe, although it forces other full implementations that want to
+expose protocol version 60002 (or later) to also implement this. What do they
+think about this?
+
+I would like to suggest to allocate an extra service bit for this. We still
+have 63 left, and this is a well-defined and useful extra service that was
+not yet provided by any earlier node. Doing that would also mean that
+mempool-providing survices may be discovered before connecting to them, as
+the service bits are carried around in addr messages. Any opinions about that?
+
+-- 
+Pieter
+
+------------------------------------------------------------------------------
+Live Security Virtual Conference
+Exclusive live event will cover all the ways today's security and 
+threat landscape has changed and how IT managers can respond. Discussions 
+will include endpoint security, mobile security and the latest in malware 
+threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+_______________________________________________
+Bitcoin-development mailing list
+Bitcoin-development at lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+
+From moon at justmoon.de  Thu Aug 16 19:21:14 2012
+From: moon at justmoon.de (Stefan Thomas)
+Date: Thu, 16 Aug 2012 21:21:14 +0200
+Subject: [Bitcoin-development] BIP 35: add mempool message
+In-Reply-To: <20120816175637.GA13454@vps7135.xlshosting.net>
+References: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+	<20120816175637.GA13454@vps7135.xlshosting.net>
+Message-ID: <502D482A.2090609@justmoon.de>
+
+> This seems safe, although it forces other full implementations that want to
+> expose protocol version 60002 (or later) to also implement this. What do they
+> think about this?
+
+BitcoinJS will implement it, it's a useful feature and there is no
+reason not to support it.
+
+Two comments from my end:
+
+- This is just a thought, but I wouldn't mind using a new inv_type for
+this, e.g. MSG_MEMTX. I could conceivably see a future where broadcast
+and relay txs are stored in a very fast local cache whereas the general
+mempool is stored in a slower data structure. By being able to
+distinguish incoming getdata requests I can save a few milliseconds by
+querying the right storage right away. Might also help with things like
+telling apart broadcast/relayed transactions from the response to a
+mempool request for purposes like DoS scoring etc.
+
+Not a big deal by any means, but I also don't see a downside to it.
+inv_types are not a scarce resource, we have four billion of them available.
+
+For now clients would just treat MSG_TX and MSG_MEMTX interchangeably.
+
+- If a node doesn't have anything in it's mempool it sends back an empty
+inv message. This is either ambiguous (if other things also send empty
+inv messages in the future) or arbitrary (why should an empty inv be
+associated with a mempool request of all things.) Instead why not
+respond with an inv message that contains a single element of type
+MSG_MEMTX and hash 0. That would a very direct way to indicate that this
+response is associated with a mempool request.
+
+
+I'm not married to either suggestion, just trying to add my perspective.
+One thing you notice when reimplementing Bitcoin is that Bitcoin's
+protocol leaves out a lot of information not for space reasons, but
+because the reference client's implementation doesn't happen to need it.
+Sometimes however this locks other clients into doing things the same
+way. If we can make the protocol a bit richer, especially if this
+doesn't cost any extra bytes, then we should consider it as it might
+help some implementation down the road make a neat optimization.
+
+
+On 8/16/2012 7:56 PM, Pieter Wuille wrote:
+> On Thu, Aug 16, 2012 at 01:32:04PM -0400, Jeff Garzik wrote:
+>> Consensus was we should do a BIP for all P2P changes, so here it is...
+>>  feedback requested.
+>>
+>> https://en.bitcoin.it/wiki/BIP_0035
+> I like the idea of being able to query the memory pool of a node; the
+> implementation is straightforward, which is good. Maybe effectively using the
+> command can be added? I suppose it is interesting in general for nodes to
+> get a memory pool refill at startup anyway.
+>
+>> 1) Upon receipt of a "mempool" message, the node will respond
+>>    with an "inv" message containing MSG_TX hashes of all the
+>>    transactions in the node's transaction memory pool.
+>>
+>>    An "inv" message is always returned, even if empty.
+> I'm not sure about this last. What is it good for? inv packets can always be
+> sent, even not in response to others, so it is not that this gives you an
+> acknowledgement the mempool is updated?
+>
+>> 3) Feature discovery is enabled by checking two "version" message attributes:
+>>
+>>    a) Protocol version >= 60002
+>>    b) NODE_NETWORK bit set in nServices
+> This seems safe, although it forces other full implementations that want to
+> expose protocol version 60002 (or later) to also implement this. What do they
+> think about this?
+>
+> I would like to suggest to allocate an extra service bit for this. We still
+> have 63 left, and this is a well-defined and useful extra service that was
+> not yet provided by any earlier node. Doing that would also mean that
+> mempool-providing survices may be discovered before connecting to them, as
+> the service bits are carried around in addr messages. Any opinions about that?
+>
+
+
+
+
+From etotheipi at gmail.com  Thu Aug 16 19:36:25 2012
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Thu, 16 Aug 2012 15:36:25 -0400
+Subject: [Bitcoin-development] BIP 35: add mempool message
+In-Reply-To: <CA+8xBpc-kSVm__O8MHf6LHJHmFNDR55ZkyUGagdv31f2E_ddBg@mail.gmail.com>
+References: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+	<20120816175637.GA13454@vps7135.xlshosting.net>
+	<CA+8xBpc-kSVm__O8MHf6LHJHmFNDR55ZkyUGagdv31f2E_ddBg@mail.gmail.com>
+Message-ID: <CALf2ePwuLaCyZjxw-JYhbKmXuM1=QEeov5iLKGX9DCsbte-CnA@mail.gmail.com>
+
+On Thu, Aug 16, 2012 at 2:04 PM, Jeff Garzik <jgarzik at exmulti.com> wrote:
+
+> On Thu, Aug 16, 2012 at 1:56 PM, Pieter Wuille <pieter.wuille at gmail.com>
+> wrote:
+> > I suppose it is interesting in general for nodes to
+> > get a memory pool refill at startup anyway.
+>
+> Yes.
+>
+> >>    An "inv" message is always returned, even if empty.
+> >
+> > I'm not sure about this last. What is it good for? inv packets can
+> always be
+> > sent, even not in response to others, so it is not that this gives you an
+> > acknowledgement the mempool is updated?
+>
+> A simple guarantee of 1:1 correspondence between request and response.
+>  The bitcoin protocol sometimes simply elides a response when the
+> response would be empty, and this makes it difficult to know whether a
+> request is timing out or already processed.
+>
+> Sending a ping(nonce) after each P2P command is another way of achieving
+> same :)
+>
+>
+
+Is there a problem with sending unrecognized messages to nodes?   If we
+create a new message type specifically asking for memory pool transactions,
+and we broadcast it to all nodes that we are connected to, and none of them
+respond, then either there are no tx in their memory pools, or they don't
+recognize the message and ignore it.  Either way, you're not going to get
+any extra information out of them.  If you really care, a simple ping can
+identify whether they're still connected and should've responded (as Jeff
+said).
+
+As long as the older node won't cut you off for sending one unrecognized
+request, it seems that you can get by fine without requiring that bit.  I
+guess it depends on the utility of definitively identifying whether a node
+supports the functionality.  I personally don't feel like it's critical,
+especially considering that this is most useful only during the transient
+period when it's not normal for nodes to support it yet.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120816/adc8bbd9/attachment.html>
+
+From zgenjix at yahoo.com  Thu Aug 16 20:57:40 2012
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Thu, 16 Aug 2012 13:57:40 -0700 (PDT)
+Subject: [Bitcoin-development] BIP 35: add mempool message
+In-Reply-To: <502D482A.2090609@justmoon.de>
+References: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+	<20120816175637.GA13454@vps7135.xlshosting.net>
+	<502D482A.2090609@justmoon.de>
+Message-ID: <1345150660.5139.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+
+MSG_MEMTX solves the issue of not knowing whether a given inv is in response to a "mempool" command or not.
+
+I don't buy the argument that always sending a response "inv" makes things easier because code should always be able to handle misbehaviour from the remote node (ommiting the "inv"). However I would argue that it is good to have it, as it makes designing flows of logic much easier (first send this, wait for response, do this, ...).
+
+
+
+----- Original Message -----
+From: Stefan Thomas <moon at justmoon.de>
+To: bitcoin-development at lists.sourceforge.net
+Cc: 
+Sent: Thursday, August 16, 2012 8:21 PM
+Subject: Re: [Bitcoin-development] BIP 35: add mempool message
+
+> This seems safe, although it forces other full implementations that want to
+> expose protocol version 60002 (or later) to also implement this. What do they
+> think about this?
+
+BitcoinJS will implement it, it's a useful feature and there is no
+reason not to support it.
+
+Two comments from my end:
+
+- This is just a thought, but I wouldn't mind using a new inv_type for
+this, e.g. MSG_MEMTX. I could conceivably see a future where broadcast
+and relay txs are stored in a very fast local cache whereas the general
+mempool is stored in a slower data structure. By being able to
+distinguish incoming getdata requests I can save a few milliseconds by
+querying the right storage right away. Might also help with things like
+telling apart broadcast/relayed transactions from the response to a
+mempool request for purposes like DoS scoring etc.
+
+Not a big deal by any means, but I also don't see a downside to it.
+inv_types are not a scarce resource, we have four billion of them available.
+
+For now clients would just treat MSG_TX and MSG_MEMTX interchangeably.
+
+- If a node doesn't have anything in it's mempool it sends back an empty
+inv message. This is either ambiguous (if other things also send empty
+inv messages in the future) or arbitrary (why should an empty inv be
+associated with a mempool request of all things.) Instead why not
+respond with an inv message that contains a single element of type
+MSG_MEMTX and hash 0. That would a very direct way to indicate that this
+response is associated with a mempool request.
+
+
+I'm not married to either suggestion, just trying to add my perspective.
+One thing you notice when reimplementing Bitcoin is that Bitcoin's
+protocol leaves out a lot of information not for space reasons, but
+because the reference client's implementation doesn't happen to need it.
+Sometimes however this locks other clients into doing things the same
+way. If we can make the protocol a bit richer, especially if this
+doesn't cost any extra bytes, then we should consider it as it might
+help some implementation down the road make a neat optimization.
+
+
+On 8/16/2012 7:56 PM, Pieter Wuille wrote:
+> On Thu, Aug 16, 2012 at 01:32:04PM -0400, Jeff Garzik wrote:
+>> Consensus was we should do a BIP for all P2P changes, so here it is...
+>>? feedback requested.
+>>
+>> https://en.bitcoin.it/wiki/BIP_0035
+> I like the idea of being able to query the memory pool of a node; the
+> implementation is straightforward, which is good. Maybe effectively using the
+> command can be added? I suppose it is interesting in general for nodes to
+> get a memory pool refill at startup anyway.
+>
+>> 1) Upon receipt of a "mempool" message, the node will respond
+>>? ? with an "inv" message containing MSG_TX hashes of all the
+>>? ? transactions in the node's transaction memory pool.
+>>
+>>? ? An "inv" message is always returned, even if empty.
+> I'm not sure about this last. What is it good for? inv packets can always be
+> sent, even not in response to others, so it is not that this gives you an
+> acknowledgement the mempool is updated?
+>
+>> 3) Feature discovery is enabled by checking two "version" message attributes:
+>>
+>>? ? a) Protocol version >= 60002
+>>? ? b) NODE_NETWORK bit set in nServices
+> This seems safe, although it forces other full implementations that want to
+> expose protocol version 60002 (or later) to also implement this. What do they
+> think about this?
+>
+> I would like to suggest to allocate an extra service bit for this. We still
+> have 63 left, and this is a well-defined and useful extra service that was
+> not yet provided by any earlier node. Doing that would also mean that
+> mempool-providing survices may be discovered before connecting to them, as
+> the service bits are carried around in addr messages. Any opinions about that?
+>
+
+
+------------------------------------------------------------------------------
+Live Security Virtual Conference
+Exclusive live event will cover all the ways today's security and 
+threat landscape has changed and how IT managers can respond. Discussions 
+will include endpoint security, mobile security and the latest in malware 
+threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+_______________________________________________
+Bitcoin-development mailing list
+Bitcoin-development at lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+
+From jgarzik at exmulti.com  Thu Aug 16 21:05:58 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Thu, 16 Aug 2012 17:05:58 -0400
+Subject: [Bitcoin-development] BIP 35: add mempool message
+In-Reply-To: <1345150660.5139.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+References: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+	<20120816175637.GA13454@vps7135.xlshosting.net>
+	<502D482A.2090609@justmoon.de>
+	<1345150660.5139.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+Message-ID: <CA+8xBpd4uHO63QCFtOqLB6SPLYO_9y2fQGbNLFH81ovGukhBmg@mail.gmail.com>
+
+On MSG_MEMTX:  The current version has a much higher Just Works value.
+
+On empty "inv":  It is generally better to do something
+unconditionally, than have a response generated only under certain
+conditions.
+
+And Alan is correct to note that unknown messages are ignored
+(intentionally, for expansion).  However, unconditionally returning a
+response has little to do with feature probing/discovery.  It is
+simply a clear, deterministic indication that processing is complete,
+for each invocation.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From mike at plan99.net  Fri Aug 17 12:27:04 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Fri, 17 Aug 2012 14:27:04 +0200
+Subject: [Bitcoin-development] BIP 35: add mempool message
+In-Reply-To: <CA+8xBpd4uHO63QCFtOqLB6SPLYO_9y2fQGbNLFH81ovGukhBmg@mail.gmail.com>
+References: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+	<20120816175637.GA13454@vps7135.xlshosting.net>
+	<502D482A.2090609@justmoon.de>
+	<1345150660.5139.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<CA+8xBpd4uHO63QCFtOqLB6SPLYO_9y2fQGbNLFH81ovGukhBmg@mail.gmail.com>
+Message-ID: <CANEZrP2FBgCYf3RL381jsTCehg+hF3R9jD_P+wvHufCSyeyfLg@mail.gmail.com>
+
+I think MSG_TX is fine. Simply sending an inv to the other node at startup
+would work, but it's better to request it explicitly as it will let the
+connecting peer configure a bloom filter before requesting mempool
+contents. It's already too heavy for mobile clients to download the entire
+mempool contents at startup so I probably wouldn't implement/activate
+support for this on the bitcoinj side until bloom filtering is done, and
+then this BIP would have to be updated to reflect that the response from
+mempool is filtered.
+
+On Thu, Aug 16, 2012 at 11:05 PM, Jeff Garzik <jgarzik at exmulti.com> wrote:
+
+> On MSG_MEMTX:  The current version has a much higher Just Works value.
+>
+> On empty "inv":  It is generally better to do something
+> unconditionally, than have a response generated only under certain
+> conditions.
+>
+> And Alan is correct to note that unknown messages are ignored
+> (intentionally, for expansion).  However, unconditionally returning a
+> response has little to do with feature probing/discovery.  It is
+> simply a clear, deterministic indication that processing is complete,
+> for each invocation.
+>
+> --
+> Jeff Garzik
+> exMULTI, Inc.
+> jgarzik at exmulti.com
+>
+>
+> ------------------------------------------------------------------------------
+> Live Security Virtual Conference
+> Exclusive live event will cover all the ways today's security and
+> threat landscape has changed and how IT managers can respond. Discussions
+> will include endpoint security, mobile security and the latest in malware
+> threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120817/cd297299/attachment.html>
+
+From pieter.wuille at gmail.com  Fri Aug 17 13:40:01 2012
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Fri, 17 Aug 2012 15:40:01 +0200
+Subject: [Bitcoin-development] BIP 35: add mempool message
+In-Reply-To: <CA+8xBpd4uHO63QCFtOqLB6SPLYO_9y2fQGbNLFH81ovGukhBmg@mail.gmail.com>
+References: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+	<20120816175637.GA13454@vps7135.xlshosting.net>
+	<502D482A.2090609@justmoon.de>
+	<1345150660.5139.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<CA+8xBpd4uHO63QCFtOqLB6SPLYO_9y2fQGbNLFH81ovGukhBmg@mail.gmail.com>
+Message-ID: <20120817134000.GA30465@vps7135.xlshosting.net>
+
+On Thu, Aug 16, 2012 at 05:05:58PM -0400, Jeff Garzik wrote:
+> On MSG_MEMTX:  The current version has a much higher Just Works value.
+> 
+> On empty "inv":  It is generally better to do something
+> unconditionally, than have a response generated only under certain
+> conditions.
+> 
+> And Alan is correct to note that unknown messages are ignored
+> (intentionally, for expansion).  However, unconditionally returning a
+> response has little to do with feature probing/discovery.  It is
+> simply a clear, deterministic indication that processing is complete,
+> for each invocation.
+
+I disagree. Returning an empty "inv" is a very strange way of replying
+"empty mempool". Bitcoin P2P is not a request-response protocol, and
+"inv" messages are sent where there are inventory items to send. The
+reaction to a request (for example "getblocks") can be nothing, or one
+or more "inv" messages if necessary. Special casing an empty "inv" to
+mean empty mempool is trying to hack a request-response system on top
+of the asynchronous system.
+
+If there is need for confirming the transmission of the mempool is
+complete, the proposal to use a MSG_MEMTX sounds good to me. No client
+will ever receive such an inv without requesting the mempool, and
+implementing handling MSG_MEMTX is trivial.
+
+-- 
+Pieter
+
+
+
+From jgarzik at exmulti.com  Fri Aug 17 16:51:33 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Fri, 17 Aug 2012 12:51:33 -0400
+Subject: [Bitcoin-development] BIP 35: add mempool message
+In-Reply-To: <20120817134000.GA30465@vps7135.xlshosting.net>
+References: <CA+8xBpcfxdpg-z4OQab3379amznM30Ae-Kurko0BKuySwfBy+Q@mail.gmail.com>
+	<20120816175637.GA13454@vps7135.xlshosting.net>
+	<502D482A.2090609@justmoon.de>
+	<1345150660.5139.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<CA+8xBpd4uHO63QCFtOqLB6SPLYO_9y2fQGbNLFH81ovGukhBmg@mail.gmail.com>
+	<20120817134000.GA30465@vps7135.xlshosting.net>
+Message-ID: <CA+8xBpcLk04m8pX3bA14H4MBamT1-1Exd6EyxOZqER8u9C0WAA@mail.gmail.com>
+
+On Fri, Aug 17, 2012 at 9:40 AM, Pieter Wuille <pieter.wuille at gmail.com> wrote:
+> On Thu, Aug 16, 2012 at 05:05:58PM -0400, Jeff Garzik wrote:
+>> On MSG_MEMTX:  The current version has a much higher Just Works value.
+>>
+>> On empty "inv":  It is generally better to do something
+>> unconditionally, than have a response generated only under certain
+>> conditions.
+>>
+>> And Alan is correct to note that unknown messages are ignored
+>> (intentionally, for expansion).  However, unconditionally returning a
+>> response has little to do with feature probing/discovery.  It is
+>> simply a clear, deterministic indication that processing is complete,
+>> for each invocation.
+>
+> I disagree. Returning an empty "inv" is a very strange way of replying
+> "empty mempool". Bitcoin P2P is not a request-response protocol, and
+> "inv" messages are sent where there are inventory items to send. The
+> reaction to a request (for example "getblocks") can be nothing, or one
+> or more "inv" messages if necessary. Special casing an empty "inv" to
+> mean empty mempool is trying to hack a request-response system on top
+> of the asynchronous system.
+
+OK, just updated 'mempool' branch to not return "inv" if mempool is empty.
+
+
+> If there is need for confirming the transmission of the mempool is
+> complete, the proposal to use a MSG_MEMTX sounds good to me. No client
+> will ever receive such an inv without requesting the mempool, and
+> implementing handling MSG_MEMTX is trivial.
+
+MSG_MEMTX is not a good idea for this use case.  Just sent a ping(nonce).
+
+Bitcoin P2P processes requests in-order, and responds accordingly.
+The remote end may insert asynchronous messages into the response
+stream, certainly, but responses to queries are processed and returned
+in-order.  A 'getdata' response is fully sent before a 'ping' response
+is sent, etc.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From bitcoin-list at bluematt.me  Mon Aug 20 16:06:14 2012
+From: bitcoin-list at bluematt.me (Matt Corallo)
+Date: Mon, 20 Aug 2012 12:06:14 -0400
+Subject: [Bitcoin-development] Warning to rawtx creators: bug in
+	SIGHASH_SINGLE
+Message-ID: <1345478774.3471.4.camel@bmthinkpad.lan.bluematt.me>
+
+If you are playing around with the current rawtx API, be careful using
+SIGHASH_SINGLE:
+
+When parsing a transaction input, which uses a SIGHASH_SINGLE signature,
+and the given input's index is >= the total number of outputs in the
+current transaction, bitcoind doesn't sign anything useful, it signs the
+constant 1.
+
+Thus, if anyone were to create such an invalid transaction, any future
+outputs to the public key which created the signature would be
+immediately steal-able by anyone.
+
+The conclusion on how to fix the issue was to fix the rawtx API to block
+such transactions instead of creating a hardfork-risk or further
+complicating transaction verification.
+
+Code (in script.cpp:SignatureHash, under SIGHASH_SINGLE):
+        if (nOut >= txTmp.vout.size())
+        {
+            printf("ERROR: SignatureHash() : nOut=%d out of range\n", nOut);
+            return 1;
+        }
+
+Matt
+
+
+
+
+From voights at gmail.com  Wed Aug 22 02:25:20 2012
+From: voights at gmail.com (Forrest Voight)
+Date: Tue, 21 Aug 2012 22:25:20 -0400
+Subject: [Bitcoin-development] Full Disclosure: CVE-2012-2459 (block merkle
+	calculation exploit)
+Message-ID: <CAOCHLotLO8eaLJV2Kkm_YEvbDb80A1VzVGuvujm6NjjGraFEsQ@mail.gmail.com>
+
+Since at least 80% of the Bitcoin network is now protected against
+this attack, I've been given permission to disclose it:
+
+
+The Merkle hash implementation that Bitcoin uses to calculate the
+Merkle root in a block header is flawed in that one can easily
+construct multiple lists of hashes that map to the same Merkle root.
+For example, merkle_hash([a, b, c]) and merkle_hash([a, b, c, c])
+yield the same result. This is because, at every iteration, the Merkle
+hash function pads its intermediate list of hashes with the last hash
+if the list is of odd length, in order to make it of even length.
+
+And so, the Merkle root function can be effectively preimaged by
+changing the input so that one of the intermediate lists is of even
+length with the last two elements equal (where originally it was of
+odd length with a last element equal to the earlier mentioned two). As
+was later noted, this extends to any input length that is not a power
+of two: merkle_hash([a, b, c, d, e, f]) == merkle_hash([a, b, c, d, e,
+f, e, f]). Note that to maintain the same root hash, the only
+flexibility that exists is duplication of elements.
+
+As a result, two blocks can easily be created that have the same block
+hash, though one can be valid and the other invalid, by duplicating
+one or more of the transactions in a way that maintains the Merkle
+root hash. Duplicating any transaction will make the block invalid,
+since the block double spends a certain past transaction output.
+
+An unpatched Bitcoin installation can be permanently wedged at its
+current highest block using this and the fact that Bitcoin caches
+orphan blocks in a disk-backed database. To do so, the attacker must
+send it a valid block (that will eventually make it into the
+blockchain) made invalid by duplicating one of the transactions in a
+way that preserves the Merkle root. The attacker doesn't even need to
+mine their own block - instead, they can listen for a block, then
+mutate it in this way, and pass it on to their peers.
+
+Once the victim receives this invalid block, they will cache it on
+disk, attempt to process it, and reject it as invalid. Re-requesting
+the block will not be even attempted since Bitcoin believes that it
+already has the block, since it has one with the same hash. Bitcoin
+eventually displays the "WARNING: Displayed transactions may not be
+correct!  You may need to upgrade, or other nodes may need to
+upgrade." warning when the blockchain extends further beyond the
+received invalid block.
+
+The problem was fixed by Gavin Andresen in Bitcoin commit be8651d [1]
+by rejecting blocks with duplicate transactions in CheckBlock,
+preventing them from being cached at all.
+
+
+Cheers,
+Forrest Voight
+http://forre.st/
+
+[1]: https://github.com/bitcoin/bitcoin/commit/be8651dde7b59e50e8c443da71c706667803d06d
+
+
+
+From luke at dashjr.org  Wed Aug 22 02:53:21 2012
+From: luke at dashjr.org (Luke-Jr)
+Date: Wed, 22 Aug 2012 02:53:21 +0000
+Subject: [Bitcoin-development] Full Disclosure: CVE-2012-2459 (block
+	merkle calculation exploit)
+In-Reply-To: <CAOCHLotLO8eaLJV2Kkm_YEvbDb80A1VzVGuvujm6NjjGraFEsQ@mail.gmail.com>
+References: <CAOCHLotLO8eaLJV2Kkm_YEvbDb80A1VzVGuvujm6NjjGraFEsQ@mail.gmail.com>
+Message-ID: <201208220253.24822.luke@dashjr.org>
+
+On Wednesday, August 22, 2012 2:25:20 AM Forrest Voight wrote:
+> An unpatched Bitcoin installation can be permanently wedged at its
+> current highest block using this and the fact that Bitcoin caches
+> orphan blocks in a disk-backed database. To do so, the attacker must
+> send it a valid block (that will eventually make it into the
+> blockchain) made invalid by duplicating one of the transactions in a
+> way that preserves the Merkle root. The attacker doesn't even need to
+> mine their own block - instead, they can listen for a block, then
+> mutate it in this way, and pass it on to their peers.
+
+From the mining perspective, the unpatched install might not be simply wedged: 
+it will also follow a competing smaller blockchain. An attacker could have 
+used this exploit against a number of large miners (say about 40% or so) and 
+exchanges to pull off any number of double-spend attacks until the miners 
+noticed they had been forked and fixed their bitcoind. That is, the attacker 
+could easily hijack as much of the miners has he wanted for his own purposes 
+including phony 6+ confirmation transactions. On a more subtle level, the 
+attacker could target certain blocks they wanted orphans by performing this 
+attack on a majority of miners with the "tip" block he wanted orphaned.
+
+This vulnerability is also the reason why Eloipool (the software behind 
+Eligius, EclipseMC, TripleMining, and other pools) has attempted to produce 
+blocks with only transaction counts that are powers of two; such blocks cannot 
+be used for an attack even against vulnerable clients.
+
+Luke
+
+
+
+From mike at plan99.net  Wed Aug 22 08:10:29 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Wed, 22 Aug 2012 10:10:29 +0200
+Subject: [Bitcoin-development] Full Disclosure: CVE-2012-2459 (block
+ merkle calculation exploit)
+In-Reply-To: <CAOCHLotLO8eaLJV2Kkm_YEvbDb80A1VzVGuvujm6NjjGraFEsQ@mail.gmail.com>
+References: <CAOCHLotLO8eaLJV2Kkm_YEvbDb80A1VzVGuvujm6NjjGraFEsQ@mail.gmail.com>
+Message-ID: <CANEZrP3Dwnv7s5J4qS=Ewj=qoYp=rHxX6LgY9sBmUfGJqs3LrA@mail.gmail.com>
+
+Thank you for practicing responsible disclosure.
+
+Now the vulnerability is out in the open, could the code please be updated
+to contain the information here, but in the comments? Gavins commit merely
+mentions there is a DoS attack without discussing further what it involves,
+also, the vulnerability of the merkle hash function should ideally be noted
+inside it.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120822/78ba1b08/attachment.html>
+
+From gavinandresen at gmail.com  Tue Aug 28 20:00:47 2012
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Tue, 28 Aug 2012 16:00:47 -0400
+Subject: [Bitcoin-development] Please help test: 0.7.0 release candidate 1
+Message-ID: <CABsx9T2ii=2WSTw6O0oN6v4HRTR_TfiMBo+ogtEX8V+6GpN5Wg@mail.gmail.com>
+
+Bitcoin version 0.7.0 release candidate 1 binaries are now available
+for download at:
+  http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.7.0/test/
+
+Please use the issue tracker at
+https://github.com/bitcoin/bitcoin/issues to report bugs.
+
+Notable changes:
+
+Qt GUI
+------
+* Add UI RPC console / debug window
+* Re-Enable URI handling on Windows, add safety checks and tray-notifications
+* Add 2 labels to the overviewpage that display Wallet and Transaction
+status (obsolete or current)
+* Extend the optionsdialog (e.g. language selection) and re-work it to
+a tabbed UI
+* Merge sign/verify message into a single window with tabbed UI
+* Improve error reporting at startup
+* Fine-grained UI updates for a much smoother UI during block downloads
+* Reorganize tray icon menu into more logical order
+* Persistently poll for balance change when number of blocks changed
+* Much better translations
+* Added 'immature balance' display on the overview page
+* (Windows only): enable ASLR and DEP for bitcoin-qt.exe
+* (Windows only): add meta-data to bitcoin-qt.exe (e.g. description)
+
+Bitcoin Improvement Proposals implemented
+-----------------------------------------
+BIP 22 - 'getblocktemplate', 'submitblock' RPCs
+
+JSON-RPC API
+------------
+* Internal HTTP server is now thread-per-connection, rather than
+  a single-threaded queue that would stall on network I/O.
+* Internal HTTP server supports HTTP/1.1, pipelined requests and
+  connection keep-alive.
+* Support JSON-RPC 2.0 batches, to encapsulate multiple JSON-RPC requests
+  within a single HTTP request.
+* IPv6 support
+* Added raw transaction API.  See https://gist.github.com/2839617
+* Added 'getrawmempool', to list contents of TX memory pool
+* Added 'getpeerinfo', to list data about each connected network peer
+* Added 'listaddressgroupings' for better coin control
+* Rework gettransaction, getblock calls. 'gettransaction' responds for
+  non-wallet TXs now.
+* Remove deprecated RPC 'getblocknumber'
+* New blockchain checkpoint at block 193,000
+* listtransactions output now displays "smart" times for transactions,
+  and 'blocktime' and 'timereceived' fields were added
+
+
+P2P networking
+--------------
+* IPv6 support
+* Tor hidden service support
+* Attempts to fix "stuck blockchain download" problems
+* Replace BDB database "addr.dat" with internally-managed "peers.dat"
+  file containing peer address data.
+* Lower default send buffer from 10MB to 1MB
+* proxy: SOCKS5 by default
+* Support connecting by hostnames passed to proxy (-proxydns)
+* Add -seednode connections, and use this for -dnsseed + -proxydns
+* Added -externalip and -discover
+* Add -onlynet to connect only to a given network (IPv4, IPv6, or Tor)
+* Separate listening sockets, -bind=<addr>
+
+
+Internal codebase
+-----------------
+* Additional unit tests
+* Compile warning fixes
+
+
+Miscellaneous
+-------------
+* Reopen debug.log upon SIGHUP
+* Bash programmable completion for bitcoind(1)
+* On supported OS's, each thread is given a useful name
+
+Thanks to everybody who contributed to this release:
+=======================================
+
+Chris Moore
+Christian von Roques
+David Joel Schwartz
+Douglas Huff
+Fordy
+Gavin Andresen
+Giel van Schijndel
+Gregory Maxwell
+Jeff Garzik
+Luke Dashjr
+Matt Corallo
+Michael Ford
+Michael Hendricks
+Peter Todd
+Philip Kaufmann
+Pieter Wuille
+R E Broadley
+Ricardo M. Correia
+Rune K. Svendsen
+Scott Ellis
+Stephane Glondu
+Wladimir J. van der Laan
+cardpuncher
+coderrr
+fanquake
+grimd34th
+sje397
+xanatos
+
+
+

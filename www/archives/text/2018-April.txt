@@ -1,0 +1,3521 @@
+From willtech at live.com.au  Sun Apr  1 14:37:13 2018
+From: willtech at live.com.au (Damian Williamson)
+Date: Sun, 1 Apr 2018 14:37:13 +0000
+Subject: [bitcoin-dev] feature: Enhance privacy by change obfuscation
+In-Reply-To: <BCD26605-01B0-437C-8D4A-68DA52055AFB@voskuil.org>
+References: <PS2P216MB0179FCA8077AAE946BFA2D069DD50@PS2P216MB0179.KORP216.PROD.OUTLOOK.COM>
+	<874lleexud.fsf@eklitzke.org>,
+	<BCD26605-01B0-437C-8D4A-68DA52055AFB@voskuil.org>
+Message-ID: <PS2P216MB0179F3FE8D11A9161F0F502E9DA70@PS2P216MB0179.KORP216.PROD.OUTLOOK.COM>
+
+I note that Electrum v3.0.6 has an option to use multiple change addresses. It is off by default.
+
+
+Regards,
+
+Damian Williamson
+
+________________________________
+From: Eric Voskuil <eric at voskuil.org>
+Sent: Monday, 19 March 2018 5:59:28 AM
+To: Evan Klitzke; Bitcoin Protocol Discussion
+Cc: Damian Williamson
+Subject: Re: [bitcoin-dev] feature: Enhance privacy by change obfuscation
+
+> This would be really expensive for the network due to the bloat in UTXO size, a cost everyone has to pay for.
+
+Without commenting on the merits of this proposal, I?d just like to correct this common misperception. There is no necessary additional cost to the network from the count of unspent outputs. This perception arises from an implementation detail of particular node software. There is no requirement for redundant indexing of unspent outputs.
+
+e
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180401/c0f282f8/attachment.html>
+
+From rusty at rustcorp.com.au  Mon Apr  2 23:46:45 2018
+From: rusty at rustcorp.com.au (Rusty Russell)
+Date: Tue, 03 Apr 2018 09:16:45 +0930
+Subject: [bitcoin-dev] Signature bundles
+Message-ID: <874lktdvdm.fsf@rustcorp.com.au>
+
+Hi all!
+
+        Since there's activity on new signature types, I think it's
+worth considering a more flexible alternative to
+SIGHASH_SINGLE|SIGHASH_ANYONECANPAY.  See Usefulness for why.
+
+Proposal: Two bits: SIGHASH_BUNDLESTART/SIGHASH_INBUNDLE
+--------
+
+A signature needs to indicate that signs only part of a transaction's
+inputs and outputs (a.k.a. a "bundle").  Bundles can be combined
+together into larger transactions, and non-bundled signature inputs /
+outputs appended.
+
+Two per-tx counters are kept: bundle_inputs_used and
+bundle_outputs_used, both starting at 0.
+
+SIGHASH_BUNDLESTART indicates two var_int sit between the sighash flags
+and the signature itself: the first is the number of inputs in this
+bundle starting at bundle_inputs_used, the second is the number of
+outputs starting at bundle_outputs_used.  bundle_inputs_used and
+bundle_outputs_used have these values added, for next time.
+
+SIGHASH_INBUNDLE indicates that this signature applies to the current
+bundle.  The txCopy is reduced to cover only the inputs and
+outputs in the current bundle, and the signature commits to the two
+var_ints from SIGHASH_BUNDLESTART along with the sighash flags.
+
+(A proper BIP would detail how any weird stuff makes the tx invalid:
+take that as read).
+
+Usage
+-----
+You can use this to sign a transaction just like now, with only two
+extra bytes and these SIGHASH flags.  But this transaction can now be
+aggregated by pasting on another bundle, or attaching other normal
+inputs and/or outputs.  You can aggregate as many transactions as you
+want this way.
+
+Usefulness
+----------
+
+One of the issues we've struck with lightning is trying to guess future
+fees for commitment transactions: we can't rely on getting another
+signature from our counterparty to increase fees.  Nor can we use
+parent-pays-for-child since the outputs we can spend are timelocked.
+
+This "holding a valid tx but I want to add fees later without
+re-signing" seems like a general problem.  The only current method would
+be to engineer transactions as a single-input-single-output tx and use
+SIGHASH_SINGLE|SIGHASH_ANYONECANPAY; this is very limiting.
+
+The other obvious application would be to run public aggregators, which
+would provide throughput promises ("if you send me a tx with feerate X,
+I will make sure it goes onchain within a week").  This service would
+sometimes profit, if it can do so cheaper than it quoted, and sometimes
+have to add additional fees.  The existence of such services should
+smooth the current fee cliff by allowing users and services to offer
+"slow mode" payment options without requiring interaction.
+
+Feedback welcome!
+Rusty.
+
+From naumenko.gs at gmail.com  Mon Apr  2 22:18:07 2018
+From: naumenko.gs at gmail.com (Gleb Naumenko)
+Date: Mon, 2 Apr 2018 15:18:07 -0700
+Subject: [bitcoin-dev] Low-bandwidth transaction relay
+Message-ID: <9ab6e32e-db51-4ce4-8f3c-3a77f7b1f9bd@Spark>
+
+Hi all,
+I have a couple of ideas regarding transaction relay protocol and wanted to share it with and probably get some feedback.
+
+I did some emulation and simulation and found out that around 90% of INV messages sent by public-IP nodes are idle (duplicate), obviously because each node creates 8 connections. ?I also realized that sending INV messages is a significant part of the overall bandwidth consumed by a public-IP node. At a larger scale, this will result in people not able to run a public-IP node.
+
+My idea is in some sense similar to BIP37 but applied to public-IP nodes. Here I want to emphasize that all the nodes will still receive *all* of the transactions. A new protocol should also keep the same zero-trust, robustness, decentralization guarantees and latency.
+
+Idea: while joining the network, a new node agrees on some filter with each of 8 nodes it connects to. So that NewNode <-> Node_A will be used to relay only a subset of transactions, NewNode <-> Node_B for another subset. This will significantly decrease the redundancy.
+
+To keep the guarantees, I would keep some redundancy (for example, each transaction INV is sent over 2 links).
+
+To make it robust to attacks, I have 2 extensions in my mind:
+1. Set reconciliation (for a subset of transactions) with *other* nodes. Getting a bloom filter of a subset of the mempool transactions from Node_B may help to figure out whether Node_A is malicious, very slow, etc.
+2. Rotating the filters every N minutes (N < 10)
+
+I can see some issues with latency here, but I believe this problem has a solution.
+
+Feedback is appreciated!
+
+If you want to look at a draft of the proposal ? please let me know.
+If there were any similar ideas ? please let me know.
+
+Best,
+Gleb
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180402/a990f1dc/attachment.html>
+
+From aj at erisian.com.au  Tue Apr  3 03:57:23 2018
+From: aj at erisian.com.au (Anthony Towns)
+Date: Tue, 3 Apr 2018 13:57:23 +1000
+Subject: [bitcoin-dev] Signature bundles
+In-Reply-To: <874lktdvdm.fsf@rustcorp.com.au>
+References: <874lktdvdm.fsf@rustcorp.com.au>
+Message-ID: <20180403035723.GA21120@erisian.com.au>
+
+On Tue, Apr 03, 2018 at 09:16:45AM +0930, Rusty Russell via bitcoin-dev wrote:
+> Proposal: Two bits: SIGHASH_BUNDLESTART/SIGHASH_INBUNDLE
+> --------
+> 
+> A signature needs to indicate that signs only part of a transaction's
+> inputs and outputs (a.k.a. a "bundle").  Bundles can be combined
+> together into larger transactions, and non-bundled signature inputs /
+> outputs appended.
+
+> Two per-tx counters are kept: bundle_inputs_used and
+> bundle_outputs_used, both starting at 0.
+> 
+> SIGHASH_BUNDLESTART indicates two var_int sit between the sighash flags
+> and the signature itself: the first is the number of inputs in this
+> bundle starting at bundle_inputs_used, the second is the number of
+> outputs starting at bundle_outputs_used.  bundle_inputs_used and
+> bundle_outputs_used have these values added, for next time.
+> 
+> SIGHASH_INBUNDLE indicates that this signature applies to the current
+> bundle.  The txCopy is reduced to cover only the inputs and
+> outputs in the current bundle, and the signature commits to the two
+> var_ints from SIGHASH_BUNDLESTART along with the sighash flags.
+
+So suppose you have two bundles you want to combine together, and they
+didn't pay enough fees, so you have an extra input so you can bump up the
+fees. Your tx looks like:
+
+bundle 1:
+  input 1:   500 bits, signed by key A [pre]
+  input 2:   500 bits, signed by key B [pre]
+  input 3:   500 bits, signed by key C
+  output 1: 1450 bits
+bundle 2:
+  input 3:   600 bits, signed by key D [pre]
+  output 2:  200 bits
+  output 3:  380 bits
+extra:
+  input 4:  2000 bits, signed by key E
+  output 4:  864 bits
+
+Keys A, B and D have pre-signed their respective bundle, but you have
+control over keys C and E at the time you're constructing the transaction.
+
+So the things you'd have to do when signing would be:
+
+  A,B,C decide on an order for the inputs and outputs (ideally just sort them)
+  Because A turns out to be first, A signs with BUNDLESTART[3,1] INBUNDLE
+  Because B is second, B just signs with INBUNDLE
+
+  D just signs with BUNDLESTART[3,1] INBUNDLE
+
+  And finally they get collected and C and E signs the entire transaction
+  with SIGHASH_ALL
+
+All bundles have to appear together, before any extra inputs; though they
+can be reordered arbitrarily prior to adding the SIGHASH_ALL sigs.
+
+If you've got one bundle that overpays fees and another that underpays,
+you can safely combine the two only if you can put a SIGHASH_ALL sig in
+the one that overpays (otherwise miners could just make their own tx of
+just the overpaying bundle).
+
+This could replace SINGLE|ANYONECANPAY at a cost of an extra couple of
+witness bytes.
+
+I think BUNDLESTART is arguably redundant -- you could just infer
+BUNDLESTART if you see an INBUNDLE flag when you're not already in
+a bundle. Probably better to have the flag to make parsing easier,
+so just have the rule be BUNDLESTART is set for precisely the first
+INBUNDLE signature since the last bundle finished.
+
+Should be straightforward to establish BIP-69-style ordering rules too:
+within a bundle, order inputs lexically, then order outputs lexically;
+order bundles lexically by the first input; order remaining inputs
+lexically, then order remaining outputs lexically.
+
+I think the only reason to do bundling like this (rather than just post
+separate transactions) is to deal with fees? It doesn't seem like you gain
+any privacy -- the inputs/outputs in each bundle are tightly related, and
+you're only saving about 10 bytes due to sharing a transaction structure.
+
+Anyway, seems like it makes sense. 
+
+> One of the issues we've struck with lightning is trying to guess future
+> fees for commitment transactions: we can't rely on getting another
+> signature from our counterparty to increase fees.  Nor can we use
+> parent-pays-for-child since the outputs we can spend are timelocked.
+
+That doesn't quite work with the HTLC-Success/HTLC-Timeout transactions
+though, does it? They spend outputs from the commitment transaction
+and need to be pre-signed by your channel partner in order to ensure
+the output address is correct -- but if the commitment transaction gets
+bundled, its txid will change, so it can't be pre-signed.
+
+FWIW, a dumb idea I had for this problem was to add a zero-value
+anyone-can-spend output to commitment transactions, that can then be
+used with CPFP to bump the fees. Not very nice for UTXO bloat if fee
+bumping isn't needed though, and I presume it would fail to pass the
+dust threshold...
+
+I wonder if it would be plausible to have after-the-fact fee-bumping
+via special sighash flags at the block level anyway though. Concretely:
+say you have two transactions, X and Y, that don't pay enough in fees,
+you then provide a third transaction whose witness is [txid-for-X,
+txid-for-Y, signature committing to (txid-for-X, txid-for-Y)], and can
+only be included in a block if X and Y are also in the same block. You
+could make that fairly concise if you allowed miners to replace txid-for-X
+with X's offset within the block (or the delta between X's txnum and the
+third transaction's txnum), though coding that probably isn't terribly
+straightforward.
+
+Cheers,
+aj
+
+
+From rusty at rustcorp.com.au  Tue Apr  3 05:31:24 2018
+From: rusty at rustcorp.com.au (Rusty Russell)
+Date: Tue, 03 Apr 2018 15:01:24 +0930
+Subject: [bitcoin-dev] Signature bundles
+In-Reply-To: <20180403035723.GA21120@erisian.com.au>
+References: <874lktdvdm.fsf@rustcorp.com.au>
+	<20180403035723.GA21120@erisian.com.au>
+Message-ID: <87sh8cc0ur.fsf@rustcorp.com.au>
+
+Anthony Towns via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> writes:
+> If you've got one bundle that overpays fees and another that underpays,
+> you can safely combine the two only if you can put a SIGHASH_ALL sig in
+> the one that overpays (otherwise miners could just make their own tx of
+> just the overpaying bundle).
+
+This is a potential problem, yes :( And I'm not sure how to solve it,
+unless you do some crazy thing like commit to a set of keys which are
+allowed to bundle, which kind of defeats the generality of outsourcing.
+
+> This could replace SINGLE|ANYONECANPAY at a cost of an extra couple of
+> witness bytes.
+>
+> I think BUNDLESTART is arguably redundant -- you could just infer
+> BUNDLESTART if you see an INBUNDLE flag when you're not already in
+> a bundle. Probably better to have the flag to make parsing easier,
+> so just have the rule be BUNDLESTART is set for precisely the first
+> INBUNDLE signature since the last bundle finished.
+
+Indeed.
+
+>> One of the issues we've struck with lightning is trying to guess future
+>> fees for commitment transactions: we can't rely on getting another
+>> signature from our counterparty to increase fees.  Nor can we use
+>> parent-pays-for-child since the outputs we can spend are timelocked.
+>
+> That doesn't quite work with the HTLC-Success/HTLC-Timeout transactions
+> though, does it? They spend outputs from the commitment transaction
+> and need to be pre-signed by your channel partner in order to ensure
+> the output address is correct -- but if the commitment transaction gets
+> bundled, its txid will change, so it can't be pre-signed.
+
+Not without SIGHASH_NOINPUT, no.
+
+> FWIW, a dumb idea I had for this problem was to add a zero-value
+> anyone-can-spend output to commitment transactions, that can then be
+> used with CPFP to bump the fees. Not very nice for UTXO bloat if fee
+> bumping isn't needed though, and I presume it would fail to pass the
+> dust threshold...
+
+Yeah, let's not do that.
+
+> I wonder if it would be plausible to have after-the-fact fee-bumping
+> via special sighash flags at the block level anyway though. Concretely:
+> say you have two transactions, X and Y, that don't pay enough in fees,
+> you then provide a third transaction whose witness is [txid-for-X,
+> txid-for-Y, signature committing to (txid-for-X, txid-for-Y)], and can
+> only be included in a block if X and Y are also in the same block. You
+> could make that fairly concise if you allowed miners to replace txid-for-X
+> with X's offset within the block (or the delta between X's txnum and the
+> third transaction's txnum), though coding that probably isn't terribly
+> straightforward.
+
+What would it spend though?  Can't use an existing output, so this
+really needs to be stashed in an *output script*, say a zero-amount
+output which is literally a push of txids, and is itself unspendable.
+
+        <txid1>... <txidN>
+
+That's pretty large though, and it's non-witness data (though
+discardable).  How about 'OP_NOP4 <N> <ripemd160-of-last-N-txids>'?
+Then the miner just bundles those tx all together?
+
+Cheers,
+Rusty.
+
+From jim.posen at gmail.com  Tue Apr  3 05:34:39 2018
+From: jim.posen at gmail.com (Jim Posen)
+Date: Mon, 2 Apr 2018 22:34:39 -0700
+Subject: [bitcoin-dev] Optimized Header Sync
+In-Reply-To: <CADabwBDiT2zNPHZ2=OyvCVrSY3Km2oyTnhRCHyMNsjW2vLMmOg@mail.gmail.com>
+References: <CADZtCSg7+x-sg-ysgacXobRexOVwT+k9fr6a9S-6xU2w8f8m3A@mail.gmail.com>
+	<CADabwBAjTRdVqsL+V=YdQ+kr8+LtSPOeSXUJOzKoPNdKEbAOWQ@mail.gmail.com>
+	<CADZtCSjmQfBZoaO=MCyRoEn-AYe4A=1kDhxSVxVMw+O4k7YJfQ@mail.gmail.com>
+	<20180330061418.GA6017@erisian.com.au>
+	<CADabwBDiT2zNPHZ2=OyvCVrSY3Km2oyTnhRCHyMNsjW2vLMmOg@mail.gmail.com>
+Message-ID: <CADZtCShrTKqR26RMnUAwK32_7XKNvsCWgfYvQ3Bud2J6r54AKg@mail.gmail.com>
+
+Thank you for your feedback AJ and Riccardo.
+
+Nice observation about using nBits from every 2016th block as a short
+specifier of chain work. You can get some savings from the 4 byte nBits
+encoding over VLQ for total chain work as in my spec.
+
+I tried it out on the current chain. At block height 516,387, there are 258
+total checkpoints in the response payload with an interval of 2016. The
+size of the checkpts message is:
+
+- 9,304 bytes using hash + nBits
+- 10,934 bytes using hash + chain work delta encoded as VLQ
+- 11,030 bytes using hash + chain work total encoded as VLQ
+
+The saving from using deltas instead of the total seems negligible to me
+especially considering the additional computation it requires. Going from
+total chain work as VLQ to nBits is a 16% savings in the size of a checkpts
+message. According to some rather rough benchmarks, it takes ~3us to
+generate the message with nBits versus ~105us to generate each message with
+VLQ chain work (including block index lookups and serialization time).
+
+The downside, however, is that the new P2P message would be tightly coupled
+to a specific parameter in Bitcoin's consensus protocol, and one that is
+changed in many alt chains. Also, it would require that checkpoints can
+only be fetched at intervals of 2016, instead of intervals chosen by the
+clients. Being able to specify the interval is a very nice property for
+longer chains, where a client may select really large intervals, then
+bisect that range even further to request a smaller PoW sample (eg. start
+by fetching every 10,000th, then every 100th).
+
+Personally, I strongly think using total chain work instead of nBits is the
+right tradeoff and is worth the extra 1KB. I'm curious to hear others'
+opinions. Note that the checkpoints message is only fetched once per peer
+per download from genesis. Subsequent catchups only fetch checkpoints from
+the locator fork point. I also don't find the caching argument compelling
+-- the time to generate checkpts response messages is fast enough anyway.
+
+I also finally got around to pulling numbers on the space savings from the
+nVersion omission. As a reminder of how this works, three bits in the
+encoding indicator represent a value 1-7 of the distance in block height
+since another block with the same version. Looking at the current Bitcoin
+main chain, this is a table of the occurrences of these values:
+
+Height distance # of Blocks
+1 469537
+2 22301
+3 8833
+4 4368
+5 2633
+6 1630
+7 1114
+                     8+ 5967
+You can read this as "469,537 blocks have the same version as their
+parent", "22,301 have the same version as their parent's parent", etc.
+Given the information in this table, we may consider only allocating 2 bits
+in the encoding header rather than 3.
+
+On Fri, Mar 30, 2018 at 1:06 AM, Riccardo Casatta <
+riccardo.casatta at gmail.com> wrote:
+
+> Yes, I think the checkpoints and the compressed headers streams should be
+> handled in chunks of 2016 headers and queried by chunk number instead of
+> height, falling back to current method if the chunk is not full yet.
+>
+> This is cache friendly and allows to avoid bit 0 and bit 1 in the bitfield
+> (because they are always 1 after the first header in the chunk of 2016).
+>
+> 2018-03-30 8:14 GMT+02:00 Anthony Towns <aj at erisian.com.au>:
+>
+>> On Thu, Mar 29, 2018 at 05:50:30PM -0700, Jim Posen via bitcoin-dev wrote:
+>> > Taken a step further though, I'm really interested in treating the
+>> checkpoints
+>> > as commitments to chain work [...]
+>>
+>> In that case, shouldn't the checkpoints just be every 2016 blocks and
+>> include the corresponding bits value for that set of blocks?
+>>
+>> That way every node commits to (approximately) how much work their entire
+>> chain has by sending something like 10kB of data (currently), and you
+>> could verify the deltas in each node's chain's target by downloading the
+>> 2016 headers between those checkpoints (~80kB with the proposed compact
+>> encoding?) and checking the timestamps and proof of work match both the
+>> old target and the new target from adjacent checkpoints.
+>>
+>> (That probably still works fine even if there's a hardfork that allows
+>> difficulty to adjust more frequently: a bits value at block n*2016 will
+>> still enforce *some* lower limit on how much work blocks n*2016+{1..2016}
+>> will have to contribute; so will still allow you to estimate how much work
+>> will have been done, it may just be less precise than the estimate you
+>> could
+>> generate now)
+>>
+>> Cheers,
+>> aj
+>>
+>>
+>
+>
+> --
+> Riccardo Casatta - @RCasatta <https://twitter.com/RCasatta>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180402/24414497/attachment-0001.html>
+
+From jim.posen at gmail.com  Tue Apr  3 17:45:34 2018
+From: jim.posen at gmail.com (Jim Posen)
+Date: Tue, 3 Apr 2018 10:45:34 -0700
+Subject: [bitcoin-dev] Low-bandwidth transaction relay
+In-Reply-To: <9ab6e32e-db51-4ce4-8f3c-3a77f7b1f9bd@Spark>
+References: <9ab6e32e-db51-4ce4-8f3c-3a77f7b1f9bd@Spark>
+Message-ID: <CADZtCSjU78fO4bKcyc-sTT_H_wuugAd5PF3Ncom-4F2uFk_AnQ@mail.gmail.com>
+
+Hey. This idea sounds quite interesting. It'd be helpful to see some more
+numbers to evaluate it.
+
+- How much bandwidth is consumed by redundant tx INVs currently? What is
+this as a % of overall bandwidth usage?
+- How would filtering txs through N=2 links affect network propagation?
+This probably requires simulation to determine.
+- Do you propose setting filters on inbound peers as well?
+
+On Mon, Apr 2, 2018 at 3:18 PM, Gleb Naumenko via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Hi all,
+> I have a couple of ideas regarding transaction relay protocol and wanted
+> to share it with and probably get some feedback.
+>
+> I did some emulation and simulation and found out that around 90% of INV
+> messages sent by public-IP nodes are idle (duplicate), obviously because
+> each node creates 8 connections.  I also realized that sending INV messages
+> is a significant part of the overall bandwidth consumed by a public-IP
+> node. At a larger scale, this will result in people not able to run a
+> public-IP node.
+>
+> My idea is in some sense similar to BIP37 but applied to public-IP nodes.
+> Here I want to emphasize that all the nodes will still receive *all* of the
+> transactions. A new protocol should also keep the same zero-trust,
+> robustness, decentralization guarantees and latency.
+>
+> Idea: while joining the network, a new node agrees on some filter with
+> each of 8 nodes it connects to. So that NewNode <-> Node_A will be used to
+> relay only a subset of transactions, NewNode <-> Node_B for another subset.
+> This will significantly decrease the redundancy.
+>
+> To keep the guarantees, I would keep some redundancy (for example, each
+> transaction INV is sent over 2 links).
+>
+> To make it robust to attacks, I have 2 extensions in my mind:
+> 1. Set reconciliation (for a subset of transactions) with *other* nodes.
+> Getting a bloom filter of a subset of the mempool transactions from Node_B
+> may help to figure out whether Node_A is malicious, very slow, etc.
+> 2. Rotating the filters every N minutes (N < 10)
+>
+> I can see some issues with latency here, but I believe this problem has a
+> solution.
+>
+> Feedback is appreciated!
+>
+> If you want to look at a draft of the proposal ? please let me know.
+> If there were any similar ideas ? please let me know.
+>
+> Best,
+> Gleb
+>
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180403/89d5a284/attachment.html>
+
+From greg at xiph.org  Tue Apr  3 19:05:40 2018
+From: greg at xiph.org (Gregory Maxwell)
+Date: Tue, 3 Apr 2018 19:05:40 +0000
+Subject: [bitcoin-dev] Low-bandwidth transaction relay
+In-Reply-To: <9ab6e32e-db51-4ce4-8f3c-3a77f7b1f9bd@Spark>
+References: <9ab6e32e-db51-4ce4-8f3c-3a77f7b1f9bd@Spark>
+Message-ID: <CAAS2fgQG8gNCLye2iBxj8pUqNZ4-9WyA5Q66=jR5a6=VNmjnsw@mail.gmail.com>
+
+On Mon, Apr 2, 2018 at 10:18 PM, Gleb Naumenko via bitcoin-dev
+<bitcoin-dev at lists.linuxfoundation.org> wrote:
+> Hi all,
+> I have a couple of ideas regarding transaction relay protocol and wanted to
+> share it with and probably get some feedback.
+
+https://bitcointalk.org/index.php?topic=1377345.0
+
+https://people.xiph.org/~greg/mempool_sync_relay.txt
+
+From naumenko.gs at gmail.com  Wed Apr  4 02:10:56 2018
+From: naumenko.gs at gmail.com (Gleb Naumenko)
+Date: Tue, 3 Apr 2018 19:10:56 -0700
+Subject: [bitcoin-dev] Low-bandwidth transaction relay
+In-Reply-To: <CADZtCSjU78fO4bKcyc-sTT_H_wuugAd5PF3Ncom-4F2uFk_AnQ@mail.gmail.com>
+References: <9ab6e32e-db51-4ce4-8f3c-3a77f7b1f9bd@Spark>
+	<CADZtCSjU78fO4bKcyc-sTT_H_wuugAd5PF3Ncom-4F2uFk_AnQ@mail.gmail.com>
+Message-ID: <a1de9445-731f-4f94-b5b9-6a94588ba12e@Spark>
+
+Yeah, sure.
+
+> How much bandwidth is consumed by redundant tx INVs currently?
+Currently, for an average public-IP node all INVs consume 0.05 Mbps or 540 megabytes per day. This number is based on current ratio public-IP nodes:private-IP nodes and transaction rate. This number is a sum of both incoming and outgoing aspects. Thus redundant INV?s on average consume 0.044 Mbps or 475 megabytes per day.
+
+> What is this as a % of overall bandwidth usage?
+This is hard to estimate because overall bandwidth includes helping other nodes to bootstrap from scratch. If we don?t consider this aspect, my very rough estimate, and a short experiment shows that INV?s are around 50% of overall bandwidth (it also depends on different factors like your hardware comparing to other public-IP nodes). I?m going to double-check this number soon.
+
+> How would filtering txs through N=2 links affect network propagation?
+Yes, network propagation for a new protocol definitely worth measuring. I?m going to look at it in the near future.
+
+> Do you propose setting filters on inbound peers as well?
+This is a good question.
+I think some filter may be applied to inbound connections. Theoretically, a symmetrical filter does not make much sense ? it might be eventually the same filter for all of the connections except first 8 outgoing ones, so it?s better to use independent filters.
+However, I?m not entirely sure it is needed. Filters on inbound peers will reduce a download aspect. It might be much less critical than upload (if we assume that private-IP nodes hear about transactions later because those have much fewer connections). I think this question needs another experiment.
+
+On Apr 3, 2018, 10:45 AM -0700, Jim Posen <jim.posen at gmail.com>, wrote:
+> Hey. This idea sounds quite interesting. It'd be helpful to see some more numbers to evaluate it.
+>
+> - How much bandwidth is consumed by redundant tx INVs currently? What is this as a % of overall bandwidth usage?
+> - How would filtering txs through N=2 links affect network propagation? This probably requires simulation to determine.
+> - Do you propose setting filters on inbound peers as well?
+>
+> > On Mon, Apr 2, 2018 at 3:18 PM, Gleb Naumenko via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> > > Hi all,
+> > > I have a couple of ideas regarding transaction relay protocol and wanted to share it with and probably get some feedback.
+> > >
+> > > I did some emulation and simulation and found out that around 90% of INV messages sent by public-IP nodes are idle (duplicate), obviously because each node creates 8 connections.? I also realized that sending INV messages is a significant part of the overall bandwidth consumed by a public-IP node. At a larger scale, this will result in people not able to run a public-IP node.
+> > >
+> > > My idea is in some sense similar to BIP37 but applied to public-IP nodes. Here I want to emphasize that all the nodes will still receive *all* of the transactions. A new protocol should also keep the same zero-trust, robustness, decentralization guarantees and latency.
+> > >
+> > > Idea: while joining the network, a new node agrees on some filter with each of 8 nodes it connects to. So that NewNode <-> Node_A will be used to relay only a subset of transactions, NewNode <-> Node_B for another subset. This will significantly decrease the redundancy.
+> > >
+> > > To keep the guarantees, I would keep some redundancy (for example, each transaction INV is sent over 2 links).
+> > >
+> > > To make it robust to attacks, I have 2 extensions in my mind:
+> > > 1. Set reconciliation (for a subset of transactions) with *other* nodes. Getting a bloom filter of a subset of the mempool transactions from Node_B may help to figure out whether Node_A is malicious, very slow, etc.
+> > > 2. Rotating the filters every N minutes (N < 10)
+> > >
+> > > I can see some issues with latency here, but I believe this problem has a solution.
+> > >
+> > > Feedback is appreciated!
+> > >
+> > > If you want to look at a draft of the proposal ? please let me know.
+> > > If there were any similar ideas ? please let me know.
+> > >
+> > > Best,
+> > > Gleb
+> > >
+> > >
+> > > _______________________________________________
+> > > bitcoin-dev mailing list
+> > > bitcoin-dev at lists.linuxfoundation.org
+> > > https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> > >
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180403/91b04bda/attachment.html>
+
+From karljohan-alm at garage.co.jp  Wed Apr  4 06:06:19 2018
+From: karljohan-alm at garage.co.jp (Karl Johan Alm)
+Date: Wed, 4 Apr 2018 15:06:19 +0900
+Subject: [bitcoin-dev] proposal: extend WIF format for segwit
+In-Reply-To: <0071EC0D-44D4-47D0-8211-2158B288CC19@friedenbach.org>
+References: <34198916-cde9-c84d-ca41-9feb8956bd80@electrum.org>
+	<CAPg+sBgukwdRvfFcgdusrXoo8RiXm8OEL-WvHzjpiD8_HU5KmQ@mail.gmail.com>
+	<0dc0336b-d590-ffe9-8689-6ae06e98a39d@electrum.org>
+	<CABXVU6YKLwr-zev_=AmGDqwZ6ZkMwa=2ooPoDWv22XU8-QzajA@mail.gmail.com>
+	<0071EC0D-44D4-47D0-8211-2158B288CC19@friedenbach.org>
+Message-ID: <CALJw2w5qkyFNLCGsiObQTRb=FNac=DRt_i4B2S_99WTdr4v+xQ@mail.gmail.com>
+
+I took the liberty of turning this into a BIP proposal -- the
+formatted version can be seen here:
+https://github.com/kallewoof/bips/blob/bip-typed-wif/bip-extended-privkey.mediawiki
+
+<pre>
+  BIP: XXX
+  Layer: Applications
+  Title: Typed Private Keys
+  Author: Karl-Johan Alm <karljohan-alm at garage.co.jp>
+  Comments-Summary: No comments yet.
+  Comments-URI: https://github.com/bitcoin/bips/wiki/Comments:BIP-XXX
+  Status: Draft
+  Type: Standards Track
+  Created: 2018-04-04
+  License: CC0-1.0
+</pre>
+
+== Abstract ==
+
+An extension to the private key (WIF) format to specify what kind of
+public key the private key corresponds to.
+
+== Motivation ==
+
+There are several types of public keys which can all be associated
+with a given private key: P2PKH (legacy <code>1...</code> format),
+P2SH-P2WPKH (SegWit public key inside P2SH), P2WPKH (bech32), etc.
+
+While private keys have a 1-byte suffix indicating whether the
+corresponding public key is compressed (<code>0x01</code>) or not
+(<code>0x00</code>), there is no way of knowing what kind of public
+keys were associated with the private key. As a result, when importing
+a private key, the wallet has to assume all kinds, and keep track of
+each possible alternative.
+
+By extending the suffix, we can specify what kind of public key was
+associated with the given private key.
+
+== Specification ==
+
+Currently, private keys are stored as a uint256 (private key data)
+followed by a uint8 (compressed flag). The latter is extended to
+specify the public key types:
+
+{|class="wikitable" style="text-align: center;"
+|-
+!Value
+!Type
+!Compr
+!Clarification
+|-
+|<code>0x00</code>||P2PKH_UNCOMPRESSED||No||Uncompressed legacy public
+key. Unknown public key format
+|-
+|<code>0x01</code>||P2PKH_COMPRESSED||Yes||Compressed legacy public
+key. Unknown public key format
+|-
+|<code>0x80</code>||P2PKH||Yes||Compressed legacy public key. Legacy
+public key format (<code>1...</code>)
+|-
+|<code>0x81</code>||P2WPKH||Yes||Bech32 format (native Segwit)
+|-
+|<code>0x82</code>||P2WPKH_P2SH||Yes||Segwit nested in BIP16 P2SH
+(<code>3...</code>)
+|-
+|<code>0x85</code>||P2SH|| &mdash; ||Non-Segwit BIP16 P2SH (<code>3...</code>)
+|-
+|<code>0x86</code>||P2WSH|| &mdash; ||Native Segwit P2SH
+|-
+|<code>0x87</code>||P2WSH_P2SH|| &mdash; ||Native Segwit P2SH nested
+in BIP16 P2SH
+|}
+
+When a wallet imports a private key, it will have two outcomes:
+
+* the key is using one of the legacy types, in which case all types
+must be accounted for
+* the key is using one of the extended types, in which case the wallet
+need only track the specific corresponding public key
+
+== Rationale ==
+
+TODO
+
+== Compatibility ==
+
+This proposal is not backwards compatible, in that software that does
+not recognize the new types will not understand the compressed flag.
+It would be trivial to change this, by keeping the 'uncompressed'
+state as it is (0) and changing 'compressed' to be 'anything not 0',
+as opposed to 'the value 1'.
+
+The proposal *is* backwards compatible in that new wallet software
+will always understand the old WIF format, however. It will, as it
+does today, assume that any kind of public key is possible, and will
+have to track all of them, as it has to today.
+
+== Acknowledgements ==
+
+This BIP is based on the initial proposal by Thomas Voegtlin
+<thomasv at electrum.org> on the Bitcoin Dev mailing
+list<ref>https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2017-September/015007.html</ref>
+and the Electrum 3.0
+implementation<ref>https://github.com/spesmilo/electrum/blob/82e88cb89df35288b80dfdbe071da74247351251/RELEASE-NOTES#L95-L108</ref>
+
+== Reference implementation ==
+
+There is a partial implementation which adds, but does not use, the
+types described in this BIP here:
+https://github.com/bitcoin/bitcoin/pull/12869
+
+== References ==
+
+<references/>
+
+== Copyright ==
+
+This document is licensed under the Creative Commons CC0 1.0 Universal license.
+
+On Mon, Sep 18, 2017 at 12:36 AM, Mark Friedenbach via bitcoin-dev
+<bitcoin-dev at lists.linuxfoundation.org> wrote:
+> Bech32 and WIF payload format are mostly orthogonal issues. You can design a
+> new wallet import format now and later switch it to Bech32.
+>
+> On Sep 17, 2017, at 7:42 AM, AJ West via bitcoin-dev
+> <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+> Hi I have a small interjection about the point on error correction (excuse
+> me if it seems elementary). Isn't there an argument to be made where a
+> wallet software should never attempt to figure out the 'correct' address, or
+> in this case private key? I don't think it's crazy to suggest somebody could
+> import a slightly erroneous WIF, the software gracefully error-corrects any
+> problem, but then the user copies that error onward such as in their backup
+> processes like a paper wallet. I always hate to advocate against a feature,
+> I'm just worried too much error correcting removes the burden of exactitude
+> and attention of the user (eg. "I know I can have up to 4 errors").
+>
+> I'm pretty sure I read those arguments somewhere in a documentation or issue
+> tracker/forum post. Maybe I'm misunderstanding the bigger picture in this
+> particular case, but I was just reminded of that concept (even if it only
+> applies generally).
+>
+> Thanks,
+> AJ West
+>
+> On Sun, Sep 17, 2017 at 4:10 AM, Thomas Voegtlin via bitcoin-dev
+> <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>>
+>> On 17.09.2017 04:29, Pieter Wuille wrote:
+>> >
+>> > This has been a low-priority thing for me, though, and the computation
+>> > work
+>> > to find a good checksum is significant.
+>> >
+>>
+>> Thanks for the info. I guess this means that a bech32 format for private
+>> keys is not going to happen soon. Even if such a format was available,
+>> the issue would remain for segwit-in-p2sh addresses, which use base58.
+>>
+>> The ambiguity of the WIF format is currently holding me from releasing a
+>> segwit-capable version of Electrum. I believe it is not acceptable to
+>> use the current WIF format with segwit scripts; that would just create
+>> technological debt, forcing wallets to try all possible scripts. There
+>> is a good reason why WIF adds a 0x01 byte for compressed pubkeys; it
+>> makes it unambiguous.
+>>
+>> I see only two options:
+>>  1. Disable private keys export in Electrum Segwit wallets, until a
+>> common WIF extension has been agreed on.
+>>  2. Define my own WIF extension for Electrum, and go ahead with it.
+>>
+>> Defining my own format does make sense for the xpub/xprv format, because
+>> Electrum users need to share master public keys across Electrum wallets.
+>> It makes much less sense for WIF, though, because WIF is mostly used to
+>> import/sweep keys from other wallets.
+>>
+>> I would love to know what other wallet developers are going to do,
+>> especially Core. Are you going to export private keys used in segwit
+>> scripts in the current WIF format?
+>>
+>> _______________________________________________
+>> bitcoin-dev mailing list
+>> bitcoin-dev at lists.linuxfoundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+
+From naumenko.gs at gmail.com  Wed Apr  4 04:55:45 2018
+From: naumenko.gs at gmail.com (Gleb Naumenko)
+Date: Tue, 3 Apr 2018 21:55:45 -0700
+Subject: [bitcoin-dev] Low-bandwidth transaction relay
+In-Reply-To: <CAAS2fgSYG+jrLM4=DXVpLTh9diMEbX0gWG-wC0-2gBRio+Lo0Q@mail.gmail.com>
+References: <9ab6e32e-db51-4ce4-8f3c-3a77f7b1f9bd@Spark>
+	<CAAS2fgSYG+jrLM4=DXVpLTh9diMEbX0gWG-wC0-2gBRio+Lo0Q@mail.gmail.com>
+Message-ID: <cdd7a34f-3cd5-4747-a3a1-3106d66c1928@Spark>
+
+Thanks for the links!
+
+Blocksonly is definitely a relevant piece. However, I?m wondering what are the implications, especially at larger scale. For example, transactions processing will be not smooth anymore and will happen every 10 minutes at once. Another question is transaction propagation.
+
+I think what I?ve proposed does not have those implications. Well, propagation is still a concern, but it?s not that extreme. One weakness of my idea is relative complexity comparing to blocksonly.
+
+Another variation of the idea I described might work without INVs at all ?(then N=1 and transactions are relayed through 1 link only, during the time between blocks) and it would have the same security assumptions as blocksonly.
+
+Your IBLT and BCH-sets proposals sound very promising. I had something like that on mind, but I decided to start with a more conservative protocol.
+It looks like sync-relay idea has a lot of interesting questions, I?m excited to follow that research.
+
+On Apr 3, 2018, 12:04 PM -0700, Gregory Maxwell <gmaxwell at gmail.com>, wrote:
+> On Mon, Apr 2, 2018 at 10:18 PM, Gleb Naumenko via bitcoin-dev
+> <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> > Hi all,
+> > I have a couple of ideas regarding transaction relay protocol and wanted to
+> > share it with and probably get some feedback.
+>
+>
+>
+> https://bitcointalk.org/index.php?topic=1377345.0
+>
+> https://people.xiph.org/~greg/mempool_sync_relay.txt
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180403/44e266d0/attachment.html>
+
+From jim.posen at gmail.com  Wed Apr  4 23:11:52 2018
+From: jim.posen at gmail.com (Jim Posen)
+Date: Wed, 4 Apr 2018 16:11:52 -0700
+Subject: [bitcoin-dev] Signature bundles
+In-Reply-To: <87sh8cc0ur.fsf@rustcorp.com.au>
+References: <874lktdvdm.fsf@rustcorp.com.au>
+	<20180403035723.GA21120@erisian.com.au>
+	<87sh8cc0ur.fsf@rustcorp.com.au>
+Message-ID: <CADZtCSh43AQ5zkRN=RJnUYPY9f=MBMmXwmAnL+Ou0kguOptBhg@mail.gmail.com>
+
+I'll just mention that non-interactive one-way aggregation with BLS
+signatures solves this problem rather nicely.
+
+On Mon, Apr 2, 2018 at 10:31 PM, Rusty Russell via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Anthony Towns via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org>
+> writes:
+> > If you've got one bundle that overpays fees and another that underpays,
+> > you can safely combine the two only if you can put a SIGHASH_ALL sig in
+> > the one that overpays (otherwise miners could just make their own tx of
+> > just the overpaying bundle).
+>
+> This is a potential problem, yes :( And I'm not sure how to solve it,
+> unless you do some crazy thing like commit to a set of keys which are
+> allowed to bundle, which kind of defeats the generality of outsourcing.
+>
+> > This could replace SINGLE|ANYONECANPAY at a cost of an extra couple of
+> > witness bytes.
+> >
+> > I think BUNDLESTART is arguably redundant -- you could just infer
+> > BUNDLESTART if you see an INBUNDLE flag when you're not already in
+> > a bundle. Probably better to have the flag to make parsing easier,
+> > so just have the rule be BUNDLESTART is set for precisely the first
+> > INBUNDLE signature since the last bundle finished.
+>
+> Indeed.
+>
+> >> One of the issues we've struck with lightning is trying to guess future
+> >> fees for commitment transactions: we can't rely on getting another
+> >> signature from our counterparty to increase fees.  Nor can we use
+> >> parent-pays-for-child since the outputs we can spend are timelocked.
+> >
+> > That doesn't quite work with the HTLC-Success/HTLC-Timeout transactions
+> > though, does it? They spend outputs from the commitment transaction
+> > and need to be pre-signed by your channel partner in order to ensure
+> > the output address is correct -- but if the commitment transaction gets
+> > bundled, its txid will change, so it can't be pre-signed.
+>
+> Not without SIGHASH_NOINPUT, no.
+>
+> > FWIW, a dumb idea I had for this problem was to add a zero-value
+> > anyone-can-spend output to commitment transactions, that can then be
+> > used with CPFP to bump the fees. Not very nice for UTXO bloat if fee
+> > bumping isn't needed though, and I presume it would fail to pass the
+> > dust threshold...
+>
+> Yeah, let's not do that.
+>
+> > I wonder if it would be plausible to have after-the-fact fee-bumping
+> > via special sighash flags at the block level anyway though. Concretely:
+> > say you have two transactions, X and Y, that don't pay enough in fees,
+> > you then provide a third transaction whose witness is [txid-for-X,
+> > txid-for-Y, signature committing to (txid-for-X, txid-for-Y)], and can
+> > only be included in a block if X and Y are also in the same block. You
+> > could make that fairly concise if you allowed miners to replace
+> txid-for-X
+> > with X's offset within the block (or the delta between X's txnum and the
+> > third transaction's txnum), though coding that probably isn't terribly
+> > straightforward.
+>
+> What would it spend though?  Can't use an existing output, so this
+> really needs to be stashed in an *output script*, say a zero-amount
+> output which is literally a push of txids, and is itself unspendable.
+>
+>         <txid1>... <txidN>
+>
+> That's pretty large though, and it's non-witness data (though
+> discardable).  How about 'OP_NOP4 <N> <ripemd160-of-last-N-txids>'?
+> Then the miner just bundles those tx all together?
+>
+> Cheers,
+> Rusty.
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180404/12cf9858/attachment.html>
+
+From ketamine at national.shitposting.agency  Fri Apr  6 19:53:13 2018
+From: ketamine at national.shitposting.agency (ketamine at national.shitposting.agency)
+Date: Fri, 06 Apr 2018 21:53:13 +0200
+Subject: [bitcoin-dev] KETAMINE: Multiple vulnerabilities in SecureRandom(),
+ numerous cryptocurrency products affected.
+Message-ID: <84976adb75bef1dfdb12b98c19811278@national.shitposting.agency>
+
+A significant number of past and current cryptocurrency products
+contain a JavaScript class named SecureRandom(), containing both
+entropy collection and a PRNG. The entropy collection and the RNG
+itself are both deficient to the degree that key material can be
+recovered by a third party with medium complexity. There are a
+substantial number of variations of this SecureRandom() class in
+various pieces of software, some with bugs fixed, some with additional
+bugs added. Products that aren't today vulnerable due to moving to
+other libraries may be using old keys that have been previously
+compromised by usage of SecureRandom().
+
+
+The most common variations of the library attempts to collect entropy
+from window.crypto's CSPRNG, but due to a type error in a comparison
+this function is silently stepped over without failing. Entropy is
+subsequently gathered from math.Random (a 48bit linear congruential
+generator, seeded by the time in some browsers), and a single
+execution of a medium resolution timer. In some known configurations
+this system has substantially less than 48 bits of entropy.
+
+The core of the RNG is an implementation of RC4 ("arcfour random"),
+and the output is often directly used for the creation of private key
+material as well as cryptographic nonces for ECDSA signatures. RC4 is
+publicly known to have biases of several bits, which are likely
+sufficient for a lattice solver to recover a ECDSA private key given a
+number of signatures. One popular Bitcoin web wallet re-initialized
+the RC4 state for every signature which makes the biases bit-aligned,
+but in other cases the Special K would be manifest itself over
+multiple transactions.
+
+
+Necessary action:
+
+   * identify and move all funds stored using SecureRandom()
+
+   * rotate all key material generated by, or has come into contact
+     with any piece of software using SecureRandom()
+
+   * do not write cryptographic tools in non-type safe languages
+
+   * don't take the output of a CSPRNG and pass it through RC4
+
+-
+3CJ99vSipFi9z11UdbdZWfNKjywJnY8sT8
+
+From ematiu at gmail.com  Fri Apr  6 20:51:11 2018
+From: ematiu at gmail.com (Matias Alejo Garcia)
+Date: Fri, 6 Apr 2018 17:51:11 -0300
+Subject: [bitcoin-dev] KETAMINE: Multiple vulnerabilities in
+ SecureRandom(), numerous cryptocurrency products affected.
+In-Reply-To: <84976adb75bef1dfdb12b98c19811278@national.shitposting.agency>
+References: <84976adb75bef1dfdb12b98c19811278@national.shitposting.agency>
+Message-ID: <CA+vKqYc3X6ZjVNXs0xgsLGekxPCTcLZj7t2vkyBOV_o=2C2qPA@mail.gmail.com>
+
+Source?
+
+On Fri, Apr 6, 2018 at 4:53 PM, ketamine--- via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> A significant number of past and current cryptocurrency products
+> contain a JavaScript class named SecureRandom(), containing both
+> entropy collection and a PRNG. The entropy collection and the RNG
+> itself are both deficient to the degree that key material can be
+> recovered by a third party with medium complexity. There are a
+> substantial number of variations of this SecureRandom() class in
+> various pieces of software, some with bugs fixed, some with additional
+> bugs added. Products that aren't today vulnerable due to moving to
+> other libraries may be using old keys that have been previously
+> compromised by usage of SecureRandom().
+>
+>
+> The most common variations of the library attempts to collect entropy
+> from window.crypto's CSPRNG, but due to a type error in a comparison
+> this function is silently stepped over without failing. Entropy is
+> subsequently gathered from math.Random (a 48bit linear congruential
+> generator, seeded by the time in some browsers), and a single
+> execution of a medium resolution timer. In some known configurations
+> this system has substantially less than 48 bits of entropy.
+>
+> The core of the RNG is an implementation of RC4 ("arcfour random"),
+> and the output is often directly used for the creation of private key
+> material as well as cryptographic nonces for ECDSA signatures. RC4 is
+> publicly known to have biases of several bits, which are likely
+> sufficient for a lattice solver to recover a ECDSA private key given a
+> number of signatures. One popular Bitcoin web wallet re-initialized
+> the RC4 state for every signature which makes the biases bit-aligned,
+> but in other cases the Special K would be manifest itself over
+> multiple transactions.
+>
+>
+> Necessary action:
+>
+>   * identify and move all funds stored using SecureRandom()
+>
+>   * rotate all key material generated by, or has come into contact
+>     with any piece of software using SecureRandom()
+>
+>   * do not write cryptographic tools in non-type safe languages
+>
+>   * don't take the output of a CSPRNG and pass it through RC4
+>
+> -
+> 3CJ99vSipFi9z11UdbdZWfNKjywJnY8sT8
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+
+
+
+-- 
+Mat?as Alejo Garcia
+@ematiu
+Roads? Where we're going, we don't need roads!
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180406/7cdc248c/attachment-0001.html>
+
+From mus at musalbas.com  Mon Apr  9 21:17:11 2018
+From: mus at musalbas.com (Mustafa Al-Bassam)
+Date: Mon, 9 Apr 2018 22:17:11 +0100
+Subject: [bitcoin-dev] KETAMINE: Multiple vulnerabilities in
+ SecureRandom(), numerous cryptocurrency products affected.
+In-Reply-To: <921edfdb-e0e5-8ce4-55d8-ba4e84ef633f@musalbas.com>
+References: <84976adb75bef1dfdb12b98c19811278@national.shitposting.agency>
+	<CA+vKqYc3X6ZjVNXs0xgsLGekxPCTcLZj7t2vkyBOV_o=2C2qPA@mail.gmail.com>
+	<921edfdb-e0e5-8ce4-55d8-ba4e84ef633f@musalbas.com>
+Message-ID: <010e34a3-f9cf-fba1-5482-de06bc350d64@musalbas.com>
+
+And specifically, here's a version of it that uses Arcfour:
+https://gist.github.com/jonls/5230850
+
+
+On 09/04/18 22:11, Mustafa Al-Bassam wrote:
+>
+> Here's the code in question: https://github.com/jasondavies/jsbn/pull/7
+>
+> Best,
+>
+> Mustafa
+>
+>
+> On 06/04/18 21:51, Matias Alejo Garcia via bitcoin-dev wrote:
+>> Source? 
+>>
+>> On Fri, Apr 6, 2018 at 4:53 PM, ketamine--- via bitcoin-dev
+>> <bitcoin-dev at lists.linuxfoundation.org
+>> <mailto:bitcoin-dev at lists.linuxfoundation.org>> wrote:
+>>
+>>     A significant number of past and current cryptocurrency products
+>>     contain a JavaScript class named SecureRandom(), containing both
+>>     entropy collection and a PRNG. The entropy collection and the RNG
+>>     itself are both deficient to the degree that key material can be
+>>     recovered by a third party with medium complexity. There are a
+>>     substantial number of variations of this SecureRandom() class in
+>>     various pieces of software, some with bugs fixed, some with
+>>     additional
+>>     bugs added. Products that aren't today vulnerable due to moving to
+>>     other libraries may be using old keys that have been previously
+>>     compromised by usage of SecureRandom().
+>>
+>>
+>>     The most common variations of the library attempts to collect entropy
+>>     from window.crypto's CSPRNG, but due to a type error in a comparison
+>>     this function is silently stepped over without failing. Entropy is
+>>     subsequently gathered from math.Random (a 48bit linear congruential
+>>     generator, seeded by the time in some browsers), and a single
+>>     execution of a medium resolution timer. In some known configurations
+>>     this system has substantially less than 48 bits of entropy.
+>>
+>>     The core of the RNG is an implementation of RC4 ("arcfour random"),
+>>     and the output is often directly used for the creation of private key
+>>     material as well as cryptographic nonces for ECDSA signatures. RC4 is
+>>     publicly known to have biases of several bits, which are likely
+>>     sufficient for a lattice solver to recover a ECDSA private key
+>>     given a
+>>     number of signatures. One popular Bitcoin web wallet re-initialized
+>>     the RC4 state for every signature which makes the biases bit-aligned,
+>>     but in other cases the Special K would be manifest itself over
+>>     multiple transactions.
+>>
+>>
+>>     Necessary action:
+>>
+>>       * identify and move all funds stored using SecureRandom()
+>>
+>>       * rotate all key material generated by, or has come into contact
+>>         with any piece of software using SecureRandom()
+>>
+>>       * do not write cryptographic tools in non-type safe languages
+>>
+>>       * don't take the output of a CSPRNG and pass it through RC4
+>>
+>>     -
+>>     3CJ99vSipFi9z11UdbdZWfNKjywJnY8sT8
+>>     _______________________________________________
+>>     bitcoin-dev mailing list
+>>     bitcoin-dev at lists.linuxfoundation.org
+>>     <mailto:bitcoin-dev at lists.linuxfoundation.org>
+>>     https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>     <https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev>
+>>
+>>
+>>
+>>
+>> -- 
+>> Mat?as Alejo Garcia
+>> @ematiu
+>> Roads? Where we're going, we don't need roads!
+>>
+>>
+>> _______________________________________________
+>> bitcoin-dev mailing list
+>> bitcoin-dev at lists.linuxfoundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180409/1bd0330e/attachment.html>
+
+From mus at musalbas.com  Mon Apr  9 21:11:02 2018
+From: mus at musalbas.com (Mustafa Al-Bassam)
+Date: Mon, 9 Apr 2018 22:11:02 +0100
+Subject: [bitcoin-dev] KETAMINE: Multiple vulnerabilities in
+ SecureRandom(), numerous cryptocurrency products affected.
+In-Reply-To: <CA+vKqYc3X6ZjVNXs0xgsLGekxPCTcLZj7t2vkyBOV_o=2C2qPA@mail.gmail.com>
+References: <84976adb75bef1dfdb12b98c19811278@national.shitposting.agency>
+	<CA+vKqYc3X6ZjVNXs0xgsLGekxPCTcLZj7t2vkyBOV_o=2C2qPA@mail.gmail.com>
+Message-ID: <921edfdb-e0e5-8ce4-55d8-ba4e84ef633f@musalbas.com>
+
+Here's the code in question: https://github.com/jasondavies/jsbn/pull/7
+
+Best,
+
+Mustafa
+
+
+On 06/04/18 21:51, Matias Alejo Garcia via bitcoin-dev wrote:
+> Source? 
+>
+> On Fri, Apr 6, 2018 at 4:53 PM, ketamine--- via bitcoin-dev
+> <bitcoin-dev at lists.linuxfoundation.org
+> <mailto:bitcoin-dev at lists.linuxfoundation.org>> wrote:
+>
+>     A significant number of past and current cryptocurrency products
+>     contain a JavaScript class named SecureRandom(), containing both
+>     entropy collection and a PRNG. The entropy collection and the RNG
+>     itself are both deficient to the degree that key material can be
+>     recovered by a third party with medium complexity. There are a
+>     substantial number of variations of this SecureRandom() class in
+>     various pieces of software, some with bugs fixed, some with additional
+>     bugs added. Products that aren't today vulnerable due to moving to
+>     other libraries may be using old keys that have been previously
+>     compromised by usage of SecureRandom().
+>
+>
+>     The most common variations of the library attempts to collect entropy
+>     from window.crypto's CSPRNG, but due to a type error in a comparison
+>     this function is silently stepped over without failing. Entropy is
+>     subsequently gathered from math.Random (a 48bit linear congruential
+>     generator, seeded by the time in some browsers), and a single
+>     execution of a medium resolution timer. In some known configurations
+>     this system has substantially less than 48 bits of entropy.
+>
+>     The core of the RNG is an implementation of RC4 ("arcfour random"),
+>     and the output is often directly used for the creation of private key
+>     material as well as cryptographic nonces for ECDSA signatures. RC4 is
+>     publicly known to have biases of several bits, which are likely
+>     sufficient for a lattice solver to recover a ECDSA private key given a
+>     number of signatures. One popular Bitcoin web wallet re-initialized
+>     the RC4 state for every signature which makes the biases bit-aligned,
+>     but in other cases the Special K would be manifest itself over
+>     multiple transactions.
+>
+>
+>     Necessary action:
+>
+>       * identify and move all funds stored using SecureRandom()
+>
+>       * rotate all key material generated by, or has come into contact
+>         with any piece of software using SecureRandom()
+>
+>       * do not write cryptographic tools in non-type safe languages
+>
+>       * don't take the output of a CSPRNG and pass it through RC4
+>
+>     -
+>     3CJ99vSipFi9z11UdbdZWfNKjywJnY8sT8
+>     _______________________________________________
+>     bitcoin-dev mailing list
+>     bitcoin-dev at lists.linuxfoundation.org
+>     <mailto:bitcoin-dev at lists.linuxfoundation.org>
+>     https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>     <https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev>
+>
+>
+>
+>
+> -- 
+> Mat?as Alejo Garcia
+> @ematiu
+> Roads? Where we're going, we don't need roads!
+>
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180409/a678381a/attachment.html>
+
+From mus at musalbas.com  Mon Apr  9 23:39:15 2018
+From: mus at musalbas.com (Mustafa Al-Bassam)
+Date: Tue, 10 Apr 2018 00:39:15 +0100
+Subject: [bitcoin-dev] KETAMINE: Multiple vulnerabilities in
+ SecureRandom(), numerous cryptocurrency products affected.
+In-Reply-To: <010e34a3-f9cf-fba1-5482-de06bc350d64@musalbas.com>
+References: <84976adb75bef1dfdb12b98c19811278@national.shitposting.agency>
+	<CA+vKqYc3X6ZjVNXs0xgsLGekxPCTcLZj7t2vkyBOV_o=2C2qPA@mail.gmail.com>
+	<921edfdb-e0e5-8ce4-55d8-ba4e84ef633f@musalbas.com>
+	<010e34a3-f9cf-fba1-5482-de06bc350d64@musalbas.com>
+Message-ID: <69fb5cc4-7b3d-e23d-2b7e-cddcd7b2877b@musalbas.com>
+
+The original disclosure didn't contain any information about the library
+in question, so I did some digging.
+
+I think that the vulnerability disclosure is referring to a pre-2013
+version of jsbn, a JavaScript crypto library. Before it used the CSRNG
+in the Web Crypto API, it tried to use nsIDOMCrypto, but incorrectly did
+a string comparison when checking the browser version.
+
+In practice though, this doesn't really matter, because
+navigator.appVersion < "5" returns true anyway for old browsers. The
+real issue is that modern browsers don't have window.crypto.random
+defined, so Bitcoin wallets using a pre-2013 version of jsbn may not be
+using a CSPRNG, when run on a modern browser.
+
+As is noted though, even if a CSPRNG is used, the library passes the
+output of the CSPRNG through RC4, which generates some biased bits,
+leading to possible private key recovery.
+
+
+On 09/04/18 22:17, Mustafa Al-Bassam via bitcoin-dev wrote:
+>
+> And specifically, here's a version of it that uses Arcfour:
+> https://gist.github.com/jonls/5230850
+>
+>
+> On 09/04/18 22:11, Mustafa Al-Bassam wrote:
+>>
+>> Here's the code in question: https://github.com/jasondavies/jsbn/pull/7
+>>
+>> Best,
+>>
+>> Mustafa
+>>
+>>
+>> On 06/04/18 21:51, Matias Alejo Garcia via bitcoin-dev wrote:
+>>> Source? 
+>>>
+>>> On Fri, Apr 6, 2018 at 4:53 PM, ketamine--- via bitcoin-dev
+>>> <bitcoin-dev at lists.linuxfoundation.org
+>>> <mailto:bitcoin-dev at lists.linuxfoundation.org>> wrote:
+>>>
+>>>     A significant number of past and current cryptocurrency products
+>>>     contain a JavaScript class named SecureRandom(), containing both
+>>>     entropy collection and a PRNG. The entropy collection and the RNG
+>>>     itself are both deficient to the degree that key material can be
+>>>     recovered by a third party with medium complexity. There are a
+>>>     substantial number of variations of this SecureRandom() class in
+>>>     various pieces of software, some with bugs fixed, some with
+>>>     additional
+>>>     bugs added. Products that aren't today vulnerable due to moving to
+>>>     other libraries may be using old keys that have been previously
+>>>     compromised by usage of SecureRandom().
+>>>
+>>>
+>>>     The most common variations of the library attempts to collect
+>>>     entropy
+>>>     from window.crypto's CSPRNG, but due to a type error in a comparison
+>>>     this function is silently stepped over without failing. Entropy is
+>>>     subsequently gathered from math.Random (a 48bit linear congruential
+>>>     generator, seeded by the time in some browsers), and a single
+>>>     execution of a medium resolution timer. In some known configurations
+>>>     this system has substantially less than 48 bits of entropy.
+>>>
+>>>     The core of the RNG is an implementation of RC4 ("arcfour random"),
+>>>     and the output is often directly used for the creation of
+>>>     private key
+>>>     material as well as cryptographic nonces for ECDSA signatures.
+>>>     RC4 is
+>>>     publicly known to have biases of several bits, which are likely
+>>>     sufficient for a lattice solver to recover a ECDSA private key
+>>>     given a
+>>>     number of signatures. One popular Bitcoin web wallet re-initialized
+>>>     the RC4 state for every signature which makes the biases
+>>>     bit-aligned,
+>>>     but in other cases the Special K would be manifest itself over
+>>>     multiple transactions.
+>>>
+>>>
+>>>     Necessary action:
+>>>
+>>>       * identify and move all funds stored using SecureRandom()
+>>>
+>>>       * rotate all key material generated by, or has come into contact
+>>>         with any piece of software using SecureRandom()
+>>>
+>>>       * do not write cryptographic tools in non-type safe languages
+>>>
+>>>       * don't take the output of a CSPRNG and pass it through RC4
+>>>
+>>>     -
+>>>     3CJ99vSipFi9z11UdbdZWfNKjywJnY8sT8
+>>>     _______________________________________________
+>>>     bitcoin-dev mailing list
+>>>     bitcoin-dev at lists.linuxfoundation.org
+>>>     <mailto:bitcoin-dev at lists.linuxfoundation.org>
+>>>     https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>>     <https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev>
+>>>
+>>>
+>>>
+>>>
+>>> -- 
+>>> Mat?as Alejo Garcia
+>>> @ematiu
+>>> Roads? Where we're going, we don't need roads!
+>>>
+>>>
+>>> _______________________________________________
+>>> bitcoin-dev mailing list
+>>> bitcoin-dev at lists.linuxfoundation.org
+>>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>
+>
+>
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180410/a4f2aca5/attachment-0001.html>
+
+From jason at jasondavies.com  Tue Apr 10 00:42:32 2018
+From: jason at jasondavies.com (Jason Davies)
+Date: Tue, 10 Apr 2018 01:42:32 +0100
+Subject: [bitcoin-dev] KETAMINE: Multiple vulnerabilities in
+ SecureRandom(), numerous cryptocurrency products affected.
+In-Reply-To: <921edfdb-e0e5-8ce4-55d8-ba4e84ef633f@musalbas.com>
+References: <84976adb75bef1dfdb12b98c19811278@national.shitposting.agency>
+	<CA+vKqYc3X6ZjVNXs0xgsLGekxPCTcLZj7t2vkyBOV_o=2C2qPA@mail.gmail.com>
+	<921edfdb-e0e5-8ce4-55d8-ba4e84ef633f@musalbas.com>
+Message-ID: <D26DFCC6-83A3-484A-B676-E443DA8FC259@jasondavies.com>
+
+These issues all stem from the RC4-based RNG implementation (with insecure
+fallback entropy) in Tom Wu's jsbn library, published here:
+http://www-cs-students.stanford.edu/~tjw/jsbn/
+
+Please refer to Tom Wu's URL, or this more up-to-date fork of Tom Wu's code
+(published to NPM): https://github.com/andyperlitch/jsbn -- my repository on
+GitHub was only ever intended to be a straight mirror of Tom Wu's code (created
+over 7 years ago!).  I'll probably delete my mirror repository given that there
+are now better JavaScript bignum alternatives, and in light of this report.
+
+Jason
+
+> On 9 Apr 2018, at 22:11, mus at musalbas.com wrote:
+> 
+> Here's the code in question: https://github.com/jasondavies/jsbn/pull/7
+> 
+> Best,
+> 
+> Mustafa
+
+--
+Jason Davies, http://www.jasondavies.com/
+
+
+From karljohan-alm at garage.co.jp  Tue Apr 10 02:54:08 2018
+From: karljohan-alm at garage.co.jp (Karl-Johan Alm)
+Date: Tue, 10 Apr 2018 11:54:08 +0900
+Subject: [bitcoin-dev] proposal: extend WIF format for segwit
+In-Reply-To: <CALJw2w5qkyFNLCGsiObQTRb=FNac=DRt_i4B2S_99WTdr4v+xQ@mail.gmail.com>
+References: <34198916-cde9-c84d-ca41-9feb8956bd80@electrum.org>
+	<CAPg+sBgukwdRvfFcgdusrXoo8RiXm8OEL-WvHzjpiD8_HU5KmQ@mail.gmail.com>
+	<0dc0336b-d590-ffe9-8689-6ae06e98a39d@electrum.org>
+	<CABXVU6YKLwr-zev_=AmGDqwZ6ZkMwa=2ooPoDWv22XU8-QzajA@mail.gmail.com>
+	<0071EC0D-44D4-47D0-8211-2158B288CC19@friedenbach.org>
+	<CALJw2w5qkyFNLCGsiObQTRb=FNac=DRt_i4B2S_99WTdr4v+xQ@mail.gmail.com>
+Message-ID: <CALJw2w58QTHKUKjZBKAbkLexrEHG+OEqjtVB4=FBmth32H31CQ@mail.gmail.com>
+
+Hello,
+
+I made slight modification to the BIP, dropping the 0x80 jump to 0x10:
+https://github.com/kallewoof/bips/blob/bip-typed-wif/bip-extended-privkey.mediawiki
+
+I will make the corresponding changes to the reference implementation shortly.
+
+If there are no objections I would also like to request a BIP number.
+
+
+On Wed, Apr 4, 2018 at 3:06 PM, Karl Johan Alm
+<karljohan-alm at garage.co.jp> wrote:
+> I took the liberty of turning this into a BIP proposal -- the
+> formatted version can be seen here:
+> https://github.com/kallewoof/bips/blob/bip-typed-wif/bip-extended-privkey.mediawiki
+>
+> <pre>
+>   BIP: XXX
+>   Layer: Applications
+>   Title: Typed Private Keys
+>   Author: Karl-Johan Alm <karljohan-alm at garage.co.jp>
+>   Comments-Summary: No comments yet.
+>   Comments-URI: https://github.com/bitcoin/bips/wiki/Comments:BIP-XXX
+>   Status: Draft
+>   Type: Standards Track
+>   Created: 2018-04-04
+>   License: CC0-1.0
+> </pre>
+>
+> == Abstract ==
+>
+> An extension to the private key (WIF) format to specify what kind of
+> public key the private key corresponds to.
+>
+> == Motivation ==
+>
+> There are several types of public keys which can all be associated
+> with a given private key: P2PKH (legacy <code>1...</code> format),
+> P2SH-P2WPKH (SegWit public key inside P2SH), P2WPKH (bech32), etc.
+>
+> While private keys have a 1-byte suffix indicating whether the
+> corresponding public key is compressed (<code>0x01</code>) or not
+> (<code>0x00</code>), there is no way of knowing what kind of public
+> keys were associated with the private key. As a result, when importing
+> a private key, the wallet has to assume all kinds, and keep track of
+> each possible alternative.
+>
+> By extending the suffix, we can specify what kind of public key was
+> associated with the given private key.
+>
+> == Specification ==
+>
+> Currently, private keys are stored as a uint256 (private key data)
+> followed by a uint8 (compressed flag). The latter is extended to
+> specify the public key types:
+>
+> {|class="wikitable" style="text-align: center;"
+> |-
+> !Value
+> !Type
+> !Compr
+> !Clarification
+> |-
+> |<code>0x00</code>||P2PKH_UNCOMPRESSED||No||Uncompressed legacy public
+> key. Unknown public key format
+> |-
+> |<code>0x01</code>||P2PKH_COMPRESSED||Yes||Compressed legacy public
+> key. Unknown public key format
+> |-
+> |<code>0x80</code>||P2PKH||Yes||Compressed legacy public key. Legacy
+> public key format (<code>1...</code>)
+> |-
+> |<code>0x81</code>||P2WPKH||Yes||Bech32 format (native Segwit)
+> |-
+> |<code>0x82</code>||P2WPKH_P2SH||Yes||Segwit nested in BIP16 P2SH
+> (<code>3...</code>)
+> |-
+> |<code>0x85</code>||P2SH|| &mdash; ||Non-Segwit BIP16 P2SH (<code>3...</code>)
+> |-
+> |<code>0x86</code>||P2WSH|| &mdash; ||Native Segwit P2SH
+> |-
+> |<code>0x87</code>||P2WSH_P2SH|| &mdash; ||Native Segwit P2SH nested
+> in BIP16 P2SH
+> |}
+>
+> When a wallet imports a private key, it will have two outcomes:
+>
+> * the key is using one of the legacy types, in which case all types
+> must be accounted for
+> * the key is using one of the extended types, in which case the wallet
+> need only track the specific corresponding public key
+>
+> == Rationale ==
+>
+> TODO
+>
+> == Compatibility ==
+>
+> This proposal is not backwards compatible, in that software that does
+> not recognize the new types will not understand the compressed flag.
+> It would be trivial to change this, by keeping the 'uncompressed'
+> state as it is (0) and changing 'compressed' to be 'anything not 0',
+> as opposed to 'the value 1'.
+>
+> The proposal *is* backwards compatible in that new wallet software
+> will always understand the old WIF format, however. It will, as it
+> does today, assume that any kind of public key is possible, and will
+> have to track all of them, as it has to today.
+>
+> == Acknowledgements ==
+>
+> This BIP is based on the initial proposal by Thomas Voegtlin
+> <thomasv at electrum.org> on the Bitcoin Dev mailing
+> list<ref>https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2017-September/015007.html</ref>
+> and the Electrum 3.0
+> implementation<ref>https://github.com/spesmilo/electrum/blob/82e88cb89df35288b80dfdbe071da74247351251/RELEASE-NOTES#L95-L108</ref>
+>
+> == Reference implementation ==
+>
+> There is a partial implementation which adds, but does not use, the
+> types described in this BIP here:
+> https://github.com/bitcoin/bitcoin/pull/12869
+>
+> == References ==
+>
+> <references/>
+>
+> == Copyright ==
+>
+> This document is licensed under the Creative Commons CC0 1.0 Universal license.
+>
+> On Mon, Sep 18, 2017 at 12:36 AM, Mark Friedenbach via bitcoin-dev
+> <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>> Bech32 and WIF payload format are mostly orthogonal issues. You can design a
+>> new wallet import format now and later switch it to Bech32.
+>>
+>> On Sep 17, 2017, at 7:42 AM, AJ West via bitcoin-dev
+>> <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>>
+>> Hi I have a small interjection about the point on error correction (excuse
+>> me if it seems elementary). Isn't there an argument to be made where a
+>> wallet software should never attempt to figure out the 'correct' address, or
+>> in this case private key? I don't think it's crazy to suggest somebody could
+>> import a slightly erroneous WIF, the software gracefully error-corrects any
+>> problem, but then the user copies that error onward such as in their backup
+>> processes like a paper wallet. I always hate to advocate against a feature,
+>> I'm just worried too much error correcting removes the burden of exactitude
+>> and attention of the user (eg. "I know I can have up to 4 errors").
+>>
+>> I'm pretty sure I read those arguments somewhere in a documentation or issue
+>> tracker/forum post. Maybe I'm misunderstanding the bigger picture in this
+>> particular case, but I was just reminded of that concept (even if it only
+>> applies generally).
+>>
+>> Thanks,
+>> AJ West
+>>
+>> On Sun, Sep 17, 2017 at 4:10 AM, Thomas Voegtlin via bitcoin-dev
+>> <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>>>
+>>> On 17.09.2017 04:29, Pieter Wuille wrote:
+>>> >
+>>> > This has been a low-priority thing for me, though, and the computation
+>>> > work
+>>> > to find a good checksum is significant.
+>>> >
+>>>
+>>> Thanks for the info. I guess this means that a bech32 format for private
+>>> keys is not going to happen soon. Even if such a format was available,
+>>> the issue would remain for segwit-in-p2sh addresses, which use base58.
+>>>
+>>> The ambiguity of the WIF format is currently holding me from releasing a
+>>> segwit-capable version of Electrum. I believe it is not acceptable to
+>>> use the current WIF format with segwit scripts; that would just create
+>>> technological debt, forcing wallets to try all possible scripts. There
+>>> is a good reason why WIF adds a 0x01 byte for compressed pubkeys; it
+>>> makes it unambiguous.
+>>>
+>>> I see only two options:
+>>>  1. Disable private keys export in Electrum Segwit wallets, until a
+>>> common WIF extension has been agreed on.
+>>>  2. Define my own WIF extension for Electrum, and go ahead with it.
+>>>
+>>> Defining my own format does make sense for the xpub/xprv format, because
+>>> Electrum users need to share master public keys across Electrum wallets.
+>>> It makes much less sense for WIF, though, because WIF is mostly used to
+>>> import/sweep keys from other wallets.
+>>>
+>>> I would love to know what other wallet developers are going to do,
+>>> especially Core. Are you going to export private keys used in segwit
+>>> scripts in the current WIF format?
+>>>
+>>> _______________________________________________
+>>> bitcoin-dev mailing list
+>>> bitcoin-dev at lists.linuxfoundation.org
+>>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>
+>>
+>> _______________________________________________
+>> bitcoin-dev mailing list
+>> bitcoin-dev at lists.linuxfoundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>
+>>
+>> _______________________________________________
+>> bitcoin-dev mailing list
+>> bitcoin-dev at lists.linuxfoundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>
+
+From jason at jasondavies.com  Tue Apr 10 08:51:51 2018
+From: jason at jasondavies.com (Jason Davies)
+Date: Tue, 10 Apr 2018 09:51:51 +0100
+Subject: [bitcoin-dev] KETAMINE: Multiple vulnerabilities in
+ SecureRandom(), numerous cryptocurrency products affected.
+In-Reply-To: <69fb5cc4-7b3d-e23d-2b7e-cddcd7b2877b@musalbas.com>
+References: <84976adb75bef1dfdb12b98c19811278@national.shitposting.agency>
+	<CA+vKqYc3X6ZjVNXs0xgsLGekxPCTcLZj7t2vkyBOV_o=2C2qPA@mail.gmail.com>
+	<921edfdb-e0e5-8ce4-55d8-ba4e84ef633f@musalbas.com>
+	<010e34a3-f9cf-fba1-5482-de06bc350d64@musalbas.com>
+	<69fb5cc4-7b3d-e23d-2b7e-cddcd7b2877b@musalbas.com>
+Message-ID: <333F9973-6092-45B7-A87F-32730D752501@jasondavies.com>
+
+On 10 Apr 2018, at 00:39, mus at musalbas.com wrote:
+
+> The original disclosure didn't contain any information about the library
+> in question, so I did some digging.
+>
+> I think that the vulnerability disclosure is referring to a pre-2013
+> version of jsbn, a JavaScript crypto library. Before it used the CSRNG
+> in the Web Crypto API, it tried to use nsIDOMCrypto, but incorrectly did
+> a string comparison when checking the browser version.
+>
+> In practice though, this doesn't really matter, because
+> navigator.appVersion < "5" returns true anyway for old browsers. The
+> real issue is that modern browsers don't have window.crypto.random
+> defined, so Bitcoin wallets using a pre-2013 version of jsbn may not be
+> using a CSPRNG, when run on a modern browser.
+
+Yes, it looks like high-quality entropy via crypto.getRandomValues was only
+added in Tom Wu's latest version (v1.4) in July 2013.
+
+Note that even with v1.4, it still does not use high-quality entropy for
+Internet Explorer, because getRandomValues is provided under window.msCrypto
+for that browser.
+
+  http://www-cs-students.stanford.edu/~tjw/jsbn/rng.js
+
+> As is noted though, even if a CSPRNG is used, the library passes the
+> output of the CSPRNG through RC4, which generates some biased bits,
+> leading to possible private key recovery.
+
+I think this is the real issue: even if high-quality entropy is utilised, the
+RNG is RC4-based, which is known to generate biased output.
+
+Finally, note that even Chrome used RC4 for crypto.getRandomValues at one
+point (as recently as 2015)!
+
+  https://bugs.chromium.org/p/chromium/issues/detail?id=552749
+
+--
+Jason Davies, https://www.jasondavies.com/
+
+
+From vitteaymeric at gmail.com  Tue Apr 10 13:15:22 2018
+From: vitteaymeric at gmail.com (Aymeric Vitte)
+Date: Tue, 10 Apr 2018 15:15:22 +0200
+Subject: [bitcoin-dev] KETAMINE: Multiple vulnerabilities in
+ SecureRandom(), numerous cryptocurrency products affected.
+In-Reply-To: <333F9973-6092-45B7-A87F-32730D752501@jasondavies.com>
+References: <84976adb75bef1dfdb12b98c19811278@national.shitposting.agency>
+	<CA+vKqYc3X6ZjVNXs0xgsLGekxPCTcLZj7t2vkyBOV_o=2C2qPA@mail.gmail.com>
+	<921edfdb-e0e5-8ce4-55d8-ba4e84ef633f@musalbas.com>
+	<010e34a3-f9cf-fba1-5482-de06bc350d64@musalbas.com>
+	<69fb5cc4-7b3d-e23d-2b7e-cddcd7b2877b@musalbas.com>
+	<333F9973-6092-45B7-A87F-32730D752501@jasondavies.com>
+Message-ID: <33a9f602-6185-cac5-e457-e5a9af047dbc@gmail.com>
+
+I used jsbn in the past, then I made some research too
+
+Apparently window.crypto.getRandomValues was introduced in jsbn mid 2012
+(according to the wayback machine, but 2012/2013 does not make any
+difference, see below), was available in Chrome since 2011 (but indeed
+see "window.crypto.getRandomValues() uses a weak CSPRNG"
+https://bugs.chromium.org/p/chromium/issues/detail?id=552749 fixed *end
+*of 2015, funny to see that those that did specify the Webcrypto API did
+not implement it correctly...), in FF in 2013
+(https://website-archive.mozilla.org/www.mozilla.org/firefox_releasenotes/en-US/firefox/21.0/releasenotes/)
+, in IE in 2013 and Safari ~2012/2013, at least that's the official
+dates for the Webcrypto API implementation, maybe something existed
+before, but it's not so easy to seek for the history
+
+The window.crypto.random check is in jsbn since the begining (2006) and
+only returns true for Netscape browsers before Netscape 5/6, ie Firefox
+(2000), see
+https://books.google.fr/books?id=UooAblGoGN8C&pg=PA85&lpg=PA85&dq=browser+appversion+4&source=bl&ots=dVijsOR0ov&sig=6SnElm56-bAvmGlKqUAdoGLAs2A&hl=fr&sa=X&ved=2ahUKEwirhtaqva_aAhUFchQKHQ4JCk4Q6AEwBXoECAAQcQ#v=onepage&q=browser%20appversion%204&f=false)
+
+>From the existing tools, there was not only jsbn, everybody was using
+Math.random (sjcl, cryptoJS, forge, etc) with different implementations
+and everybody did put a note stating that it might be insecure with an
+"improvement to come" comment
+
+We can probably assume that nobody was using Netscape any longer when
+Bitcoin started
+
+The conclusion seems to be that at least all wallets generated by js
+tools inside browsers since bitcoin exists until 2011 are impacted by
+the Math.random weakness if applicable to the related implementations,
+the Math.random or RC4 (Chrome) weakness between 2011 and 2013, and RC4
+weakness for Chrome users until end of 2015
+
+And all wallets using jsbn are impacted by Math.random and RC4 until
+2013 (or end 2015 for Chrome), then still by the RC4 fallback step after
+
+> Note that even with v1.4, it still does not use high-quality entropy
+for Internet Explorer, because getRandomValues is provided under
+window.msCrypto for that browser
+
+I don't know for that one, what was the issue?
+
+Le 10/04/2018 ? 10:51, Jason Davies via bitcoin-dev a ?crit?:
+> On 10 Apr 2018, at 00:39, mus at musalbas.com wrote:
+>
+>> The original disclosure didn't contain any information about the library
+>> in question, so I did some digging.
+>>
+>> I think that the vulnerability disclosure is referring to a pre-2013
+>> version of jsbn, a JavaScript crypto library. Before it used the CSRNG
+>> in the Web Crypto API, it tried to use nsIDOMCrypto, but incorrectly did
+>> a string comparison when checking the browser version.
+>>
+>> In practice though, this doesn't really matter, because
+>> navigator.appVersion < "5" returns true anyway for old browsers. The
+>> real issue is that modern browsers don't have window.crypto.random
+>> defined, so Bitcoin wallets using a pre-2013 version of jsbn may not be
+>> using a CSPRNG, when run on a modern browser.
+> Yes, it looks like high-quality entropy via crypto.getRandomValues was only
+> added in Tom Wu's latest version (v1.4) in July 2013.
+>
+> Note that even with v1.4, it still does not use high-quality entropy for
+> Internet Explorer, because getRandomValues is provided under window.msCrypto
+> for that browser.
+>
+>   http://www-cs-students.stanford.edu/~tjw/jsbn/rng.js
+>
+>> As is noted though, even if a CSPRNG is used, the library passes the
+>> output of the CSPRNG through RC4, which generates some biased bits,
+>> leading to possible private key recovery.
+> I think this is the real issue: even if high-quality entropy is utilised, the
+> RNG is RC4-based, which is known to generate biased output.
+>
+> Finally, note that even Chrome used RC4 for crypto.getRandomValues at one
+> point (as recently as 2015)!
+>
+>   https://bugs.chromium.org/p/chromium/issues/detail?id=552749
+>
+> --
+> Jason Davies, https://www.jasondavies.com/
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+-- 
+Bitcoin transactions made simple: https://github.com/Ayms/bitcoin-transactions
+Zcash wallets made simple: https://github.com/Ayms/zcash-wallets
+Bitcoin wallets made simple: https://github.com/Ayms/bitcoin-wallets
+Get the torrent dynamic blocklist: http://peersm.com/getblocklist
+Check the 10 M passwords list: http://peersm.com/findmyass
+Anti-spies and private torrents, dynamic blocklist: http://torrent-live.org
+Peersm : http://www.peersm.com
+torrent-live: https://github.com/Ayms/torrent-live
+node-Tor : https://www.github.com/Ayms/node-Tor
+GitHub : https://www.github.com/Ayms
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180410/5f3954ea/attachment-0001.html>
+
+From jason at jasondavies.com  Tue Apr 10 13:32:36 2018
+From: jason at jasondavies.com (Jason Davies)
+Date: Tue, 10 Apr 2018 14:32:36 +0100
+Subject: [bitcoin-dev] KETAMINE: Multiple vulnerabilities in
+ SecureRandom(), numerous cryptocurrency products affected.
+In-Reply-To: <33a9f602-6185-cac5-e457-e5a9af047dbc@gmail.com>
+References: <84976adb75bef1dfdb12b98c19811278@national.shitposting.agency>
+	<CA+vKqYc3X6ZjVNXs0xgsLGekxPCTcLZj7t2vkyBOV_o=2C2qPA@mail.gmail.com>
+	<921edfdb-e0e5-8ce4-55d8-ba4e84ef633f@musalbas.com>
+	<010e34a3-f9cf-fba1-5482-de06bc350d64@musalbas.com>
+	<69fb5cc4-7b3d-e23d-2b7e-cddcd7b2877b@musalbas.com>
+	<333F9973-6092-45B7-A87F-32730D752501@jasondavies.com>
+	<33a9f602-6185-cac5-e457-e5a9af047dbc@gmail.com>
+Message-ID: <E0F193EA-9479-4E07-8B91-B77D33FB0CBE@jasondavies.com>
+
+>> Note that even with v1.4, it still does not use high-quality entropy for
+>> Internet Explorer, because getRandomValues is provided under window.msCrypto
+>> for that browser.
+>
+> I don't know for that one, what was the issue?
+
+I simply meant that Internet Explorer implements the Web Cryptography API under
+window.msCrypto instead of window.crypto.  Thus, unless
+msCrypto.getRandomValues is used, high-quality entropy will not have been used
+by any of these libraries under Internet Explorer.
+
+--
+Jason Davies, https://www.jasondavies.com/
+
+
+From vitteaymeric at gmail.com  Tue Apr 10 13:50:40 2018
+From: vitteaymeric at gmail.com (Aymeric Vitte)
+Date: Tue, 10 Apr 2018 15:50:40 +0200
+Subject: [bitcoin-dev] KETAMINE: Multiple vulnerabilities in
+ SecureRandom(), numerous cryptocurrency products affected.
+In-Reply-To: <E0F193EA-9479-4E07-8B91-B77D33FB0CBE@jasondavies.com>
+References: <84976adb75bef1dfdb12b98c19811278@national.shitposting.agency>
+	<CA+vKqYc3X6ZjVNXs0xgsLGekxPCTcLZj7t2vkyBOV_o=2C2qPA@mail.gmail.com>
+	<921edfdb-e0e5-8ce4-55d8-ba4e84ef633f@musalbas.com>
+	<010e34a3-f9cf-fba1-5482-de06bc350d64@musalbas.com>
+	<69fb5cc4-7b3d-e23d-2b7e-cddcd7b2877b@musalbas.com>
+	<333F9973-6092-45B7-A87F-32730D752501@jasondavies.com>
+	<33a9f602-6185-cac5-e457-e5a9af047dbc@gmail.com>
+	<E0F193EA-9479-4E07-8B91-B77D33FB0CBE@jasondavies.com>
+Message-ID: <b2f07b9d-14e6-60f6-29fa-dc397dccbc48@gmail.com>
+
+Indeed, this impacts jsbn only normally since all others from the time
+getRandomValues was available are supposed to implement both
+
+
+Le 10/04/2018 ? 15:32, Jason Davies a ?crit?:
+>>> Note that even with v1.4, it still does not use high-quality entropy for
+>>> Internet Explorer, because getRandomValues is provided under window.msCrypto
+>>> for that browser.
+>> I don't know for that one, what was the issue?
+> I simply meant that Internet Explorer implements the Web Cryptography API under
+> window.msCrypto instead of window.crypto.  Thus, unless
+> msCrypto.getRandomValues is used, high-quality entropy will not have been used
+> by any of these libraries under Internet Explorer.
+>
+> --
+> Jason Davies, https://www.jasondavies.com/
+>
+
+-- 
+Bitcoin transactions made simple: https://github.com/Ayms/bitcoin-transactions
+Zcash wallets made simple: https://github.com/Ayms/zcash-wallets
+Bitcoin wallets made simple: https://github.com/Ayms/bitcoin-wallets
+Get the torrent dynamic blocklist: http://peersm.com/getblocklist
+Check the 10 M passwords list: http://peersm.com/findmyass
+Anti-spies and private torrents, dynamic blocklist: http://torrent-live.org
+Peersm : http://www.peersm.com
+torrent-live: https://github.com/Ayms/torrent-live
+node-Tor : https://www.github.com/Ayms/node-Tor
+GitHub : https://www.github.com/Ayms
+
+
+From maxim.solovjov at gmail.com  Tue Apr 10 20:29:23 2018
+From: maxim.solovjov at gmail.com (Maksim Solovjov)
+Date: Tue, 10 Apr 2018 23:29:23 +0300
+Subject: [bitcoin-dev] Few questions regarding ListTransaction
+Message-ID: <CAO11aqjomkZcr8yeKtT5M8VUROGwz56w11UzR0pDBu333=BEPg@mail.gmail.com>
+
+Hi,
+
+I have few questions regarding ListTransaction RPC call and I hope you can
+help me.
+Documentation for the RPC call is here:
+https://bitcoin.org/en/developer-reference#listtransactions
+
+1. What does it mean for a transaction ( with 0 confirmations ) to be
+*trusted* or not?
+There is such field in the response of ListTransaction
+As far as I know bitcoin - nothing is trusted unless there are some numbers
+of confirmations.
+How does this value is set to true or false?
+
+2. When does *confirmations* can be -1 ( conflicted )?
+What does it mean to have conflicted transaction?
+Is it about Transaction Malleability? Double Spend? or both?
+
+3. *walletconflicts*. What if I add watch-only address to my bitcoind
+process.
+This address will not be a part of my wallet.
+Now, someone will pay me to this address and someone else will make
+Transaction Malleability ( for the sake of example, lets assume this second
+one will be confirmed, not the original one ).
+Will I get a first transaction in *walletconflicts* array when
+ListTransaction will return me second transaction in the response?
+
+Thank you in advance!
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180410/8b44871c/attachment.html>
+
+From fireduck at gmail.com  Tue Apr 10 20:41:07 2018
+From: fireduck at gmail.com (=?UTF-8?B?Sm9zZXBoIEdsZWFzb24g4pGI?=)
+Date: Tue, 10 Apr 2018 20:41:07 +0000
+Subject: [bitcoin-dev] Few questions regarding ListTransaction
+In-Reply-To: <CAO11aqjomkZcr8yeKtT5M8VUROGwz56w11UzR0pDBu333=BEPg@mail.gmail.com>
+References: <CAO11aqjomkZcr8yeKtT5M8VUROGwz56w11UzR0pDBu333=BEPg@mail.gmail.com>
+Message-ID: <CA+ASnrFMXc66ei=xnyRVwegEo+t3ivQTGFCNkv+KgU2kAPH95Q@mail.gmail.com>
+
+2) -1 doesn't mean conflicted, it means the transaction is not only
+unconfirmed buy depends on another unconfirmed transaction.
+
+1) Depends on what you mean by trusted.  If you are giving the user online
+access to something that costs you next to nothing to revoke if there is a
+problem later, no problem.  0-conf is great.  If you are pre-pairing
+shipments and will be able to pull the box from the ship stream if there is
+a problem, also no problem.  If you are sending some other non-reversible
+thing like crypto, then you might want to be careful.  It really depends on
+the value of your things and your tolerance of risk.
+
+In my opinion, an zero-conf transaction is way way better than a credit
+card preauth or a check in hand.
+
+
+
+On Tue, Apr 10, 2018 at 1:34 PM Maksim Solovjov via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Hi,
+>
+> I have few questions regarding ListTransaction RPC call and I hope you can
+> help me.
+> Documentation for the RPC call is here:
+> https://bitcoin.org/en/developer-reference#listtransactions
+>
+> 1. What does it mean for a transaction ( with 0 confirmations ) to be
+> *trusted* or not?
+> There is such field in the response of ListTransaction
+> As far as I know bitcoin - nothing is trusted unless there are some
+> numbers of confirmations.
+> How does this value is set to true or false?
+>
+> 2. When does *confirmations* can be -1 ( conflicted )?
+> What does it mean to have conflicted transaction?
+> Is it about Transaction Malleability? Double Spend? or both?
+>
+> 3. *walletconflicts*. What if I add watch-only address to my bitcoind
+> process.
+> This address will not be a part of my wallet.
+> Now, someone will pay me to this address and someone else will make
+> Transaction Malleability ( for the sake of example, lets assume this second
+> one will be confirmed, not the original one ).
+> Will I get a first transaction in *walletconflicts* array when
+> ListTransaction will return me second transaction in the response?
+>
+> Thank you in advance!
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180410/212bdb4e/attachment.html>
+
+From karljohan-alm at garage.co.jp  Wed Apr 11 05:21:10 2018
+From: karljohan-alm at garage.co.jp (Karl-Johan Alm)
+Date: Wed, 11 Apr 2018 14:21:10 +0900
+Subject: [bitcoin-dev] Few questions regarding ListTransaction
+In-Reply-To: <CAO11aqjomkZcr8yeKtT5M8VUROGwz56w11UzR0pDBu333=BEPg@mail.gmail.com>
+References: <CAO11aqjomkZcr8yeKtT5M8VUROGwz56w11UzR0pDBu333=BEPg@mail.gmail.com>
+Message-ID: <CALJw2w6Guc6rX7A_8Nqob+w1=NKi2DfH9aj2-sg2EfgRFjDw0g@mail.gmail.com>
+
+On Wed, Apr 11, 2018 at 5:29 AM, Maksim Solovjov via bitcoin-dev
+<bitcoin-dev at lists.linuxfoundation.org> wrote:
+> 1. What does it mean for a transaction ( with 0 confirmations ) to be
+> trusted or not?
+
+It is trusted if (1) it is final (i.e. it can't be replaced), (2) it
+is not in a block that was reorged out (negative confirmation count),
+(3) the 'spend zero conf change' option is set, (4) it is in the
+mempool, and (5) all inputs are from us.
+
+> 2. When does confirmations can be -1 ( conflicted )?
+> What does it mean to have conflicted transaction?
+> Is it about Transaction Malleability? Double Spend? or both?
+
+A transaction is conflicted if a different transaction exists that
+spends the same inputs. A transaction gets -N confirmations if it is
+mined in a block, and that block is orphaned away, and a different
+transaction is mined in the new block so that the transaction becomes
+a double spend.
+
+From karljohan-alm at garage.co.jp  Wed Apr 11 05:22:42 2018
+From: karljohan-alm at garage.co.jp (Karl-Johan Alm)
+Date: Wed, 11 Apr 2018 14:22:42 +0900
+Subject: [bitcoin-dev] Few questions regarding ListTransaction
+In-Reply-To: <CALJw2w6Guc6rX7A_8Nqob+w1=NKi2DfH9aj2-sg2EfgRFjDw0g@mail.gmail.com>
+References: <CAO11aqjomkZcr8yeKtT5M8VUROGwz56w11UzR0pDBu333=BEPg@mail.gmail.com>
+	<CALJw2w6Guc6rX7A_8Nqob+w1=NKi2DfH9aj2-sg2EfgRFjDw0g@mail.gmail.com>
+Message-ID: <CALJw2w5wfVt160uywmfOjhON8EbYkjg9bCU-6EKBO2y9TYFY5A@mail.gmail.com>
+
+Clarification on one part below:
+
+On Wed, Apr 11, 2018 at 2:21 PM, Karl-Johan Alm
+<karljohan-alm at garage.co.jp> wrote:
+> On Wed, Apr 11, 2018 at 5:29 AM, Maksim Solovjov via bitcoin-dev
+> <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>> 1. What does it mean for a transaction ( with 0 confirmations ) to be
+>> trusted or not?
+>
+> It is trusted if (1) it is final (i.e. it can't be replaced), (2) it
+> is not in a block that was reorged out (negative confirmation count),
+> (3) the 'spend zero conf change' option is set, (4) it is in the
+> mempool, and (5) all inputs are from us.
+
+"can't be replaced" here means it cannot be replaced through
+conventional means. It is always possible to replace a transaction
+that has not yet been confirmed, e.g. by asking a miner to mine a
+conflicting transaction directly.
+
+From pete at petertodd.org  Wed Apr 11 07:52:25 2018
+From: pete at petertodd.org (Peter Todd)
+Date: Wed, 11 Apr 2018 03:52:25 -0400
+Subject: [bitcoin-dev] Few questions regarding ListTransaction
+In-Reply-To: <CALJw2w5wfVt160uywmfOjhON8EbYkjg9bCU-6EKBO2y9TYFY5A@mail.gmail.com>
+References: <CAO11aqjomkZcr8yeKtT5M8VUROGwz56w11UzR0pDBu333=BEPg@mail.gmail.com>
+	<CALJw2w6Guc6rX7A_8Nqob+w1=NKi2DfH9aj2-sg2EfgRFjDw0g@mail.gmail.com>
+	<CALJw2w5wfVt160uywmfOjhON8EbYkjg9bCU-6EKBO2y9TYFY5A@mail.gmail.com>
+Message-ID: <20180411075225.GG20665@savin.petertodd.org>
+
+On Wed, Apr 11, 2018 at 02:22:42PM +0900, Karl-Johan Alm via bitcoin-dev wrote:
+> Clarification on one part below:
+> 
+> On Wed, Apr 11, 2018 at 2:21 PM, Karl-Johan Alm
+> <karljohan-alm at garage.co.jp> wrote:
+> > On Wed, Apr 11, 2018 at 5:29 AM, Maksim Solovjov via bitcoin-dev
+> > <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> >> 1. What does it mean for a transaction ( with 0 confirmations ) to be
+> >> trusted or not?
+> >
+> > It is trusted if (1) it is final (i.e. it can't be replaced), (2) it
+> > is not in a block that was reorged out (negative confirmation count),
+> > (3) the 'spend zero conf change' option is set, (4) it is in the
+> > mempool, and (5) all inputs are from us.
+> 
+> "can't be replaced" here means it cannot be replaced through
+> conventional means. It is always possible to replace a transaction
+> that has not yet been confirmed, e.g. by asking a miner to mine a
+> conflicting transaction directly.
+
+Or via full replace-by-fee, which appears to be used by a significant minority
+of miners:
+
+https://github.com/petertodd/bitcoin/tree/replace-by-fee-v0.16.0
+
+In practice transaction replacement by the sender for any transaction is very
+easy.
+
+-- 
+https://petertodd.org 'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 455 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180411/31bcf010/attachment.sig>
+
+From karljohan-alm at garage.co.jp  Wed Apr 11 08:10:43 2018
+From: karljohan-alm at garage.co.jp (Karl-Johan Alm)
+Date: Wed, 11 Apr 2018 17:10:43 +0900
+Subject: [bitcoin-dev] Few questions regarding ListTransaction
+In-Reply-To: <20180411075225.GG20665@savin.petertodd.org>
+References: <CAO11aqjomkZcr8yeKtT5M8VUROGwz56w11UzR0pDBu333=BEPg@mail.gmail.com>
+	<CALJw2w6Guc6rX7A_8Nqob+w1=NKi2DfH9aj2-sg2EfgRFjDw0g@mail.gmail.com>
+	<CALJw2w5wfVt160uywmfOjhON8EbYkjg9bCU-6EKBO2y9TYFY5A@mail.gmail.com>
+	<20180411075225.GG20665@savin.petertodd.org>
+Message-ID: <CALJw2w6OJZLrf20R--EYECPE65H0EJPxyUHRbSOJGQc9SNvupA@mail.gmail.com>
+
+On Wed, Apr 11, 2018 at 4:52 PM, Peter Todd <pete at petertodd.org> wrote:
+> Or via full replace-by-fee, which appears to be used by a significant minority
+> of miners:
+
+I was of the impression that final transactions (sequence=0xffffffff)
+cannot be RBF'd.
+
+From pete at petertodd.org  Wed Apr 11 09:37:24 2018
+From: pete at petertodd.org (Peter Todd)
+Date: Wed, 11 Apr 2018 05:37:24 -0400
+Subject: [bitcoin-dev] Few questions regarding ListTransaction
+In-Reply-To: <CALJw2w6OJZLrf20R--EYECPE65H0EJPxyUHRbSOJGQc9SNvupA@mail.gmail.com>
+References: <CAO11aqjomkZcr8yeKtT5M8VUROGwz56w11UzR0pDBu333=BEPg@mail.gmail.com>
+	<CALJw2w6Guc6rX7A_8Nqob+w1=NKi2DfH9aj2-sg2EfgRFjDw0g@mail.gmail.com>
+	<CALJw2w5wfVt160uywmfOjhON8EbYkjg9bCU-6EKBO2y9TYFY5A@mail.gmail.com>
+	<20180411075225.GG20665@savin.petertodd.org>
+	<CALJw2w6OJZLrf20R--EYECPE65H0EJPxyUHRbSOJGQc9SNvupA@mail.gmail.com>
+Message-ID: <20180411093724.GA21441@savin.petertodd.org>
+
+On Wed, Apr 11, 2018 at 05:10:43PM +0900, Karl-Johan Alm wrote:
+> On Wed, Apr 11, 2018 at 4:52 PM, Peter Todd <pete at petertodd.org> wrote:
+> > Or via full replace-by-fee, which appears to be used by a significant minority
+> > of miners:
+> 
+> I was of the impression that final transactions (sequence=0xffffffff)
+> cannot be RBF'd.
+
+My full-replace-by-fee tree ignores that. It also does preferential peering to
+ensure it's well connected with likewise peers, and thus the whole network.
+
+-- 
+https://petertodd.org 'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 455 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180411/ee9bc522/attachment.sig>
+
+From karljohan-alm at garage.co.jp  Wed Apr 11 10:00:45 2018
+From: karljohan-alm at garage.co.jp (Karl-Johan Alm)
+Date: Wed, 11 Apr 2018 19:00:45 +0900
+Subject: [bitcoin-dev] Few questions regarding ListTransaction
+In-Reply-To: <W-3_0a0Wp9HoQBvu-eGzXlwpj63Kk4kAGWECRax6CqdvML961niOTYkq60sv381rS-ffpQGG-apaTtvHkjkobNVlyXAG_WSekXevGmaOS5Q=@protonmail.com>
+References: <CAO11aqjomkZcr8yeKtT5M8VUROGwz56w11UzR0pDBu333=BEPg@mail.gmail.com>
+	<CALJw2w6Guc6rX7A_8Nqob+w1=NKi2DfH9aj2-sg2EfgRFjDw0g@mail.gmail.com>
+	<CALJw2w5wfVt160uywmfOjhON8EbYkjg9bCU-6EKBO2y9TYFY5A@mail.gmail.com>
+	<20180411075225.GG20665@savin.petertodd.org>
+	<CALJw2w6OJZLrf20R--EYECPE65H0EJPxyUHRbSOJGQc9SNvupA@mail.gmail.com>
+	<20180411093724.GA21441@savin.petertodd.org>
+	<W-3_0a0Wp9HoQBvu-eGzXlwpj63Kk4kAGWECRax6CqdvML961niOTYkq60sv381rS-ffpQGG-apaTtvHkjkobNVlyXAG_WSekXevGmaOS5Q=@protonmail.com>
+Message-ID: <CALJw2w6T6+ZTtsWGoqicuL6r3A0X_Ru379aH_7JcxnBaUiFfkQ@mail.gmail.com>
+
+Thanks for clarifying!
+
+On Wed, Apr 11, 2018 at 6:48 PM, ZmnSCPxj <ZmnSCPxj at protonmail.com> wrote:
+> Good morning Karl-Johan Alm,
+>
+> To clarify:
+>
+> Nothing prevents a miner from completely ignoring nSequence when putting transactions in blocks.
+>
+> Unconfirmed transactions are, by definition, not recorded in blocks.  So if there is a transaction 0xFFFFFFF nSequence and fee 1000 satoshi, and another conflicting transaction 0xFFFFFFF nSequence and fee 100000000 satoshi, miners can include the latter one even if the first one came to their knowledge first, regardless nSequence.
+>
+> Thus, in the end "full replace-by-fee", where nSequence is IGNORED for purposes of replace-by-fee, is expected to become the norm, and we should really be designing our wallets and so on so that we only trust transactions that have confirmations.
+>
+> The "nSequence=0xFFFFFFFF means opt-OUT of RBF" convention is only followed by fullnodes running standard bitcoind.  Nothing prevents miners from running patched bitcoind that ignores this rule, and connecting with similar peers who also ignore this rule.
+>
+> Regards,
+> ZmnSCPxj
+>
+>
+> Sent with ProtonMail Secure Email.
+>
+> ??????? Original Message ???????
+>
+> On April 11, 2018 5:37 PM, Peter Todd via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+>> On Wed, Apr 11, 2018 at 05:10:43PM +0900, Karl-Johan Alm wrote:
+>>
+>> > On Wed, Apr 11, 2018 at 4:52 PM, Peter Todd pete at petertodd.org wrote:
+>> >
+>> > > Or via full replace-by-fee, which appears to be used by a significant minority
+>> > >
+>> > > of miners:
+>> >
+>> > I was of the impression that final transactions (sequence=0xffffffff)
+>> >
+>> > cannot be RBF'd.
+>>
+>> My full-replace-by-fee tree ignores that. It also does preferential peering to
+>>
+>> ensure it's well connected with likewise peers, and thus the whole network.
+>>
+>>
+>> ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+>>
+>> https://petertodd.org 'peter'[:-1]@petertodd.org
+>>
+>> bitcoin-dev mailing list
+>>
+>> bitcoin-dev at lists.linuxfoundation.org
+>>
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+>
+
+From ZmnSCPxj at protonmail.com  Wed Apr 11 09:48:39 2018
+From: ZmnSCPxj at protonmail.com (ZmnSCPxj)
+Date: Wed, 11 Apr 2018 05:48:39 -0400
+Subject: [bitcoin-dev] Few questions regarding ListTransaction
+In-Reply-To: <20180411093724.GA21441@savin.petertodd.org>
+References: <CAO11aqjomkZcr8yeKtT5M8VUROGwz56w11UzR0pDBu333=BEPg@mail.gmail.com>
+	<CALJw2w6Guc6rX7A_8Nqob+w1=NKi2DfH9aj2-sg2EfgRFjDw0g@mail.gmail.com>
+	<CALJw2w5wfVt160uywmfOjhON8EbYkjg9bCU-6EKBO2y9TYFY5A@mail.gmail.com>
+	<20180411075225.GG20665@savin.petertodd.org>
+	<CALJw2w6OJZLrf20R--EYECPE65H0EJPxyUHRbSOJGQc9SNvupA@mail.gmail.com>
+	<20180411093724.GA21441@savin.petertodd.org>
+Message-ID: <W-3_0a0Wp9HoQBvu-eGzXlwpj63Kk4kAGWECRax6CqdvML961niOTYkq60sv381rS-ffpQGG-apaTtvHkjkobNVlyXAG_WSekXevGmaOS5Q=@protonmail.com>
+
+Good morning Karl-Johan Alm,
+
+To clarify:
+
+Nothing prevents a miner from completely ignoring nSequence when putting transactions in blocks.
+
+Unconfirmed transactions are, by definition, not recorded in blocks.  So if there is a transaction 0xFFFFFFF nSequence and fee 1000 satoshi, and another conflicting transaction 0xFFFFFFF nSequence and fee 100000000 satoshi, miners can include the latter one even if the first one came to their knowledge first, regardless nSequence.
+
+Thus, in the end "full replace-by-fee", where nSequence is IGNORED for purposes of replace-by-fee, is expected to become the norm, and we should really be designing our wallets and so on so that we only trust transactions that have confirmations.
+
+The "nSequence=0xFFFFFFFF means opt-OUT of RBF" convention is only followed by fullnodes running standard bitcoind.  Nothing prevents miners from running patched bitcoind that ignores this rule, and connecting with similar peers who also ignore this rule.
+
+Regards,
+ZmnSCPxj
+
+
+?Sent with ProtonMail Secure Email.?
+
+??????? Original Message ???????
+
+On April 11, 2018 5:37 PM, Peter Todd via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> On Wed, Apr 11, 2018 at 05:10:43PM +0900, Karl-Johan Alm wrote:
+> 
+> > On Wed, Apr 11, 2018 at 4:52 PM, Peter Todd pete at petertodd.org wrote:
+> > 
+> > > Or via full replace-by-fee, which appears to be used by a significant minority
+> > > 
+> > > of miners:
+> > 
+> > I was of the impression that final transactions (sequence=0xffffffff)
+> > 
+> > cannot be RBF'd.
+> 
+> My full-replace-by-fee tree ignores that. It also does preferential peering to
+> 
+> ensure it's well connected with likewise peers, and thus the whole network.
+> 
+> 
+> ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+> 
+> https://petertodd.org 'peter'[:-1]@petertodd.org
+> 
+> bitcoin-dev mailing list
+> 
+> bitcoin-dev at lists.linuxfoundation.org
+> 
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+
+
+From maxim.solovjov at gmail.com  Wed Apr 11 19:58:45 2018
+From: maxim.solovjov at gmail.com (Maksim Solovjov)
+Date: Wed, 11 Apr 2018 22:58:45 +0300
+Subject: [bitcoin-dev] Few questions regarding ListTransaction
+In-Reply-To: <CALJw2w6T6+ZTtsWGoqicuL6r3A0X_Ru379aH_7JcxnBaUiFfkQ@mail.gmail.com>
+References: <CAO11aqjomkZcr8yeKtT5M8VUROGwz56w11UzR0pDBu333=BEPg@mail.gmail.com>
+	<CALJw2w6Guc6rX7A_8Nqob+w1=NKi2DfH9aj2-sg2EfgRFjDw0g@mail.gmail.com>
+	<CALJw2w5wfVt160uywmfOjhON8EbYkjg9bCU-6EKBO2y9TYFY5A@mail.gmail.com>
+	<20180411075225.GG20665@savin.petertodd.org>
+	<CALJw2w6OJZLrf20R--EYECPE65H0EJPxyUHRbSOJGQc9SNvupA@mail.gmail.com>
+	<20180411093724.GA21441@savin.petertodd.org>
+	<W-3_0a0Wp9HoQBvu-eGzXlwpj63Kk4kAGWECRax6CqdvML961niOTYkq60sv381rS-ffpQGG-apaTtvHkjkobNVlyXAG_WSekXevGmaOS5Q=@protonmail.com>
+	<CALJw2w6T6+ZTtsWGoqicuL6r3A0X_Ru379aH_7JcxnBaUiFfkQ@mail.gmail.com>
+Message-ID: <CAO11aqiipgo8tty2qiA0Jr1SiDjE51VbeUJBR4O9_Nyzm5EXBg@mail.gmail.com>
+
+OK.
+
+Thank you guys for clarification.
+
+On Wed, Apr 11, 2018 at 1:00 PM, Karl-Johan Alm via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Thanks for clarifying!
+>
+> On Wed, Apr 11, 2018 at 6:48 PM, ZmnSCPxj <ZmnSCPxj at protonmail.com> wrote:
+> > Good morning Karl-Johan Alm,
+> >
+> > To clarify:
+> >
+> > Nothing prevents a miner from completely ignoring nSequence when putting
+> transactions in blocks.
+> >
+> > Unconfirmed transactions are, by definition, not recorded in blocks.  So
+> if there is a transaction 0xFFFFFFF nSequence and fee 1000 satoshi, and
+> another conflicting transaction 0xFFFFFFF nSequence and fee 100000000
+> satoshi, miners can include the latter one even if the first one came to
+> their knowledge first, regardless nSequence.
+> >
+> > Thus, in the end "full replace-by-fee", where nSequence is IGNORED for
+> purposes of replace-by-fee, is expected to become the norm, and we should
+> really be designing our wallets and so on so that we only trust
+> transactions that have confirmations.
+> >
+> > The "nSequence=0xFFFFFFFF means opt-OUT of RBF" convention is only
+> followed by fullnodes running standard bitcoind.  Nothing prevents miners
+> from running patched bitcoind that ignores this rule, and connecting with
+> similar peers who also ignore this rule.
+> >
+> > Regards,
+> > ZmnSCPxj
+> >
+> >
+> > Sent with ProtonMail Secure Email.
+> >
+> > ??????? Original Message ???????
+> >
+> > On April 11, 2018 5:37 PM, Peter Todd via bitcoin-dev <
+> bitcoin-dev at lists.linuxfoundation.org> wrote:
+> >
+> >> On Wed, Apr 11, 2018 at 05:10:43PM +0900, Karl-Johan Alm wrote:
+> >>
+> >> > On Wed, Apr 11, 2018 at 4:52 PM, Peter Todd pete at petertodd.org wrote:
+> >> >
+> >> > > Or via full replace-by-fee, which appears to be used by a
+> significant minority
+> >> > >
+> >> > > of miners:
+> >> >
+> >> > I was of the impression that final transactions (sequence=0xffffffff)
+> >> >
+> >> > cannot be RBF'd.
+> >>
+> >> My full-replace-by-fee tree ignores that. It also does preferential
+> peering to
+> >>
+> >> ensure it's well connected with likewise peers, and thus the whole
+> network.
+> >>
+> >>
+> >> ------------------------------------------------------------
+> ------------------------------------------------------------
+> ---------------------------------------
+> >>
+> >> https://petertodd.org 'peter'[:-1]@petertodd.org
+> >>
+> >> bitcoin-dev mailing list
+> >>
+> >> bitcoin-dev at lists.linuxfoundation.org
+> >>
+> >> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> >
+> >
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180411/bc0c76ff/attachment.html>
+
+From andreas at schildbach.de  Fri Apr 13 15:32:15 2018
+From: andreas at schildbach.de (Andreas Schildbach)
+Date: Fri, 13 Apr 2018 17:32:15 +0200
+Subject: [bitcoin-dev] BloomFilter issue with segwit addresses
+Message-ID: <paqids$e14$1@blaine.gmane.org>
+
+Anton, a developer on the bitcoinj maiing list, recently made me aware
+[1] of a compatibility issue between segwit and BIP37 (Bloom Filtering).
+
+The issue affects only P2WPKH and the special case of transactions
+without change outputs (such as when emptying a wallet). In this case,
+neither inputs not outputs contain any data elements that would cause a
+match for the filter. The public key, which would match, goes to the
+witness but not to the input.
+
+My suggestion was to include an OP_RETURN output with a matching public
+key in such transactions. Anton confirmed that this workaround is indeed
+working. But of course it nullifies some of the segwit's size improvements.
+
+I wonder if Bitcoin Core would be willing to extend the BIP37 matching
+rules such that data elements in the witness are also matched against?
+
+
+[1] https://groups.google.com/d/msg/bitcoinj/SJpLgjowc1I/V7u2BavvAwAJ
+
+
+From dev at jonasschnelli.ch  Fri Apr 13 19:12:47 2018
+From: dev at jonasschnelli.ch (Jonas Schnelli)
+Date: Fri, 13 Apr 2018 21:12:47 +0200
+Subject: [bitcoin-dev] BloomFilter issue with segwit addresses
+In-Reply-To: <paqids$e14$1@blaine.gmane.org>
+References: <paqids$e14$1@blaine.gmane.org>
+Message-ID: <4A0CD31A-8745-4425-99FC-5DF12FA3B917@jonasschnelli.ch>
+
+Hi Andreas
+
+Thanks for bringing this up and this seems indeed to be suboptimal.
+
+> I wonder if Bitcoin Core would be willing to extend the BIP37 matching
+> rules such that data elements in the witness are also matched against?
+
+Bitcoin Core is not an identity that can be ?willing to extend? (or reject) a feature.
+Someone needs to come up with a proposal (pull request).
+
+Maybe an extension for BIP37 would make sense (*meh*).
+Just inserting the witness data into the bloom filter seems to be an easy solution (CBloomFilter::IsRelevantAndUpdate())
+
+/jonas
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 833 bytes
+Desc: Message signed with OpenPGP
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180413/1dd52b17/attachment.sig>
+
+From jim.posen at gmail.com  Fri Apr 13 22:15:50 2018
+From: jim.posen at gmail.com (Jim Posen)
+Date: Fri, 13 Apr 2018 15:15:50 -0700
+Subject: [bitcoin-dev] BloomFilter issue with segwit addresses
+In-Reply-To: <4A0CD31A-8745-4425-99FC-5DF12FA3B917@jonasschnelli.ch>
+References: <paqids$e14$1@blaine.gmane.org>
+	<4A0CD31A-8745-4425-99FC-5DF12FA3B917@jonasschnelli.ch>
+Message-ID: <CADZtCSjsLSr_A-cBG5weAgstW9RG0sDL1txHC_E9ksVL=xJ4uA@mail.gmail.com>
+
+Why not add the outpoints owned by the wallet to the filter and watch for
+those instead of elements in the input script or witness data?
+
+On Fri, Apr 13, 2018 at 12:12 PM, Jonas Schnelli via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Hi Andreas
+>
+> Thanks for bringing this up and this seems indeed to be suboptimal.
+>
+> > I wonder if Bitcoin Core would be willing to extend the BIP37 matching
+> > rules such that data elements in the witness are also matched against?
+>
+> Bitcoin Core is not an identity that can be ?willing to extend? (or
+> reject) a feature.
+> Someone needs to come up with a proposal (pull request).
+>
+> Maybe an extension for BIP37 would make sense (*meh*).
+> Just inserting the witness data into the bloom filter seems to be an easy
+> solution (CBloomFilter::IsRelevantAndUpdate())
+>
+> /jonas
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180413/cedc5780/attachment.html>
+
+From luke at dashjr.org  Fri Apr 13 22:52:23 2018
+From: luke at dashjr.org (Luke Dashjr)
+Date: Fri, 13 Apr 2018 22:52:23 +0000
+Subject: [bitcoin-dev] BloomFilter issue with segwit addresses
+In-Reply-To: <paqids$e14$1@blaine.gmane.org>
+References: <paqids$e14$1@blaine.gmane.org>
+Message-ID: <201804132252.24419.luke@dashjr.org>
+
+As I understand it, the plan is to deprecated and remove BIP37 entirely once 
+BIP158 is implemented and deployed.
+
+In the meantime, Bitcoin Knots supports the MSG_FILTERED_WITNESS_BLOCK 
+extension to download witness data. (Note that light clients currently have no 
+way to verify the witness data is correct.)
+
+As far as matching goes, why not look for the specific COutPoints? That should 
+work already with standard BIP37.
+
+Luke
+
+
+On Friday 13 April 2018 3:32:15 PM Andreas Schildbach via bitcoin-dev wrote:
+> Anton, a developer on the bitcoinj maiing list, recently made me aware
+> [1] of a compatibility issue between segwit and BIP37 (Bloom Filtering).
+> 
+> The issue affects only P2WPKH and the special case of transactions
+> without change outputs (such as when emptying a wallet). In this case,
+> neither inputs not outputs contain any data elements that would cause a
+> match for the filter. The public key, which would match, goes to the
+> witness but not to the input.
+> 
+> My suggestion was to include an OP_RETURN output with a matching public
+> key in such transactions. Anton confirmed that this workaround is indeed
+> working. But of course it nullifies some of the segwit's size improvements.
+> 
+> I wonder if Bitcoin Core would be willing to extend the BIP37 matching
+> rules such that data elements in the witness are also matched against?
+> 
+> 
+> [1] https://groups.google.com/d/msg/bitcoinj/SJpLgjowc1I/V7u2BavvAwAJ
+> 
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+From decker.christian at gmail.com  Sat Apr 14 16:14:04 2018
+From: decker.christian at gmail.com (Christian Decker)
+Date: Sat, 14 Apr 2018 16:14:04 +0000
+Subject: [bitcoin-dev] BloomFilter issue with segwit addresses
+In-Reply-To: <CADZtCSjsLSr_A-cBG5weAgstW9RG0sDL1txHC_E9ksVL=xJ4uA@mail.gmail.com>
+References: <paqids$e14$1@blaine.gmane.org>
+	<4A0CD31A-8745-4425-99FC-5DF12FA3B917@jonasschnelli.ch>
+	<CADZtCSjsLSr_A-cBG5weAgstW9RG0sDL1txHC_E9ksVL=xJ4uA@mail.gmail.com>
+Message-ID: <CALxbBHV=xpzu8iL-S=EKBc39QWvAiicVixM_j3Ve1TH+sngPoQ@mail.gmail.com>
+
+Note that this would compound the privacy leak that Jonas Nick used to
+identify address clusters via the bloom filters in one of his publications.
+By reducing the false positives when matching you can get very detailed
+clusters. Then again we know that bloom filters aren't good for privacy
+anyway, so this might be a non-issue.
+
+On Sat, Apr 14, 2018, 00:17 Jim Posen via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Why not add the outpoints owned by the wallet to the filter and watch for
+> those instead of elements in the input script or witness data?
+>
+> On Fri, Apr 13, 2018 at 12:12 PM, Jonas Schnelli via bitcoin-dev <
+> bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+>> Hi Andreas
+>>
+>> Thanks for bringing this up and this seems indeed to be suboptimal.
+>>
+>> > I wonder if Bitcoin Core would be willing to extend the BIP37 matching
+>> > rules such that data elements in the witness are also matched against?
+>>
+>> Bitcoin Core is not an identity that can be ?willing to extend? (or
+>> reject) a feature.
+>> Someone needs to come up with a proposal (pull request).
+>>
+>> Maybe an extension for BIP37 would make sense (*meh*).
+>> Just inserting the witness data into the bloom filter seems to be an easy
+>> solution (CBloomFilter::IsRelevantAndUpdate())
+>>
+>> /jonas
+>>
+>> _______________________________________________
+>> bitcoin-dev mailing list
+>> bitcoin-dev at lists.linuxfoundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>
+>>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180414/1e06e952/attachment.html>
+
+From jim.posen at gmail.com  Sat Apr 14 19:46:01 2018
+From: jim.posen at gmail.com (Jim Posen)
+Date: Sat, 14 Apr 2018 12:46:01 -0700
+Subject: [bitcoin-dev] BloomFilter issue with segwit addresses
+In-Reply-To: <CALxbBHV=xpzu8iL-S=EKBc39QWvAiicVixM_j3Ve1TH+sngPoQ@mail.gmail.com>
+References: <paqids$e14$1@blaine.gmane.org>
+	<4A0CD31A-8745-4425-99FC-5DF12FA3B917@jonasschnelli.ch>
+	<CADZtCSjsLSr_A-cBG5weAgstW9RG0sDL1txHC_E9ksVL=xJ4uA@mail.gmail.com>
+	<CALxbBHV=xpzu8iL-S=EKBc39QWvAiicVixM_j3Ve1TH+sngPoQ@mail.gmail.com>
+Message-ID: <CADZtCSgQ-R8Z-eCPNaaNgSP6FWNn6qOucWUX3WkuOFHmXNc5dQ@mail.gmail.com>
+
+To Christian's point about privacy, I'll take this opportunity to
+shamelessly review beg on https://github.com/bitcoin/bitcoin/pull/12254,
+the PR for BIP 158 implementation (but not 157).
+
+On Sat, Apr 14, 2018 at 9:14 AM, Christian Decker <
+decker.christian at gmail.com> wrote:
+
+> Note that this would compound the privacy leak that Jonas Nick used to
+> identify address clusters via the bloom filters in one of his publications.
+> By reducing the false positives when matching you can get very detailed
+> clusters. Then again we know that bloom filters aren't good for privacy
+> anyway, so this might be a non-issue.
+>
+> On Sat, Apr 14, 2018, 00:17 Jim Posen via bitcoin-dev <bitcoin-dev at lists.
+> linuxfoundation.org> wrote:
+>
+>> Why not add the outpoints owned by the wallet to the filter and watch for
+>> those instead of elements in the input script or witness data?
+>>
+>> On Fri, Apr 13, 2018 at 12:12 PM, Jonas Schnelli via bitcoin-dev <
+>> bitcoin-dev at lists.linuxfoundation.org> wrote:
+>>
+>>> Hi Andreas
+>>>
+>>> Thanks for bringing this up and this seems indeed to be suboptimal.
+>>>
+>>> > I wonder if Bitcoin Core would be willing to extend the BIP37 matching
+>>> > rules such that data elements in the witness are also matched against?
+>>>
+>>> Bitcoin Core is not an identity that can be ?willing to extend? (or
+>>> reject) a feature.
+>>> Someone needs to come up with a proposal (pull request).
+>>>
+>>> Maybe an extension for BIP37 would make sense (*meh*).
+>>> Just inserting the witness data into the bloom filter seems to be an
+>>> easy solution (CBloomFilter::IsRelevantAndUpdate())
+>>>
+>>> /jonas
+>>>
+>>> _______________________________________________
+>>> bitcoin-dev mailing list
+>>> bitcoin-dev at lists.linuxfoundation.org
+>>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>>
+>>>
+>> _______________________________________________
+>> bitcoin-dev mailing list
+>> bitcoin-dev at lists.linuxfoundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180414/085832a7/attachment.html>
+
+From andreas at schildbach.de  Sun Apr 15 18:37:45 2018
+From: andreas at schildbach.de (Andreas Schildbach)
+Date: Sun, 15 Apr 2018 20:37:45 +0200
+Subject: [bitcoin-dev] BloomFilter issue with segwit addresses
+In-Reply-To: <CALxbBHV=xpzu8iL-S=EKBc39QWvAiicVixM_j3Ve1TH+sngPoQ@mail.gmail.com>
+References: <paqids$e14$1@blaine.gmane.org>
+	<4A0CD31A-8745-4425-99FC-5DF12FA3B917@jonasschnelli.ch>
+	<CADZtCSjsLSr_A-cBG5weAgstW9RG0sDL1txHC_E9ksVL=xJ4uA@mail.gmail.com>
+	<CALxbBHV=xpzu8iL-S=EKBc39QWvAiicVixM_j3Ve1TH+sngPoQ@mail.gmail.com>
+Message-ID: <pb061m$lj1$1@blaine.gmane.org>
+
+Yes, I guess the quicker filter exhaustion must be the reason why
+bitcoinj doesn't make use of outpoints in filters for standard
+transactions. I'll look into if I can change that.
+
+
+On 04/14/2018 06:14 PM, Christian Decker via bitcoin-dev wrote:
+> Note that this would compound the privacy leak that Jonas Nick used to
+> identify address clusters via the bloom filters in one of his
+> publications. By reducing the false positives when matching you can get
+> very detailed clusters. Then again we know that bloom filters aren't
+> good for privacy anyway, so this might be a non-issue.
+> 
+> On Sat, Apr 14, 2018, 00:17 Jim Posen via bitcoin-dev
+> <bitcoin-dev at lists.linuxfoundation.org
+> <mailto:bitcoin-dev at lists.linuxfoundation.org>> wrote:
+> 
+>     Why not add the outpoints owned by the wallet to the filter and
+>     watch for those instead of elements in the input script or witness data?
+> 
+>     On Fri, Apr 13, 2018 at 12:12 PM, Jonas Schnelli via bitcoin-dev
+>     <bitcoin-dev at lists.linuxfoundation.org
+>     <mailto:bitcoin-dev at lists.linuxfoundation.org>> wrote:
+> 
+>         Hi Andreas
+> 
+>         Thanks for bringing this up and this seems indeed to be suboptimal.
+> 
+>         > I wonder if Bitcoin Core would be willing to extend the BIP37 matching
+>         > rules such that data elements in the witness are also matched against?
+> 
+>         Bitcoin Core is not an identity that can be ?willing to extend?
+>         (or reject) a feature.
+>         Someone needs to come up with a proposal (pull request).
+> 
+>         Maybe an extension for BIP37 would make sense (*meh*).
+>         Just inserting the witness data into the bloom filter seems to
+>         be an easy solution (CBloomFilter::IsRelevantAndUpdate())
+> 
+>         /jonas
+> 
+>         _______________________________________________
+>         bitcoin-dev mailing list
+>         bitcoin-dev at lists.linuxfoundation.org
+>         <mailto:bitcoin-dev at lists.linuxfoundation.org>
+>         https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> 
+> 
+>     _______________________________________________
+>     bitcoin-dev mailing list
+>     bitcoin-dev at lists.linuxfoundation.org
+>     <mailto:bitcoin-dev at lists.linuxfoundation.org>
+>     https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> 
+> 
+> 
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> 
+
+
+
+From tyzbit at gmail.com  Sat Apr 21 12:35:28 2018
+From: tyzbit at gmail.com (Tyler H)
+Date: Sat, 21 Apr 2018 12:35:28 +0000
+Subject: [bitcoin-dev] Numerifides - Proposal for Decentralized
+	trust/authority on Bitcoin blockchain
+Message-ID: <CAEegQfVLWSySWfCbSmGG4V0i6GMpgyUr=86Qzb4YE9s+M5K1gg@mail.gmail.com>
+
+Greetings,
+
+I have been working on a proposal called Numerifides which would provide a
+general method to register human-readable names and arbitrary data (such as
+username->GPG key, domain->IP address, Lightning node Alias-> URI, etc).
+Here are the key highlights:
+
+--New transaction type called "numerifides" transactions
+--Lock up Bitcoin for a certain amount of time to make the mappings valid,
+discourage "namesquatting"
+--Transaction puzzle attached to transactions to allow community consensus
+revocation of highly contested names or "squatted" name mappings.
+--Transactions are RBF so if name is contentious or miners wish to censor,
+one honest greedy miner can include the censored user's high-fee
+transaction)
+--Solves Zooko's triangle of Secure, Decentralized and Human Meaningful
+
+Full working spec is here: https://github.com/tyzbit/numerifides
+
+I'd love feedback and possible enhancements, as I know this early rough
+draft does have a lot of room for improvement (I also think it would be
+remiss to incentivize filling blocks with data like this, and a possible
+change proposed on the lightning-dev list by ZmnSCPxj is a P2WSH defining
+the mapping that is gossiped about outside of the Bitcoin network, but I'd
+like to hear all comments).
+
+Thank you for your time.
+Tyler Hawkins
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180421/60d32e11/attachment.html>
+
+From paul at 345.systems  Wed Apr 25 09:35:03 2018
+From: paul at 345.systems (Paul Brown)
+Date: Wed, 25 Apr 2018 09:35:03 +0000
+Subject: [bitcoin-dev] Multi-signature and multi-coin HD wallet in one BIP32
+ derivation path (new BIP)
+Message-ID: <HE1PR09MB026619CDFFBA6D995600EF18988F0@HE1PR09MB0266.eurprd09.prod.outlook.com>
+
+Hi
+
+I have written a new BIP describing a BIP32 derivation path that supports a single or multi-signature and multi-coin wallet from a single master seed.  It combines BIP44 and BIP45 and adds in a self-describing structure in the derivation path for multiple multi-sig combinations within the single wallet along with an extended public key export file format for public key distribution between parties.  I can particularly see this being useful for multiple Lightning Network 2of2 accounts for different payment channels.
+
+The BIP can be found here: https://github.com/gluexchange/bip/blob/master/bip-0046.mediawiki
+
+I appreciate that this might be re-hashing old ground as BIP44 in particular has been widely adopted, however, BIP44 does leave itself open to a lot of interpretation from a wallet portability perspective such as:
+
+- What address format is expected when discovering balances and creating transactions?
+- Does the master seed represent a single-sig or multi-sig wallet?
+- If multi-sig, how many cosigners and what are their extended public keys (so that the wallet can generate the correctly formatted redeem script with public keys in the right order)?
+- If multi-sig, how do you prevent collisions on the same address index (in a wallet that is occasionally connected)?
+
+BIP45 solves the collision that occurs when the individual parties in a multi-sig group each give out a new address from a wallet, where the wallet hasn't been able to sync to mark the address as 'used' (this could happen if they gave out addresses independently at the same time).  It uses a cosigner index in the derivation path so that each party has their own path to their addresses.  However, BIP45 drops the multi-coin support that BIP44 has.
+
+This is a useful discussion on the problems of a collision and the merits of separating cosigners in the derivation path: https://www.mail-archive.com/bitcoin-development at lists.sourceforge.net/msg05188.html
+
+For the purposes of the BIP text (and the example paths used to generate keys) I've temporarily assigned it the number 46.  It looks like that is available and seemed somewhat appropriate given that it builds on the good work of BIP44 and BIP45.
+
+Paul Brown
+
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180425/eb57c1c2/attachment.html>
+
+From tyzbit at gmail.com  Wed Apr 25 06:58:45 2018
+From: tyzbit at gmail.com (Tyler H)
+Date: Wed, 25 Apr 2018 06:58:45 +0000
+Subject: [bitcoin-dev] Numerifides - Proposal for Decentralized
+ trust/authority on Bitcoin blockchain
+In-Reply-To: <CAEegQfVLWSySWfCbSmGG4V0i6GMpgyUr=86Qzb4YE9s+M5K1gg@mail.gmail.com>
+References: <CAEegQfVLWSySWfCbSmGG4V0i6GMpgyUr=86Qzb4YE9s+M5K1gg@mail.gmail.com>
+Message-ID: <CAEegQfW48ZUfxnHG4FFs0Z+BxYzhdLJkS_oiJcWhvp3iw6o3Ow@mail.gmail.com>
+
+Hello again,
+
+I've reworked this idea a bit as alluded to previously.  The key highlights
+of Numerifides are now:
+
+- Transaction is a normal transaction paying to a script hash with a
+CHECKSEQUENCEVERIFY encumbrance.
+- Users "mine" their registrations to produce TXIDs with Proof of Work
+attached (providing for a way to secure and "commandeer" names).
+- Secondary network for gossiping name->data mappings, that is rooted from
+the numerifide transactions on the Bitcoin blockchain.
+
+The "mining" is done simply by incrementing a nonce in the registration
+data (off-chain).  This prevents "namesquatting" like we see on Namecoin.
+
+There is an easy formula that uses the Timelock, Proof of Work and amount
+of Bitcoin locked that determines which transactions are authoritative for
+a given name mapping.
+
+https://github.com/tyzbit/numerifides#technical-proposal
+
+Feedback and criticism appreciated,
+Tyler
+
+On Sat, Apr 21, 2018 at 8:35 AM Tyler H <tyzbit at gmail.com> wrote:
+
+> Greetings,
+>
+> I have been working on a proposal called Numerifides which would provide a
+> general method to register human-readable names and arbitrary data (such as
+> username->GPG key, domain->IP address, Lightning node Alias-> URI, etc).
+> Here are the key highlights:
+>
+> --New transaction type called "numerifides" transactions
+> --Lock up Bitcoin for a certain amount of time to make the mappings valid,
+> discourage "namesquatting"
+> --Transaction puzzle attached to transactions to allow community consensus
+> revocation of highly contested names or "squatted" name mappings.
+> --Transactions are RBF so if name is contentious or miners wish to censor,
+> one honest greedy miner can include the censored user's high-fee
+> transaction)
+> --Solves Zooko's triangle of Secure, Decentralized and Human Meaningful
+>
+> Full working spec is here: https://github.com/tyzbit/numerifides
+>
+> I'd love feedback and possible enhancements, as I know this early rough
+> draft does have a lot of room for improvement (I also think it would be
+> remiss to incentivize filling blocks with data like this, and a possible
+> change proposed on the lightning-dev list by ZmnSCPxj is a P2WSH defining
+> the mapping that is gossiped about outside of the Bitcoin network, but I'd
+> like to hear all comments).
+>
+> Thank you for your time.
+> Tyler Hawkins
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180425/27290ddb/attachment.html>
+
+From clark at clarkmoody.com  Wed Apr 25 14:35:57 2018
+From: clark at clarkmoody.com (Clark Moody)
+Date: Wed, 25 Apr 2018 09:35:57 -0500
+Subject: [bitcoin-dev] Multi-signature and multi-coin HD wallet in one
+ BIP32 derivation path (new BIP)
+In-Reply-To: <HE1PR09MB026619CDFFBA6D995600EF18988F0@HE1PR09MB0266.eurprd09.prod.outlook.com>
+References: <HE1PR09MB026619CDFFBA6D995600EF18988F0@HE1PR09MB0266.eurprd09.prod.outlook.com>
+Message-ID: <CAHGSxGt649Ok=jp0STnHkYvEhWSOTwMfh0oB+7jqY6MAmr4TKQ@mail.gmail.com>
+
+Thanks for the proposal, Paul.
+
+*> - What address format is expected when discovering balances and creating
+transactions?*
+
+Your solution does not solve your first bullet point, since the xpub
+encoding looks no different than any other xpub (BIP 44, 45, 49, etc). At
+the least, you should propose new version bytes to change the "xpub" in the
+encoding to some other string.
+
+Alternatively, I would suggest that you use the xpub serialization format
+described in SLIP-0032 (
+https://github.com/satoshilabs/slips/blob/master/slip-0032.md). It includes
+the derivation path within the xpub itself and uses Bech32 for encoding.
+
+Given a normal xpub with no additional information, a wallet must scan the
+address space for the various formats. SLIP-0032 solves this bootstrapping
+problem and avoids the UX nightmare of users being required to know to
+which BIP number the xpub conforms.
+
+Also, @luke-jr will give you a hard time to self-assigning a BIP number ;-)
+
+Thanks
+
+
+
+-Clark
+
+On Wed, Apr 25, 2018 at 4:35 AM, Paul Brown via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Hi
+>
+>
+>
+> I have written a new BIP describing a BIP32 derivation path that supports
+> a single or multi-signature and multi-coin wallet from a single master
+> seed.  It combines BIP44 and BIP45 and adds in a self-describing structure
+> in the derivation path for multiple multi-sig combinations within the
+> single wallet along with an extended public key export file format for
+> public key distribution between parties.  I can particularly see this being
+> useful for multiple Lightning Network 2of2 accounts for different payment
+> channels.
+>
+>
+>
+> The BIP can be found here: https://github.com/gluexchange/bip/blob/master/
+> bip-0046.mediawiki
+>
+>
+>
+> I appreciate that this might be re-hashing old ground as BIP44 in
+> particular has been widely adopted, however, BIP44 does leave itself open
+> to a lot of interpretation from a wallet portability perspective such as:
+>
+>
+>
+> - What address format is expected when discovering balances and creating
+> transactions?
+>
+> - Does the master seed represent a single-sig or multi-sig wallet?
+>
+> - If multi-sig, how many cosigners and what are their extended public keys
+> (so that the wallet can generate the correctly formatted redeem script with
+> public keys in the right order)?
+>
+> - If multi-sig, how do you prevent collisions on the same address index
+> (in a wallet that is occasionally connected)?
+>
+>
+>
+> BIP45 solves the collision that occurs when the individual parties in a
+> multi-sig group each give out a new address from a wallet, where the wallet
+> hasn?t been able to sync to mark the address as ?used? (this could happen
+> if they gave out addresses independently at the same time).  It uses a
+> cosigner index in the derivation path so that each party has their own path
+> to their addresses.  However, BIP45 drops the multi-coin support that BIP44
+> has.
+>
+>
+>
+> This is a useful discussion on the problems of a collision and the merits
+> of separating cosigners in the derivation path:
+> https://www.mail-archive.com/bitcoin-development at lists.
+> sourceforge.net/msg05188.html
+>
+>
+>
+> For the purposes of the BIP text (and the example paths used to generate
+> keys) I?ve temporarily assigned it the number 46.  It looks like that is
+> available and seemed somewhat appropriate given that it builds on the good
+> work of BIP44 and BIP45.
+>
+>
+>
+> Paul Brown
+>
+>
+>
+>
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180425/14fbc624/attachment-0001.html>
+
+From paul at 345.systems  Wed Apr 25 16:44:55 2018
+From: paul at 345.systems (Paul Brown)
+Date: Wed, 25 Apr 2018 16:44:55 +0000
+Subject: [bitcoin-dev] Multi-signature and multi-coin HD wallet in one
+ BIP32 derivation path (new BIP)
+In-Reply-To: <CAHGSxGt649Ok=jp0STnHkYvEhWSOTwMfh0oB+7jqY6MAmr4TKQ@mail.gmail.com>
+References: <HE1PR09MB026619CDFFBA6D995600EF18988F0@HE1PR09MB0266.eurprd09.prod.outlook.com>
+	<CAHGSxGt649Ok=jp0STnHkYvEhWSOTwMfh0oB+7jqY6MAmr4TKQ@mail.gmail.com>
+Message-ID: <HE1PR09MB0266B019ECE16E62CD4E2DE9988F0@HE1PR09MB0266.eurprd09.prod.outlook.com>
+
+Hi Clark,
+
+Thanks very much for the feedback, it is most appreciated.
+
+The BIP does state that the address format would be bech32 serialized, using P2WPKH and P2WSH, however, I take your point as you would need to know it?s a BIP ?46? to know to use bech32 P2WPKH or P2WSH.  SLIP-0032 serialization format does solve it from the point of view of knowing which BIP the xpub is associated and therefore by association what address format to use.  Makes perfect sense and probably a good change to make to the proposed BIP.
+
+Also, the nice thing about SLIP-0032 is that the serialization format additionally provides that extra check that the correct xpubs are distributed between parties where say, distributing a 3of5 xpub means you can check that the bytes at depth 3 and 4 represent the 3of5 path.
+
+Ah yes, it was a little presumptuous of me to pick 46 for the BIP but in my defence I needed a ?real? number to generate the paths with ?
+
+Paul
+
+
+
+From: clarkmoody at gmail.com <clarkmoody at gmail.com> On Behalf Of Clark Moody
+Sent: 25 April 2018 15:36
+To: Paul Brown <paul at 345.systems>; Bitcoin Protocol Discussion <bitcoin-dev at lists.linuxfoundation.org>
+Subject: Re: [bitcoin-dev] Multi-signature and multi-coin HD wallet in one BIP32 derivation path (new BIP)
+
+Thanks for the proposal, Paul.
+
+> - What address format is expected when discovering balances and creating transactions?
+
+Your solution does not solve your first bullet point, since the xpub encoding looks no different than any other xpub (BIP 44, 45, 49, etc). At the least, you should propose new version bytes to change the "xpub" in the encoding to some other string.
+
+Alternatively, I would suggest that you use the xpub serialization format described in SLIP-0032 (https://github.com/satoshilabs/slips/blob/master/slip-0032.md). It includes the derivation path within the xpub itself and uses Bech32 for encoding.
+
+Given a normal xpub with no additional information, a wallet must scan the address space for the various formats. SLIP-0032 solves this bootstrapping problem and avoids the UX nightmare of users being required to know to which BIP number the xpub conforms.
+
+Also, @luke-jr will give you a hard time to self-assigning a BIP number ;-)
+
+Thanks
+
+
+
+-Clark
+
+On Wed, Apr 25, 2018 at 4:35 AM, Paul Brown via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org<mailto:bitcoin-dev at lists.linuxfoundation.org>> wrote:
+Hi
+
+I have written a new BIP describing a BIP32 derivation path that supports a single or multi-signature and multi-coin wallet from a single master seed.  It combines BIP44 and BIP45 and adds in a self-describing structure in the derivation path for multiple multi-sig combinations within the single wallet along with an extended public key export file format for public key distribution between parties.  I can particularly see this being useful for multiple Lightning Network 2of2 accounts for different payment channels.
+
+The BIP can be found here: https://github.com/gluexchange/bip/blob/master/bip-0046.mediawiki
+
+I appreciate that this might be re-hashing old ground as BIP44 in particular has been widely adopted, however, BIP44 does leave itself open to a lot of interpretation from a wallet portability perspective such as:
+
+- What address format is expected when discovering balances and creating transactions?
+- Does the master seed represent a single-sig or multi-sig wallet?
+- If multi-sig, how many cosigners and what are their extended public keys (so that the wallet can generate the correctly formatted redeem script with public keys in the right order)?
+- If multi-sig, how do you prevent collisions on the same address index (in a wallet that is occasionally connected)?
+
+BIP45 solves the collision that occurs when the individual parties in a multi-sig group each give out a new address from a wallet, where the wallet hasn?t been able to sync to mark the address as ?used? (this could happen if they gave out addresses independently at the same time).  It uses a cosigner index in the derivation path so that each party has their own path to their addresses.  However, BIP45 drops the multi-coin support that BIP44 has.
+
+This is a useful discussion on the problems of a collision and the merits of separating cosigners in the derivation path: https://www.mail-archive.com/bitcoin-development at lists.sourceforge.net/msg05188.html
+
+For the purposes of the BIP text (and the example paths used to generate keys) I?ve temporarily assigned it the number 46.  It looks like that is available and seemed somewhat appropriate given that it builds on the good work of BIP44 and BIP45.
+
+Paul Brown
+
+
+
+_______________________________________________
+bitcoin-dev mailing list
+bitcoin-dev at lists.linuxfoundation.org<mailto:bitcoin-dev at lists.linuxfoundation.org>
+https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180425/cdad8bec/attachment-0001.html>
+
+From paul at 345.systems  Thu Apr 26 14:05:06 2018
+From: paul at 345.systems (Paul Brown)
+Date: Thu, 26 Apr 2018 14:05:06 +0000
+Subject: [bitcoin-dev] Multi-signature and multi-coin HD wallet in one
+ BIP32 derivation path (new BIP)
+In-Reply-To: <CAHGSxGt649Ok=jp0STnHkYvEhWSOTwMfh0oB+7jqY6MAmr4TKQ@mail.gmail.com>
+References: <HE1PR09MB026619CDFFBA6D995600EF18988F0@HE1PR09MB0266.eurprd09.prod.outlook.com>
+	<CAHGSxGt649Ok=jp0STnHkYvEhWSOTwMfh0oB+7jqY6MAmr4TKQ@mail.gmail.com>
+Message-ID: <HE1PR09MB0266CE6FDFE63FD368AD8E20988E0@HE1PR09MB0266.eurprd09.prod.outlook.com>
+
+Hi
+
+I realised after I sent my previous response that the encoding was wrong and that my smiley face at the end of the BIP number comment got turned into a ? and the tongue in cheek context was lost :-(
+
+Anyway, back onto subject.  I've been thinking some more on the SLIP-0032 adoption in this proposal and specifically the address format to use when generating addresses.
+
+My proposal states bech32 serialized addresses (P2WPKH or P2WSH), however, I wonder whether there is some merit in extending the derivation path with an additional level below coin type to represent the address format, with the value determined by the context of the coin type value in the derivation path (0x00 for P2WPKH bech32, 0x01 for P2PKH base58 if coin type is Bitcoin, 0x00 for Ethereum account format if coin type is Ether, etc).  A separate spec similar to SLIP-0044 could be created that defines the list of address formats and the derivation path values.
+
+When importing root master seeds or distributing the xpub's for each cosigner to each party the discovery process in the proposal would need extending to try each address format in turn to determine whether there is a 'hit' when checking balances.  It does mean that the import process is slower however the additional flexibility of supporting multiple address formats possibly outweighs this.  I'm just thinking that having a rule to follow during discovery, particularly where non-Bitcoin coins are concerned, is more explicit than leaving it open to the wallet implementer to figure out (for altcoins, what address format to use?).
+
+It also means that future address formats are supported as they are simply added to the new spec list for the coin type (can be done by anyone, similar to the way SLIP-0044 works now) - it doesn't require a new BIP to support.  For example, if address format was a derivation level in BIP44, would BIP49 and BIP84 be needed?
+
+I'm somewhat musing out loud here, but I like the idea of being able to mostly self-discover as much as possible and reducing or eliminating the need for proprietary metadata attached to the wallet.
+
+Cheers
+Paul
+
+From: clarkmoody at gmail.com <clarkmoody at gmail.com> On Behalf Of Clark Moody
+Sent: 25 April 2018 15:36
+To: Paul Brown <paul at 345.systems>; Bitcoin Protocol Discussion <bitcoin-dev at lists.linuxfoundation.org>
+Subject: Re: [bitcoin-dev] Multi-signature and multi-coin HD wallet in one BIP32 derivation path (new BIP)
+
+Thanks for the proposal, Paul.
+
+>?- What address format is expected when discovering balances and creating transactions?
+
+Your solution does not solve your first bullet point, since the xpub encoding looks no different than any other xpub (BIP 44, 45, 49, etc). At the least, you should propose new version bytes to change the "xpub" in the encoding to some other string.
+
+Alternatively, I would suggest that you use the xpub serialization format described in SLIP-0032 (https://github.com/satoshilabs/slips/blob/master/slip-0032.md). It includes the derivation path within the xpub itself and uses Bech32 for encoding.
+
+Given a normal xpub with no additional information, a wallet must scan the address space for the various formats. SLIP-0032 solves this bootstrapping problem and avoids the UX nightmare of users being required to know to which BIP number the xpub conforms.
+
+Also, @luke-jr will give you a hard time to self-assigning a BIP number ;-)
+
+Thanks
+
+
+
+
+-Clark
+
+On Wed, Apr 25, 2018 at 4:35 AM, Paul Brown via bitcoin-dev <mailto:bitcoin-dev at lists.linuxfoundation.org> wrote:
+Hi
+?
+I have written a new BIP describing a BIP32 derivation path that supports a single or multi-signature and multi-coin wallet from a single master seed.? It combines BIP44 and BIP45 and adds in a self-describing structure in the derivation path for multiple multi-sig combinations within the single wallet along with an extended public key export file format for public key distribution between parties.? I can particularly see this being useful for multiple Lightning Network 2of2 accounts for different payment channels.
+?
+The BIP can be found here: https://github.com/gluexchange/bip/blob/master/bip-0046.mediawiki
+?
+I appreciate that this might be re-hashing old ground as BIP44 in particular has been widely adopted, however, BIP44 does leave itself open to a lot of interpretation from a wallet portability perspective such as:
+?
+- What address format is expected when discovering balances and creating transactions?
+- Does the master seed represent a single-sig or multi-sig wallet?
+- If multi-sig, how many cosigners and what are their extended public keys (so that the wallet can generate the correctly formatted redeem script with public keys in the right order)?
+- If multi-sig, how do you prevent collisions on the same address index (in a wallet that is occasionally connected)?
+?
+BIP45 solves the collision that occurs when the individual parties in a multi-sig group each give out a new address from a wallet, where the wallet hasn?t been able to sync to mark the address as ?used? (this could happen if they gave out addresses independently at the same time).? It uses a cosigner index in the derivation path so that each party has their own path to their addresses.? However, BIP45 drops the multi-coin support that BIP44 has.
+?
+This is a useful discussion on the problems of a collision and the merits of separating cosigners in the derivation path: https://www.mail-archive.com/bitcoin-development at lists.sourceforge.net/msg05188.html
+?
+For the purposes of the BIP text (and the example paths used to generate keys) I?ve temporarily assigned it the number 46.? It looks like that is available and seemed somewhat appropriate given that it builds on the good work of BIP44 and BIP45.
+?
+Paul Brown
+?
+?
+
+_______________________________________________
+bitcoin-dev mailing list
+mailto:bitcoin-dev at lists.linuxfoundation.org
+https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+
+From decker.christian at gmail.com  Mon Apr 30 15:41:38 2018
+From: decker.christian at gmail.com (Christian Decker)
+Date: Mon, 30 Apr 2018 17:41:38 +0200
+Subject: [bitcoin-dev] eltoo: A Simplified update Mechanism for Lightning
+	and Off-Chain Contracts
+Message-ID: <874ljsitvx.fsf@gmail.com>
+
+(cross-posting to bitcoin-dev since this serves as motivation behind the
+sighash_noinput proposal)
+
+> TL;DR: we announce a new, simple, update mechanism for off-chain protocols,
+> see the announcement [1] and the paper [2] :-)
+
+A little over a year ago, the three Lightning Network implementation
+teams joined forces to work on a common specification for the protocol
+stack. Now that both that specification and our three implementations
+are becoming stable and usable, it is time to look forward: to further
+improve the protocol, to add new features, to simplify, and to fix
+downsides.
+
+One of the core innovations that enabled Lightning in the first place was an
+off-chain update mechanism to renegotiate a new state and ensure that the old
+state can not be settled on-chain. Today, we're excited to release our latest
+research paper on a new, simplified, update mechanism for layer 2 protocols,
+called eltoo.
+
+eltoo is a drop-in replacement for the penalty based invalidation
+mechanism that is used today in the Lightning specification. It is
+similar in many ways to the sequence number mechanism that was already
+present in the original Bitcoin implementation. But, while sequence
+numbers were unenforceable on the blockchain, eltoo is enforceable by
+overriding subsequent states on-chain.
+
+Unlike the current mechanism used in Lightning so far, it is not penalty
+based, i.e., publishing an old state does not result in the faulty node
+to automatically lose funds, and is most similar to the duplex
+micropayment channels construction. It is a symmetric scheme, i.e., all
+participants share an identical set of transactions, and it ensures that the
+last agreed upon state is settled on-chain, with similar tradeoffs as
+today's Lightning (timelock vs. online requirement).
+
+eltoo addresses some of the issues we encountered while speficying and
+implementing the Lightning Network. For example outsourcing becomes very
+simple since old states becoming public can't hurt us anymore. We
+completely remove the need to estimate fees ahead of time. The
+construction allows us to attach fees when settling, and even allows for
+fees to be bumped using CPFP or RBF.
+
+Beyond Lightning, eltoo can be used as a generic update mechanism for an
+off-chain contract, for a larger number of participants. This was not
+possible in the current update mechanism since reactions to a
+misbehaving participant needed to be tailore to that participant. This
+enables other protocols such as the channel factories, and in
+combination with Schnorr signatures allows for very large off-chain
+contracts with minimal on-chain footprint.
+
+Before we can implement eltoo, we need a minor change to Bitcoin: the
+introduction of the SIGHASH_NOINPUT flag for signatures. This was first
+discussed a few months ago in the context of watchtowers to help secure
+Lightning channels, but was not formally proposed. A formal proposal may
+now be found in the eltoo paper.
+
+We invite the community to consider our proposal and to participate in
+its discussion. We hope to arrive at a consensus for the usage of
+SIGHASH_NOINPUT, so that it can be accepted and included in a future
+soft fork of Bitcoin Script. Doing so will put us on the road to a more
+reliable and simpler Lightning Network, incorporating a new update
+mechanism that can also be used for many other applications.
+
+The full official announcement can be found at [1] and the paper with the full
+details can be found at [2].
+
+Looking forward to the communities feedback,
+Christian
+
+[1] https://blockstream.com/2018/04/30/eltoo-next-lightning.html
+[2] https://blockstream.com/eltoo.pdf
+
+From decker.christian at gmail.com  Mon Apr 30 16:29:53 2018
+From: decker.christian at gmail.com (Christian Decker)
+Date: Mon, 30 Apr 2018 18:29:53 +0200
+Subject: [bitcoin-dev] BIP sighash_noinput
+Message-ID: <871sewirni.fsf@gmail.com>
+
+Hi all,
+
+I'd like to pick up the discussion from a few months ago, and propose a new
+sighash flag, `SIGHASH_NOINPUT`, that removes the commitment to the previous
+output. This was previously mentioned on the list by Joseph Poon [1], but was
+never formally proposed, so I wrote a proposal [2].
+
+We have long known that `SIGHASH_NOINPUT` would be a great fit for Lightning.
+They enable simple watch-towers, i.e., outsource the need to watch the
+blockchain for channel closures, and react appropriately if our counterparty
+misbehaves. In addition to this we just released the eltoo [3,4] paper which
+describes a simplified update mechanism that can be used in Lightning, and other
+off-chain contracts, with any number of participants.
+
+By not committing to the previous output being spent by the transaction, we can
+rebind an input to point to any outpoint with a matching output script and
+value. The binding therefore is no longer explicit through a reference, but
+through script compatibility, and the transaction ID reference in the input is a
+hint to validators. The sighash flag is meant to enable some off-chain use-cases
+and should not be used unless the tradeoffs are well-known. In particular we
+suggest using contract specific key-pairs, in order to avoid having any unwanted
+rebinding opportunities.
+
+The proposal is very minimalistic, and simple. However, there are a few things
+where we'd like to hear the input of the wider community with regards to the
+implementation details though. We had some discussions internally on whether to
+use a separate opcode or a sighash flag, some feeling that the sighash flag
+could lead to some confusion with existing wallets, but given that we have
+`SIGHASH_NONE`, and that existing wallets will not sign things with unknown
+flags, we decided to go the sighash way. Another thing is that we still commit
+to the amount of the outpoint being spent. The rationale behind this is that,
+while rebinding to outpoints with the same value maintains the value
+relationship between input and output, we will probably not want to bind to
+something with a different value and suddenly pay a gigantic fee.
+
+The deployment part of the proposal is left vague on purpose in order not to
+collide with any other proposals. It should be possible to introduce it by
+bumping the segwit script version and adding the new behavior.
+
+I hope the proposal is well received, and I'm looking forward to discussing
+variants and tradeoffs here. I think the applications we proposed so far are
+quite interesting, and I'm sure there are many more we can enable with this
+change.
+
+Cheers,
+Christian
+
+[1] https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2016-February/012460.html
+[2] https://github.com/cdecker/bips/blob/noinput/bip-xyz.mediawiki
+[3] https://blockstream.com/2018/04/30/eltoo-next-lightning.html
+[4] https://blockstream.com/eltoo.pdf
+
+From dariosn at gmail.com  Mon Apr 30 18:25:42 2018
+From: dariosn at gmail.com (Dario Sneidermanis)
+Date: Mon, 30 Apr 2018 15:25:42 -0300
+Subject: [bitcoin-dev] BIP sighash_noinput
+In-Reply-To: <871sewirni.fsf@gmail.com>
+References: <871sewirni.fsf@gmail.com>
+Message-ID: <CAHBM8UgvJvwHcM0jEtFzDDUGArZ=k4jUVY6ZVNEh4+2v6u5x0Q@mail.gmail.com>
+
+Something like this might also be useful for several use cases related to
+RBF. For example:
+
+Alice sends Bob an RBF-activated transaction T1 with the intention of
+bumping its fee if necessary. Bob wants to send these funds to Carol, but
+cannot wait until T1 confirms, so he crafts a transaction T2 that spends T1
+using SIGHASH_NOINPUT, and pays Carol. Carol can now make sure she receives
+the money even if Alice fee-bumps T1, as long as the outputs of the
+replaced transactions are compatible.
+
+Extra care should be taken to avoid rebinding, maybe by including an extra
+input in T2 that doesn't use SIGHASH_NOINPUT.
+
+On Mon, Apr 30, 2018 at 1:29 PM, Christian Decker via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Hi all,
+>
+> I'd like to pick up the discussion from a few months ago, and propose a new
+> sighash flag, `SIGHASH_NOINPUT`, that removes the commitment to the
+> previous
+> output. This was previously mentioned on the list by Joseph Poon [1], but
+> was
+> never formally proposed, so I wrote a proposal [2].
+>
+> We have long known that `SIGHASH_NOINPUT` would be a great fit for
+> Lightning.
+> They enable simple watch-towers, i.e., outsource the need to watch the
+> blockchain for channel closures, and react appropriately if our
+> counterparty
+> misbehaves. In addition to this we just released the eltoo [3,4] paper
+> which
+> describes a simplified update mechanism that can be used in Lightning, and
+> other
+> off-chain contracts, with any number of participants.
+>
+> By not committing to the previous output being spent by the transaction,
+> we can
+> rebind an input to point to any outpoint with a matching output script and
+> value. The binding therefore is no longer explicit through a reference, but
+> through script compatibility, and the transaction ID reference in the
+> input is a
+> hint to validators. The sighash flag is meant to enable some off-chain
+> use-cases
+> and should not be used unless the tradeoffs are well-known. In particular
+> we
+> suggest using contract specific key-pairs, in order to avoid having any
+> unwanted
+> rebinding opportunities.
+>
+> The proposal is very minimalistic, and simple. However, there are a few
+> things
+> where we'd like to hear the input of the wider community with regards to
+> the
+> implementation details though. We had some discussions internally on
+> whether to
+> use a separate opcode or a sighash flag, some feeling that the sighash flag
+> could lead to some confusion with existing wallets, but given that we have
+> `SIGHASH_NONE`, and that existing wallets will not sign things with unknown
+> flags, we decided to go the sighash way. Another thing is that we still
+> commit
+> to the amount of the outpoint being spent. The rationale behind this is
+> that,
+> while rebinding to outpoints with the same value maintains the value
+> relationship between input and output, we will probably not want to bind to
+> something with a different value and suddenly pay a gigantic fee.
+>
+> The deployment part of the proposal is left vague on purpose in order not
+> to
+> collide with any other proposals. It should be possible to introduce it by
+> bumping the segwit script version and adding the new behavior.
+>
+> I hope the proposal is well received, and I'm looking forward to discussing
+> variants and tradeoffs here. I think the applications we proposed so far
+> are
+> quite interesting, and I'm sure there are many more we can enable with this
+> change.
+>
+> Cheers,
+> Christian
+>
+> [1] https://lists.linuxfoundation.org/pipermail/bitcoin-dev/
+> 2016-February/012460.html
+> [2] https://github.com/cdecker/bips/blob/noinput/bip-xyz.mediawiki
+> [3] https://blockstream.com/2018/04/30/eltoo-next-lightning.html
+> [4] https://blockstream.com/eltoo.pdf
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180430/4b977159/attachment.html>
+
+From jim.posen at gmail.com  Mon Apr 30 23:00:55 2018
+From: jim.posen at gmail.com (Jim Posen)
+Date: Mon, 30 Apr 2018 16:00:55 -0700
+Subject: [bitcoin-dev] eltoo: A Simplified update Mechanism for
+ Lightning and Off-Chain Contracts
+In-Reply-To: <874ljsitvx.fsf@gmail.com>
+References: <874ljsitvx.fsf@gmail.com>
+Message-ID: <CADZtCSgSJsU+j1teT4A9+nc+cuzBz+dhL+sC3dyGniQAsxPUxw@mail.gmail.com>
+
+This construction is pretty neat and seems to solve a lot of problems. I
+find the use of CLTV with past timestamps to provide ordering in particular
+to be quite clever.
+
+If my understanding is correct though, this construction would
+significantly increase the safe CLTV delta requirements because HTLCs
+cannot be timed out immediately on the settlement transaction. Consider a
+case where node B receives an HTLC from A and forwards to C. If the HTLC
+offered to C times out and C does not fail the HTLC off-chain, Lightning
+currently guarantees that the CLTV delta is sufficient that I may close the
+channel to C on-chain and claim the timed-out HTLC before my upstream HTLC
+to A times out. If the CLTV delta is too small, I may fail the upstream
+HTLC as soon as it times out, and then C may still claim the downstream
+HTLC with the preimage on-chain. With eltoo, when B closes the downstream
+channel on-chain, it must wait the CSV timeout on the update transaction
+before locking in the timed-out HTLC. This effectively means the CLTV delta
+has to be greater than the CSV timeout, plus some extra (whereas it is
+currently safe to make it significantly shorter). Is that true or am I
+missing something?
+
+On Mon, Apr 30, 2018 at 8:41 AM, Christian Decker via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> (cross-posting to bitcoin-dev since this serves as motivation behind the
+> sighash_noinput proposal)
+>
+> > TL;DR: we announce a new, simple, update mechanism for off-chain
+> protocols,
+> > see the announcement [1] and the paper [2] :-)
+>
+> A little over a year ago, the three Lightning Network implementation
+> teams joined forces to work on a common specification for the protocol
+> stack. Now that both that specification and our three implementations
+> are becoming stable and usable, it is time to look forward: to further
+> improve the protocol, to add new features, to simplify, and to fix
+> downsides.
+>
+> One of the core innovations that enabled Lightning in the first place was
+> an
+> off-chain update mechanism to renegotiate a new state and ensure that the
+> old
+> state can not be settled on-chain. Today, we're excited to release our
+> latest
+> research paper on a new, simplified, update mechanism for layer 2
+> protocols,
+> called eltoo.
+>
+> eltoo is a drop-in replacement for the penalty based invalidation
+> mechanism that is used today in the Lightning specification. It is
+> similar in many ways to the sequence number mechanism that was already
+> present in the original Bitcoin implementation. But, while sequence
+> numbers were unenforceable on the blockchain, eltoo is enforceable by
+> overriding subsequent states on-chain.
+>
+> Unlike the current mechanism used in Lightning so far, it is not penalty
+> based, i.e., publishing an old state does not result in the faulty node
+> to automatically lose funds, and is most similar to the duplex
+> micropayment channels construction. It is a symmetric scheme, i.e., all
+> participants share an identical set of transactions, and it ensures that
+> the
+> last agreed upon state is settled on-chain, with similar tradeoffs as
+> today's Lightning (timelock vs. online requirement).
+>
+> eltoo addresses some of the issues we encountered while speficying and
+> implementing the Lightning Network. For example outsourcing becomes very
+> simple since old states becoming public can't hurt us anymore. We
+> completely remove the need to estimate fees ahead of time. The
+> construction allows us to attach fees when settling, and even allows for
+> fees to be bumped using CPFP or RBF.
+>
+> Beyond Lightning, eltoo can be used as a generic update mechanism for an
+> off-chain contract, for a larger number of participants. This was not
+> possible in the current update mechanism since reactions to a
+> misbehaving participant needed to be tailore to that participant. This
+> enables other protocols such as the channel factories, and in
+> combination with Schnorr signatures allows for very large off-chain
+> contracts with minimal on-chain footprint.
+>
+> Before we can implement eltoo, we need a minor change to Bitcoin: the
+> introduction of the SIGHASH_NOINPUT flag for signatures. This was first
+> discussed a few months ago in the context of watchtowers to help secure
+> Lightning channels, but was not formally proposed. A formal proposal may
+> now be found in the eltoo paper.
+>
+> We invite the community to consider our proposal and to participate in
+> its discussion. We hope to arrive at a consensus for the usage of
+> SIGHASH_NOINPUT, so that it can be accepted and included in a future
+> soft fork of Bitcoin Script. Doing so will put us on the road to a more
+> reliable and simpler Lightning Network, incorporating a new update
+> mechanism that can also be used for many other applications.
+>
+> The full official announcement can be found at [1] and the paper with the
+> full
+> details can be found at [2].
+>
+> Looking forward to the communities feedback,
+> Christian
+>
+> [1] https://blockstream.com/2018/04/30/eltoo-next-lightning.html
+> [2] https://blockstream.com/eltoo.pdf
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20180430/b6a46771/attachment-0001.html>
+

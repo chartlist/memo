@@ -1,0 +1,3943 @@
+From zgenjix at yahoo.com  Sun Apr  1 11:06:34 2012
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Sun, 1 Apr 2012 04:06:34 -0700 (PDT)
+Subject: [Bitcoin-development] Can I make a BIP 16 payment?
+Message-ID: <1333278394.87091.YahooMailNeo@web121006.mail.ne1.yahoo.com>
+
+?Hey,
+
+Just wondering why no-one has made one yet. Is there a reason why? I want to test it out.
+
+
+
+From pieter.wuille at gmail.com  Mon Apr  2 15:23:00 2012
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Mon, 2 Apr 2012 17:23:00 +0200
+Subject: [Bitcoin-development] Network version increase
+Message-ID: <20120402152259.GA19853@vps7135.xlshosting.net>
+
+Hello all,
+
+Mike Hearn has submitted a pull request to add a pong message in reply to a ping.
+
+This warrants an upgrade of the network protocol version number, which is since BIP14
+independent from the version numbers of the reference client.
+
+Any opinions about a numbering scheme? Currently the value 60000 is used. We could
+simply start increasing the number one by one now for every change, or we could
+do a "cleanup" to 100000 first, and start incrementing from there.
+
+-- 
+Pieter
+
+
+
+From gavinandresen at gmail.com  Mon Apr  2 15:36:54 2012
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Mon, 2 Apr 2012 11:36:54 -0400
+Subject: [Bitcoin-development] Release plan: 0.6.1
+Message-ID: <CABsx9T1_jaNBvH+8-WFRf1zCk2-tbbTX7GQa2YU1e4Pj=ZHdaw@mail.gmail.com>
+
+Summarizing a discussion from #bitcoin-dev this morning:
+
+The merge window for pull requests for a 0.6.1 release is now open.
+
+This will be a bug-fix and code-cleanup only release, with the goal to
+have Release Candidate 1 binaries available for testing in three
+weeks: April 23'rd.  We want this to be a quick release cycle so we
+can start pulling new features for a 0.7 release in a month or so.
+
+The major issues I would like to get resolved:
+ # 1024 Correct passphrase crashed the client
+ # 1012 bitcoin-qt slow to shut down after recent commits
+
+There are currently 189 open issues in our bug tracker; lets try to
+get that down to under 100.
+
+I know this will frustrate some of you who think development is
+happening at a snail's pace; feel free to pull and test new features
+(IPv6 support and coin control) that are important to you. Adequate
+testing is still our biggest issue, if you want your favorite feature
+to get into bitcoin core faster please spend some time helping test
+other people's favorite features.
+
+-- 
+--
+Gavin Andresen
+
+
+
+From jgarzik at exmulti.com  Mon Apr  2 16:32:52 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Mon, 2 Apr 2012 12:32:52 -0400
+Subject: [Bitcoin-development] Network version increase
+In-Reply-To: <20120402152259.GA19853@vps7135.xlshosting.net>
+References: <20120402152259.GA19853@vps7135.xlshosting.net>
+Message-ID: <CA+8xBpep_gvX8Tp-srwFtvdzCyWFfXeR_e_P27CgVoXZj+frcQ@mail.gmail.com>
+
+On Mon, Apr 2, 2012 at 11:23 AM, Pieter Wuille <pieter.wuille at gmail.com> wrote:
+> Any opinions about a numbering scheme? Currently the value 60000 is used. We could
+> simply start increasing the number one by one now for every change, or we could
+> do a "cleanup" to 100000 first, and start incrementing from there.
+
+
+It would be nice to have 100000 as the baseline, "frozen" protocol.
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From laanwj at gmail.com  Mon Apr  2 16:42:54 2012
+From: laanwj at gmail.com (Wladimir)
+Date: Mon, 2 Apr 2012 18:42:54 +0200
+Subject: [Bitcoin-development] Network version increase
+In-Reply-To: <CA+8xBpep_gvX8Tp-srwFtvdzCyWFfXeR_e_P27CgVoXZj+frcQ@mail.gmail.com>
+References: <20120402152259.GA19853@vps7135.xlshosting.net>
+	<CA+8xBpep_gvX8Tp-srwFtvdzCyWFfXeR_e_P27CgVoXZj+frcQ@mail.gmail.com>
+Message-ID: <CA+s+GJCK=HtrNFA_nByFBdEP9NuiUD4ZG+8gf-0VJ=PjWWp0JA@mail.gmail.com>
+
+On Mon, Apr 2, 2012 at 6:32 PM, Jeff Garzik <jgarzik at exmulti.com> wrote:
+
+> On Mon, Apr 2, 2012 at 11:23 AM, Pieter Wuille <pieter.wuille at gmail.com>
+> wrote:
+> > Any opinions about a numbering scheme? Currently the value 60000 is
+> used. We could
+> > simply start increasing the number one by one now for every change, or
+> we could
+> > do a "cleanup" to 100000 first, and start incrementing from there.
+>
+>
+> It would be nice to have 100000 as the baseline, "frozen" protocol.
+>
+
+Yes, I think increasing with one is enough for now. Let's not get ahead of
+ourselves :)
+
+Wladimir
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120402/caa01943/attachment.html>
+
+From etotheipi at gmail.com  Mon Apr  2 20:55:03 2012
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Mon, 02 Apr 2012 16:55:03 -0400
+Subject: [Bitcoin-development] Signature Blocks and URI Sign Requests
+Message-ID: <4F7A1227.7070306@gmail.com>
+
+I would like to propose two things that are closely related.  I will 
+start making BIPS if there's positive feedback.  Sorry it's so long, but 
+I felt both should be in the same email...
+
+
+_*(1) Signature Blocks*  -- A more-robust, versatile, message-signing 
+exchange_
+
+Satoshi client 0.6.0 introduced message signing, but I've been fairly 
+unimpressed with the implementation.  Strictly speaking, it works, but 
+it's really not intended for "regular users."  There is no indication of 
+what message was signed or what address signed it.  Key recovery works 
+for the computers processing it, but the user has no idea what this 
+chunk of random data is.  They don't even know if the message they 
+thought they signed is what's in the signature (along the lines of the 
+copy&paste virus, the message could be switched out without the user 
+noticing).
+
+I have implemented Signature Blocks 
+<https://bitcointalk.org/index.php?topic=56424.msg776163#msg776163> in 
+Armory (as of v0.55), which is a fully-functional expansion on the 
+idea.  Along the lines of BIP 10, a signature block is a human-readable 
+chunk of data that immediately identifies the address and the message 
+that are being signed.  It is easily copy&pasted via email or text 
+files, and is fairly compact for visual identification.   Click the link 
+above to see an example signature block and an Armory screenshot of the 
+UI (which needs improvement, but still usable).  The verification 
+process will include:
+
+-- Check that the public key (included or recovered) matches the address 
+field.
+-- Verify that the signature matches the included message for this 
+public key
+-- The message is properly formatted with a standardized character set 
+and escape/replacement scheme for things like newlines or double-quotes.
+
+gmaxwell already pointed out that key recovery makes the "Public Key" 
+field pointless.  Okay fine -- I just don't have key recovery 
+implemented yet in Armory, and when I do I can ditch that field (or 
+simply make it optional).  The point is to create a versatile, 
+human-readable standardized form, much like the BIP 0010 
+signature-collection scheme <https://en.bitcoin.it/wiki/BIP_0010>.
+
+
+_*(2) Sign-Message URI scheme***-- Request signed messages from users 
+using URIs_
+
+I had the idea that for certain services, the first funding address 
+could be used to identify the owner of an account, and all account 
+maintenance (such as cashouts) be done through signed messages with this 
+address.  For instance, the user would need both a login password *and* 
+a signed message in order to make a withdrawal or purchase:
+
+     ("Please withdraw 12.3 BTC from acct 1828349132 to address 
+1Hfr3jk2093f")_signed_by_A
+
+This gives the service the ability to use two separate factors to 
+authenticate the request (username&password *and* access to unencrypted 
+wallet).  This /could/ work with manual signature blocks alone... but 
+it's too many steps for regular users.  However, I think it's workable 
+if we expand bitcoin URIs to include "Signature Requests".
+
+The URI scheme would add a few parameters to the scheme, and would have 
+to have further replacement rules to make sure that messages are handled 
+properly.   The general CONOPs would be (*Con*cept of *Op*eration*s*):
+
+     -- User navigates to "Withdraw funds" on webpage
+     -- Webpage has you fill in the details:  from-account, to-address, 
+withdrawal amount
+     -- Webpage produces a clickable URI link that loads all the 
+information into your client, including addr-reqd-for-sig
+     -- Client asks for confirmation and passphrase (if necessary) then 
+produces a signature (and sig block if necessary)
+     -- URI may include reply-to field that tells it where to send the 
+siganture when it's ready
+
+So the extra tags that would be needed would probably be:
+
+         "*requestSig*=True":
+                 Flag to identify that this is a signing request URI
+         "*sigNeeded*=1Qjf3392k31h"
+                 The address that needs to sign the message
+         
+"*message*=Please%20withdraw%2012.3%20BTC%20to%20addr%201Hfr3jk2093f"
+                 Some encoding of the message that can be parsed the 
+same way on all systems
+         "*replyurl*=http://requestor.com/sig_replies.asp?"
+                 (Optional) After signing, application will submit the 
+signature to the replyurl
+
+The reply url could be simply an http URL which will use bitcoin URI 
+syntax, with the fields above copied.  Therefore, to complete the above 
+request, the application handling the request will simply send an HTTP 
+request to:
+
+     
+http://requestor.com/sig_replies.asp?*sigNeeded*=1Qjf3392k31h&*message*=...&*signature*=1fb1893ac193...&*replySig*=True
+
+Any thoughts?  (I have no doubts that there are :) )
+
+-Alan
+
+
+
+
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120402/8c315b70/attachment.html>
+
+From luke at dashjr.org  Tue Apr  3 00:44:37 2012
+From: luke at dashjr.org (Luke-Jr)
+Date: Mon, 2 Apr 2012 20:44:37 -0400
+Subject: [Bitcoin-development] Signature Blocks and URI Sign Requests
+In-Reply-To: <4F7A1227.7070306@gmail.com>
+References: <4F7A1227.7070306@gmail.com>
+Message-ID: <201204022044.38861.luke@dashjr.org>
+
+On Monday, April 02, 2012 4:55:03 PM Alan Reiner wrote:
+> Any thoughts?  (I have no doubts that there are :) )
+
+IMO, the sign-request URI should be an extension on the existing bitcoin: URI 
+scheme; this way, sigNeeded can be omitted to imply "sign with a sending 
+address".
+
+
+
+From gavinandresen at gmail.com  Tue Apr  3 18:46:17 2012
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Tue, 3 Apr 2012 14:46:17 -0400
+Subject: [Bitcoin-development] Signature Blocks and URI Sign Requests
+In-Reply-To: <4F7A1227.7070306@gmail.com>
+References: <4F7A1227.7070306@gmail.com>
+Message-ID: <CABsx9T3MQzJ5gN5xTZ9y5d-og11=mB86cM3ZP4S-fhjs1U+20g@mail.gmail.com>
+
+RE: signature blocks and BIP 10:
+
+We should avoid reinventing the wheel, if we can. I think we should
+extend existing standards whenever possible.
+
+So: could we encode signature blocks or BIP-10 transactions using
+S/MIME ?  Or is there a more appropriate "sign a message" standard we
+could/should use?
+
+You're glossing over little details like what character encoding is
+used for the message, but I'd rather leverage all the work already
+done by the IETF to nail down all those little details rather then
+re-discover them and come up with our own solutions.
+
+-- 
+--
+Gavin Andresen
+
+
+
+From luke at dashjr.org  Tue Apr  3 18:55:40 2012
+From: luke at dashjr.org (Luke-Jr)
+Date: Tue, 3 Apr 2012 14:55:40 -0400
+Subject: [Bitcoin-development] Signature Blocks and URI Sign Requests
+In-Reply-To: <CABsx9T3MQzJ5gN5xTZ9y5d-og11=mB86cM3ZP4S-fhjs1U+20g@mail.gmail.com>
+References: <4F7A1227.7070306@gmail.com>
+	<CABsx9T3MQzJ5gN5xTZ9y5d-og11=mB86cM3ZP4S-fhjs1U+20g@mail.gmail.com>
+Message-ID: <201204031455.42265.luke@dashjr.org>
+
+On Tuesday, April 03, 2012 2:46:17 PM Gavin Andresen wrote:
+> We should avoid reinventing the wheel, if we can. I think we should
+> extend existing standards whenever possible.
+
+I wonder if it's possible to make sigs compatible with PGP/EC ?
+
+
+
+From laanwj at gmail.com  Tue Apr  3 19:42:52 2012
+From: laanwj at gmail.com (Wladimir)
+Date: Tue, 3 Apr 2012 21:42:52 +0200
+Subject: [Bitcoin-development] Signature Blocks and URI Sign Requests
+In-Reply-To: <201204031455.42265.luke@dashjr.org>
+References: <4F7A1227.7070306@gmail.com>
+	<CABsx9T3MQzJ5gN5xTZ9y5d-og11=mB86cM3ZP4S-fhjs1U+20g@mail.gmail.com>
+	<201204031455.42265.luke@dashjr.org>
+Message-ID: <CA+s+GJCKcOky=Kfa9cNaEnpO0Lj4Va8a8N=-OZSoXLoO8aUGgQ@mail.gmail.com>
+
+On Tue, Apr 3, 2012 at 8:55 PM, Luke-Jr <luke at dashjr.org> wrote:
+
+> On Tuesday, April 03, 2012 2:46:17 PM Gavin Andresen wrote:
+> > We should avoid reinventing the wheel, if we can. I think we should
+> > extend existing standards whenever possible.
+>
+> I wonder if it's possible to make sigs compatible with PGP/EC ?
+>
+
+Or we could take a step back, further into "don't reinvent the wheel"
+territory. Why not simply make use of PGP(/EC) to sign and verify messages?
+It has many advantages, like an already existing web-of-trust and keyserver
+infrastructure.
+
+I still feel like this is sign message stuff is dragging the kitchen sink
+into Bitcoin. It's fine for logging into a website, what you use it for,
+but anything that approaches signing email (such as S/MIME implementations
+and handling different character encodings) is going too far IMO.
+
+Wladimir
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120403/84f9c76b/attachment.html>
+
+From etotheipi at gmail.com  Tue Apr  3 20:51:18 2012
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Tue, 03 Apr 2012 16:51:18 -0400
+Subject: [Bitcoin-development] Signature Blocks and URI Sign Requests
+In-Reply-To: <CABsx9T3MQzJ5gN5xTZ9y5d-og11=mB86cM3ZP4S-fhjs1U+20g@mail.gmail.com>
+References: <4F7A1227.7070306@gmail.com>
+	<CABsx9T3MQzJ5gN5xTZ9y5d-og11=mB86cM3ZP4S-fhjs1U+20g@mail.gmail.com>
+Message-ID: <4F7B62C6.6010007@gmail.com>
+
+On 04/03/2012 02:46 PM, Gavin Andresen wrote:
+> RE: signature blocks and BIP 10:
+>
+> We should avoid reinventing the wheel, if we can. I think we should
+> extend existing standards whenever possible.
+>
+> So: could we encode signature blocks or BIP-10 transactions using
+> S/MIME ?  Or is there a more appropriate "sign a message" standard we
+> could/should use?
+>
+> You're glossing over little details like what character encoding is
+> used for the message, but I'd rather leverage all the work already
+> done by the IETF to nail down all those little details rather then
+> re-discover them and come up with our own solutions.
+>
+I'm glossing over details because I actually have no experience dealing 
+with character encodings,  or the implementation specifics of existing 
+solutions (PGP or S/MIME).   That's why I'm emailing this list: I want 
+to figure this stuff out, and at the same time try to converge on 
+something that is efficient and can be interoperable between Armory and 
+the Satoshi client (wallets, signature collection, sig blocks).
+
+I don't go into these things solely to reinvent stuff.  My primary 
+motivation for both ideas I have pitched so far (BIP 0010 and the sig 
+blocks) is the versatility.  I like the encoding-independent, visual 
+compactness of PGP ASCII-armored text blocks, but I don't like their 
+opaqueness.  PGP vs my signature blocks basically look the same to a 
+casual user, but even a moderately-knowledgeable user can appreciate the 
+human-readable components of it.  You can visually identify if 
+signatures are missing from sig-collection packet, or see that you 
+signed with the wrong address without having to load an external program.
+
+But that isn't a critical requirement, it's just my personal 
+preference.  I'm fine with existing systems if it sidesteps a lot of 
+problems and there's easy interface to it.    But, I don't want to have 
+another BSDDB-wallet situation where we end up with 10x more capability 
+than we need, and pay for it with 10x the complexity (at least in this 
+case, using PGP is an existing crypto/security-sensitive technology).  I 
+have made "simplicity" one of my goals in Armory.
+
+Alternatively, we could change the discussion to a requirements 
+discussion, to first figure out what we need in order to address 
+multi-signature collection, etc.  Then evaluate competing ideas based on 
+their qualities relative to the requirements.
+
+
+
+
+
+
+From peter at coinlab.com  Tue Apr  3 20:04:19 2012
+From: peter at coinlab.com (Peter Vessenes)
+Date: Tue, 3 Apr 2012 14:04:19 -0600
+Subject: [Bitcoin-development] Signature Blocks and URI Sign Requests
+In-Reply-To: <CA+s+GJCKcOky=Kfa9cNaEnpO0Lj4Va8a8N=-OZSoXLoO8aUGgQ@mail.gmail.com>
+References: <4F7A1227.7070306@gmail.com>
+	<CABsx9T3MQzJ5gN5xTZ9y5d-og11=mB86cM3ZP4S-fhjs1U+20g@mail.gmail.com>
+	<201204031455.42265.luke@dashjr.org>
+	<CA+s+GJCKcOky=Kfa9cNaEnpO0Lj4Va8a8N=-OZSoXLoO8aUGgQ@mail.gmail.com>
+Message-ID: <CAMGNxUujVx0taTh+QR1WFBMKGWcxF-CvCMPwVFWirQ=XyZtquA@mail.gmail.com>
+
+I don't think it's minimally invasive to layer PGP's web of trust on top of
+Bitcoin, in fact, the opposite.
+
+>From a certain angle, bitcoin exists as a sort of answer / alternate
+solution to the web of trust. Digital cash with an existing web of trust in
+place was a working concept in the mid-1990s, courtesy of David Chaum, I
+believe.
+
+I totally agree on the kitchen sink concern; I would personally like to see
+something like a one-year required discussion period on all non-security
+changes proposed to the blockchain protocol. We know almost nothing about
+how bitcoin will be used over the next 20 years; I believe it's a mistake
+to bulk up the protocol too rapidly right now.
+
+There's a famous phrase from the founder of Lotus about Lotus' engineering
+process: "add lightness." The equivalent for protocol design might be "add
+simplicity." I'd like to see us adding simplicity for now, getting a core
+set of tests together for alternate implementations like libbitcoin, and
+thinking hard about the dangers of cruft over a 10+ year period when it
+comes to a technology which will necessarily include a complete history of
+every crufty decision embodied in transaction histories.
+
+Peter
+
+
+On Tue, Apr 3, 2012 at 1:42 PM, Wladimir <laanwj at gmail.com> wrote:
+
+>
+> On Tue, Apr 3, 2012 at 8:55 PM, Luke-Jr <luke at dashjr.org> wrote:
+>
+>> On Tuesday, April 03, 2012 2:46:17 PM Gavin Andresen wrote:
+>> > We should avoid reinventing the wheel, if we can. I think we should
+>> > extend existing standards whenever possible.
+>>
+>> I wonder if it's possible to make sigs compatible with PGP/EC ?
+>>
+>
+> Or we could take a step back, further into "don't reinvent the wheel"
+> territory. Why not simply make use of PGP(/EC) to sign and verify messages?
+> It has many advantages, like an already existing web-of-trust and keyserver
+> infrastructure.
+>
+> I still feel like this is sign message stuff is dragging the kitchen sink
+> into Bitcoin. It's fine for logging into a website, what you use it for,
+> but anything that approaches signing email (such as S/MIME implementations
+> and handling different character encodings) is going too far IMO.
+>
+> Wladimir
+>
+>
+>
+> ------------------------------------------------------------------------------
+> Better than sec? Nothing is better than sec when it comes to
+> monitoring Big Data applications. Try Boundary one-second
+> resolution app monitoring today. Free.
+> http://p.sf.net/sfu/Boundary-dev2dev
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+
+
+-- 
+
+Peter J. Vessenes
+CEO, CoinLab
+M: 206.595.9839
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120403/9e40ceb3/attachment.html>
+
+From etotheipi at gmail.com  Tue Apr  3 21:12:54 2012
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Tue, 03 Apr 2012 17:12:54 -0400
+Subject: [Bitcoin-development] Signature Blocks and URI Sign Requests
+In-Reply-To: <CAMGNxUujVx0taTh+QR1WFBMKGWcxF-CvCMPwVFWirQ=XyZtquA@mail.gmail.com>
+References: <4F7A1227.7070306@gmail.com>	<CABsx9T3MQzJ5gN5xTZ9y5d-og11=mB86cM3ZP4S-fhjs1U+20g@mail.gmail.com>	<201204031455.42265.luke@dashjr.org>	<CA+s+GJCKcOky=Kfa9cNaEnpO0Lj4Va8a8N=-OZSoXLoO8aUGgQ@mail.gmail.com>
+	<CAMGNxUujVx0taTh+QR1WFBMKGWcxF-CvCMPwVFWirQ=XyZtquA@mail.gmail.com>
+Message-ID: <4F7B67D6.7090101@gmail.com>
+
+Just to clarify, I'm not proposing anything to the protocol itself.  
+Simply that some applications might benefit from users being to sign 
+messages with existing Bitcoin identities, and what can we do to 
+accommodate that (out of band)?  It's not a high priority, but I think 
+it's potentially useful, and most codebases already have everything they 
+need in place to implement it.
+
+
+On 04/03/2012 04:04 PM, Peter Vessenes wrote:
+> I don't think it's minimally invasive to layer PGP's web of trust on 
+> top of Bitcoin, in fact, the opposite.
+>
+> From a certain angle, bitcoin exists as a sort of answer / alternate 
+> solution to the web of trust. Digital cash with an existing web of 
+> trust in place was a working concept in the mid-1990s, courtesy of 
+> David Chaum, I believe.
+>
+> I totally agree on the kitchen sink concern; I would personally like 
+> to see something like a one-year required discussion period on all 
+> non-security changes proposed to the blockchain protocol. We know 
+> almost nothing about how bitcoin will be used over the next 20 years; 
+> I believe it's a mistake to bulk up the protocol too rapidly right now.
+>
+> There's a famous phrase from the founder of Lotus about Lotus' 
+> engineering process: "add lightness." The equivalent for protocol 
+> design might be "add simplicity." I'd like to see us adding simplicity 
+> for now, getting a core set of tests together for alternate 
+> implementations like libbitcoin, and thinking hard about the dangers 
+> of cruft over a 10+ year period when it comes to a technology which 
+> will necessarily include a complete history of every crufty decision 
+> embodied in transaction histories.
+>
+> Peter
+>
+>
+> On Tue, Apr 3, 2012 at 1:42 PM, Wladimir <laanwj at gmail.com 
+> <mailto:laanwj at gmail.com>> wrote:
+>
+>
+>     On Tue, Apr 3, 2012 at 8:55 PM, Luke-Jr <luke at dashjr.org
+>     <mailto:luke at dashjr.org>> wrote:
+>
+>         On Tuesday, April 03, 2012 2:46:17 PM Gavin Andresen wrote:
+>         > We should avoid reinventing the wheel, if we can. I think we
+>         should
+>         > extend existing standards whenever possible.
+>
+>         I wonder if it's possible to make sigs compatible with PGP/EC ?
+>
+>
+>     Or we could take a step back, further into "don't reinvent the
+>     wheel" territory. Why not simply make use of PGP(/EC) to sign and
+>     verify messages? It has many advantages, like an already existing
+>     web-of-trust and keyserver infrastructure.
+>
+>     I still feel like this is sign message stuff is dragging the
+>     kitchen sink into Bitcoin. It's fine for logging into a website,
+>     what you use it for, but anything that approaches signing email
+>     (such as S/MIME implementations and handling different character
+>     encodings) is going too far IMO.
+>
+>     Wladimir
+>
+>
+>     ------------------------------------------------------------------------------
+>     Better than sec? Nothing is better than sec when it comes to
+>     monitoring Big Data applications. Try Boundary one-second
+>     resolution app monitoring today. Free.
+>     http://p.sf.net/sfu/Boundary-dev2dev
+>     _______________________________________________
+>     Bitcoin-development mailing list
+>     Bitcoin-development at lists.sourceforge.net
+>     <mailto:Bitcoin-development at lists.sourceforge.net>
+>     https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+>
+>
+> -- 
+>
+> Peter J. Vessenes
+> CEO, CoinLab
+> M: 206.595.9839
+>
+>
+> ------------------------------------------------------------------------------
+> Better than sec? Nothing is better than sec when it comes to
+> monitoring Big Data applications. Try Boundary one-second
+> resolution app monitoring today. Free.
+> http://p.sf.net/sfu/Boundary-dev2dev
+>
+>
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120403/c948c48e/attachment.html>
+
+From etotheipi at gmail.com  Wed Apr  4 00:01:10 2012
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Tue, 03 Apr 2012 20:01:10 -0400
+Subject: [Bitcoin-development] Signature Blocks and URI Sign Requests
+In-Reply-To: <CAErK2CjSEvhuHt-fdu-jTL6A9sL9NEXZQM6fUxSz9bxeTxHoAQ@mail.gmail.com>
+References: <4F7A1227.7070306@gmail.com>	<CABsx9T3MQzJ5gN5xTZ9y5d-og11=mB86cM3ZP4S-fhjs1U+20g@mail.gmail.com>	<201204031455.42265.luke@dashjr.org>	<CA+s+GJCKcOky=Kfa9cNaEnpO0Lj4Va8a8N=-OZSoXLoO8aUGgQ@mail.gmail.com>	<CAMGNxUujVx0taTh+QR1WFBMKGWcxF-CvCMPwVFWirQ=XyZtquA@mail.gmail.com>	<4F7B67D6.7090101@gmail.com>
+	<CAErK2CjSEvhuHt-fdu-jTL6A9sL9NEXZQM6fUxSz9bxeTxHoAQ@mail.gmail.com>
+Message-ID: <4F7B8F46.8060706@gmail.com>
+
+Mike,
+
+You make an excellent point.  Neither of these proposals impact the 
+protocol itself.  I hadn't considered that.  But I think it's a 
+critically important problem to solve (signature blocks, not so much, 
+but it could piggy back on the same solution).    So the mailing list is 
+a good place to discuss this, but it maybe it shouldn't be labeled as a 
+BIP.  I'll leave that up to the others (arguably, the URI scheme is not 
+a protocol change, either, but was still a BIP).
+
+There is all this fanfare around P2SH and how multi-sig is the solution 
+to all these security problems, but how the hell do you use it?  I 
+believe that BIP 10 (or successor) is *critical//*to the success of 
+multi-sig, because the greatest barrier to using multi-sig will be the 
+ability to actually execute them in less than 14 steps.  And if every 
+client implements it differently, there's even less chance it will be 
+used (assuming the userbase reaches any level of client diversity).
+
+I think we need to supply a solution to this existing problem before 
+everyone starts solving it on their own and fragmenting the market.  No 
+one has to use the solution we come up with -- but I believe it's a 
+problem for which most developers will take any solution that is easy to 
+exchange, size-efficient and promised to be interoperable (if for no 
+other reason than the Satoshi client uses it).
+
+-Alan
+
+
+
+On 04/03/2012 07:37 PM, Mike Koss wrote:
+> Alan, I'm coming in late to the conversation - do I understand that 
+> BIP 010 does not propose any changes to the protocol - but just an 
+> intermediate data format that other clients might use to collect the 
+> need key material to sign a multi-signature block?
+>
+> If so - one might ask what the role of BIP's are if they actually do 
+> not impact the protocol?
+>
+> If there is any encapsulated data format that is expected to be 
+> interpreted by clients - I'd call that a "protocol change"; but I take 
+> it in this instance that you will transmit these signature block out 
+> of band from the client ... yet they would have to be parsed and 
+> converted into a Transaction Script once collected by SOME client? 
+>  Would we expect the standard client do so?
+>
+> Sorry if this has been discussed before - I'm trying to understand the 
+> proposal.
+>
+>
+> On Tue, Apr 3, 2012 at 2:12 PM, Alan Reiner <etotheipi at gmail.com 
+> <mailto:etotheipi at gmail.com>> wrote:
+>
+>     Just to clarify, I'm not proposing anything to the protocol
+>     itself.  Simply that some applications might benefit from users
+>     being to sign messages with existing Bitcoin identities, and what
+>     can we do to accommodate that (out of band)?  It's not a high
+>     priority, but I think it's potentially useful, and most codebases
+>     already have everything they need in place to implement it.
+>
+>
+>
+>     On 04/03/2012 04:04 PM, Peter Vessenes wrote:
+>>     I don't think it's minimally invasive to layer PGP's web of trust
+>>     on top of Bitcoin, in fact, the opposite.
+>>
+>>     From a certain angle, bitcoin exists as a sort of answer /
+>>     alternate solution to the web of trust. Digital cash with an
+>>     existing web of trust in place was a working concept in the
+>>     mid-1990s, courtesy of David Chaum, I believe.
+>>
+>>     I totally agree on the kitchen sink concern; I would personally
+>>     like to see something like a one-year required discussion period
+>>     on all non-security changes proposed to the blockchain protocol.
+>>     We know almost nothing about how bitcoin will be used over the
+>>     next 20 years; I believe it's a mistake to bulk up the protocol
+>>     too rapidly right now.
+>>
+>>     There's a famous phrase from the founder of Lotus about Lotus'
+>>     engineering process: "add lightness." The equivalent for protocol
+>>     design might be "add simplicity." I'd like to see us adding
+>>     simplicity for now, getting a core set of tests together for
+>>     alternate implementations like libbitcoin, and thinking hard
+>>     about the dangers of cruft over a 10+ year period when it comes
+>>     to a technology which will necessarily include a complete history
+>>     of every crufty decision embodied in transaction histories.
+>>
+>>     Peter
+>>
+>>
+>>     On Tue, Apr 3, 2012 at 1:42 PM, Wladimir <laanwj at gmail.com
+>>     <mailto:laanwj at gmail.com>> wrote:
+>>
+>>
+>>         On Tue, Apr 3, 2012 at 8:55 PM, Luke-Jr <luke at dashjr.org
+>>         <mailto:luke at dashjr.org>> wrote:
+>>
+>>             On Tuesday, April 03, 2012 2:46:17 PM Gavin Andresen wrote:
+>>             > We should avoid reinventing the wheel, if we can. I
+>>             think we should
+>>             > extend existing standards whenever possible.
+>>
+>>             I wonder if it's possible to make sigs compatible with
+>>             PGP/EC ?
+>>
+>>
+>>         Or we could take a step back, further into "don't reinvent
+>>         the wheel" territory. Why not simply make use of PGP(/EC) to
+>>         sign and verify messages? It has many advantages, like an
+>>         already existing web-of-trust and keyserver infrastructure.
+>>
+>>         I still feel like this is sign message stuff is dragging the
+>>         kitchen sink into Bitcoin. It's fine for logging into a
+>>         website, what you use it for, but anything that approaches
+>>         signing email (such as S/MIME implementations and handling
+>>         different character encodings) is going too far IMO.
+>>
+>>         Wladimir
+>>
+>>
+>>         ------------------------------------------------------------------------------
+>>         Better than sec? Nothing is better than sec when it comes to
+>>         monitoring Big Data applications. Try Boundary one-second
+>>         resolution app monitoring today. Free.
+>>         http://p.sf.net/sfu/Boundary-dev2dev
+>>         _______________________________________________
+>>         Bitcoin-development mailing list
+>>         Bitcoin-development at lists.sourceforge.net
+>>         <mailto:Bitcoin-development at lists.sourceforge.net>
+>>         https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>>
+>>
+>>
+>>
+>>     -- 
+>>
+>>     Peter J. Vessenes
+>>     CEO, CoinLab
+>>     M: 206.595.9839 <tel:206.595.9839>
+>>
+>>
+>>     ------------------------------------------------------------------------------
+>>     Better than sec? Nothing is better than sec when it comes to
+>>     monitoring Big Data applications. Try Boundary one-second
+>>     resolution app monitoring today. Free.
+>>     http://p.sf.net/sfu/Boundary-dev2dev
+>>
+>>
+>>     _______________________________________________
+>>     Bitcoin-development mailing list
+>>     Bitcoin-development at lists.sourceforge.net  <mailto:Bitcoin-development at lists.sourceforge.net>
+>>     https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+>     ------------------------------------------------------------------------------
+>     Better than sec? Nothing is better than sec when it comes to
+>     monitoring Big Data applications. Try Boundary one-second
+>     resolution app monitoring today. Free.
+>     http://p.sf.net/sfu/Boundary-dev2dev
+>     _______________________________________________
+>     Bitcoin-development mailing list
+>     Bitcoin-development at lists.sourceforge.net
+>     <mailto:Bitcoin-development at lists.sourceforge.net>
+>     https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+>
+>
+> -- 
+> Mike Koss
+> CTO, CoinLab
+> (425) 246-7701 (m)
+>
+> A Bitcoin Primer <http://coinlab.com/a-bitcoin-primer.pdf> - What you 
+> need to know about Bitcoins.
+>
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120403/c9b724a0/attachment.html>
+
+From mike at coinlab.com  Tue Apr  3 23:37:01 2012
+From: mike at coinlab.com (Mike Koss)
+Date: Tue, 3 Apr 2012 16:37:01 -0700
+Subject: [Bitcoin-development] Signature Blocks and URI Sign Requests
+In-Reply-To: <4F7B67D6.7090101@gmail.com>
+References: <4F7A1227.7070306@gmail.com>
+	<CABsx9T3MQzJ5gN5xTZ9y5d-og11=mB86cM3ZP4S-fhjs1U+20g@mail.gmail.com>
+	<201204031455.42265.luke@dashjr.org>
+	<CA+s+GJCKcOky=Kfa9cNaEnpO0Lj4Va8a8N=-OZSoXLoO8aUGgQ@mail.gmail.com>
+	<CAMGNxUujVx0taTh+QR1WFBMKGWcxF-CvCMPwVFWirQ=XyZtquA@mail.gmail.com>
+	<4F7B67D6.7090101@gmail.com>
+Message-ID: <CAErK2CjSEvhuHt-fdu-jTL6A9sL9NEXZQM6fUxSz9bxeTxHoAQ@mail.gmail.com>
+
+Alan, I'm coming in late to the conversation - do I understand that BIP 010
+does not propose any changes to the protocol - but just an intermediate
+data format that other clients might use to collect the need key material
+to sign a multi-signature block?
+
+If so - one might ask what the role of BIP's are if they actually do not
+impact the protocol?
+
+If there is any encapsulated data format that is expected to be interpreted
+by clients - I'd call that a "protocol change"; but I take it in this
+instance that you will transmit these signature block out of band from the
+client ... yet they would have to be parsed and converted into a
+Transaction Script once collected by SOME client?  Would we expect the
+standard client do so?
+
+Sorry if this has been discussed before - I'm trying to understand the
+proposal.
+
+
+On Tue, Apr 3, 2012 at 2:12 PM, Alan Reiner <etotheipi at gmail.com> wrote:
+
+> **
+> Just to clarify, I'm not proposing anything to the protocol itself.
+> Simply that some applications might benefit from users being to sign
+> messages with existing Bitcoin identities, and what can we do to
+> accommodate that (out of band)?  It's not a high priority, but I think it's
+> potentially useful, and most codebases already have everything they need in
+> place to implement it.
+>
+>
+>
+> On 04/03/2012 04:04 PM, Peter Vessenes wrote:
+>
+> I don't think it's minimally invasive to layer PGP's web of trust on top
+> of Bitcoin, in fact, the opposite.
+>
+>  From a certain angle, bitcoin exists as a sort of answer / alternate
+> solution to the web of trust. Digital cash with an existing web of trust in
+> place was a working concept in the mid-1990s, courtesy of David Chaum, I
+> believe.
+>
+>  I totally agree on the kitchen sink concern; I would personally like to
+> see something like a one-year required discussion period on all
+> non-security changes proposed to the blockchain protocol. We know almost
+> nothing about how bitcoin will be used over the next 20 years; I believe
+> it's a mistake to bulk up the protocol too rapidly right now.
+>
+>  There's a famous phrase from the founder of Lotus about Lotus'
+> engineering process: "add lightness." The equivalent for protocol design
+> might be "add simplicity." I'd like to see us adding simplicity for now,
+> getting a core set of tests together for alternate implementations like
+> libbitcoin, and thinking hard about the dangers of cruft over a 10+ year
+> period when it comes to a technology which will necessarily include a
+> complete history of every crufty decision embodied in transaction histories.
+>
+>  Peter
+>
+>
+> On Tue, Apr 3, 2012 at 1:42 PM, Wladimir <laanwj at gmail.com> wrote:
+>
+>>
+>>  On Tue, Apr 3, 2012 at 8:55 PM, Luke-Jr <luke at dashjr.org> wrote:
+>>
+>>> On Tuesday, April 03, 2012 2:46:17 PM Gavin Andresen wrote:
+>>> > We should avoid reinventing the wheel, if we can. I think we should
+>>> > extend existing standards whenever possible.
+>>>
+>>>  I wonder if it's possible to make sigs compatible with PGP/EC ?
+>>>
+>>
+>> Or we could take a step back, further into "don't reinvent the wheel"
+>> territory. Why not simply make use of PGP(/EC) to sign and verify messages?
+>> It has many advantages, like an already existing web-of-trust and keyserver
+>> infrastructure.
+>>
+>> I still feel like this is sign message stuff is dragging the kitchen sink
+>> into Bitcoin. It's fine for logging into a website, what you use it for,
+>> but anything that approaches signing email (such as S/MIME implementations
+>> and handling different character encodings) is going too far IMO.
+>>
+>> Wladimir
+>>
+>>
+>>
+>> ------------------------------------------------------------------------------
+>> Better than sec? Nothing is better than sec when it comes to
+>> monitoring Big Data applications. Try Boundary one-second
+>> resolution app monitoring today. Free.
+>> http://p.sf.net/sfu/Boundary-dev2dev
+>> _______________________________________________
+>> Bitcoin-development mailing list
+>> Bitcoin-development at lists.sourceforge.net
+>> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>>
+>>
+>
+>
+>  --
+>
+> Peter J. Vessenes
+> CEO, CoinLab
+> M: 206.595.9839
+>
+>
+> ------------------------------------------------------------------------------
+> Better than sec? Nothing is better than sec when it comes to
+> monitoring Big Data applications. Try Boundary one-second
+> resolution app monitoring today. Free.http://p.sf.net/sfu/Boundary-dev2dev
+>
+>
+> _______________________________________________
+> Bitcoin-development mailing listBitcoin-development at lists.sourceforge.nethttps://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+>
+>
+> ------------------------------------------------------------------------------
+> Better than sec? Nothing is better than sec when it comes to
+> monitoring Big Data applications. Try Boundary one-second
+> resolution app monitoring today. Free.
+> http://p.sf.net/sfu/Boundary-dev2dev
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+
+
+-- 
+Mike Koss
+CTO, CoinLab
+(425) 246-7701 (m)
+
+A Bitcoin Primer <http://coinlab.com/a-bitcoin-primer.pdf> - What you need
+to know about Bitcoins.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120403/84a5db0d/attachment.html>
+
+From laanwj at gmail.com  Wed Apr  4 06:23:48 2012
+From: laanwj at gmail.com (Wladimir)
+Date: Wed, 4 Apr 2012 08:23:48 +0200
+Subject: [Bitcoin-development] Signature Blocks and URI Sign Requests
+In-Reply-To: <4F7B8F46.8060706@gmail.com>
+References: <4F7A1227.7070306@gmail.com>
+	<CABsx9T3MQzJ5gN5xTZ9y5d-og11=mB86cM3ZP4S-fhjs1U+20g@mail.gmail.com>
+	<201204031455.42265.luke@dashjr.org>
+	<CA+s+GJCKcOky=Kfa9cNaEnpO0Lj4Va8a8N=-OZSoXLoO8aUGgQ@mail.gmail.com>
+	<CAMGNxUujVx0taTh+QR1WFBMKGWcxF-CvCMPwVFWirQ=XyZtquA@mail.gmail.com>
+	<4F7B67D6.7090101@gmail.com>
+	<CAErK2CjSEvhuHt-fdu-jTL6A9sL9NEXZQM6fUxSz9bxeTxHoAQ@mail.gmail.com>
+	<4F7B8F46.8060706@gmail.com>
+Message-ID: <CA+s+GJBFYNZjOzRJd19wZ29h-uKqaVNx-RhnsgGpRAMg-nRgZw@mail.gmail.com>
+
+Alan,
+
+On Wed, Apr 4, 2012 at 2:01 AM, Alan Reiner <etotheipi at gmail.com> wrote:
+
+> **
+> There is all this fanfare around P2SH and how multi-sig is the solution to
+> all these security problems, but how the hell do you use it?  I believe
+> that BIP 10 (or successor) is *critical *to the success of multi-sig,
+> because the greatest barrier to using multi-sig will be the ability to
+> actually execute them in less than 14 steps.  And if every client
+> implements it differently, there's even less chance it will be used
+> (assuming the userbase reaches any level of client diversity).
+>
+
+That is a laudable goal.
+
+So your proposal is about signing "Preformatted messages from sites" to
+make financial transactions more secure, not arbitrary user-to-user
+messages such as email. That really restricts the scope, which is good.
+
+In this case there is no use for S/MIME, which deals with encoding/signing
+multipart mail messages. And no need to deal with MIME headers, html, or
+embedded images, and such. And we can simply require one character
+encoding, no need to support hundreds.
+
+The "request signing" bitcoin URL makes sense in my eyes. Less copy/pasting
+is good. Do mind that there is usually a URL size limit (depending on the
+browser) so this cannot be used for long messages/contracts. A possible
+solution would be to make an option to pass the address where the message
+can be retrieved (and maybe also where the signature must be sent, to save
+a copy-paste back?).
+
+Looking at existing solutions, the only other "sign request" that I know of
+is the CSR (https://en.wikipedia.org/wiki/Certificate_signing_request) but
+the functionality and goal is very different.
+
+It'd be useful (and IMO most important) to write down some use-cases in
+which this makes P2SH easier and less involved. How many steps can be
+eliminated of the 14?
+
+Wladimir
+BTW: we also still need a BIP to define URL signing / authentication
+itself.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120404/5909aec1/attachment.html>
+
+From gronager at mac.com  Wed Apr  4 08:35:12 2012
+From: gronager at mac.com (=?iso-8859-1?Q?Michael_Gr=F8nager?=)
+Date: Wed, 04 Apr 2012 10:35:12 +0200
+Subject: [Bitcoin-development] Signature Blocks and URI Sign Requests
+In-Reply-To: <CA+s+GJBFYNZjOzRJd19wZ29h-uKqaVNx-RhnsgGpRAMg-nRgZw@mail.gmail.com>
+References: <4F7A1227.7070306@gmail.com>
+	<CABsx9T3MQzJ5gN5xTZ9y5d-og11=mB86cM3ZP4S-fhjs1U+20g@mail.gmail.com>
+	<201204031455.42265.luke@dashjr.org>
+	<CA+s+GJCKcOky=Kfa9cNaEnpO0Lj4Va8a8N=-OZSoXLoO8aUGgQ@mail.gmail.com>
+	<CAMGNxUujVx0taTh+QR1WFBMKGWcxF-CvCMPwVFWirQ=XyZtquA@mail.gmail.com>
+	<4F7B67D6.7090101@gmail.com>
+	<CAErK2CjSEvhuHt-fdu-jTL6A9sL9NEXZQM6fUxSz9bxeTxHoAQ@mail.gmail.com>
+	<4F7B8F46.8060706@gmail.com>
+	<CA+s+GJBFYNZjOzRJd19wZ29h-uKqaVNx-RhnsgGpRAMg-nRgZw@mail.gmail.com>
+Message-ID: <416DB500-46F1-4249-8728-F08B1FFADE11@mac.com>
+
+Hi Alan,
+
+I am using an approach similar to your proposal in a service I am developing. I have, however, chosen to sign using the following scheme:
+1. take sha512 of document (=hash512)
+2. take ripemd160 of hash512
+3. create 512 bit data structure, where the first 352bits are '0', and the rest is the ripemd160 of our hash512
+4. sign it with the key
+
+This procedure prevents an evil site from fooling you to sign a transaction spending your own coins. So bottom like never sign a full sha512 with a key for any other purpose than a transaction. (The above could easily well have been implemented as just truncating the hash512 to 256 bits, feel free to propose the optimal scheme).
+
+/M
+
+
+
+On 04/04/2012, at 08:23, Wladimir wrote:
+
+> Alan,
+> 
+> On Wed, Apr 4, 2012 at 2:01 AM, Alan Reiner <etotheipi at gmail.com> wrote:
+> There is all this fanfare around P2SH and how multi-sig is the solution to all these security problems, but how the hell do you use it?  I believe that BIP 10 (or successor) is critical to the success of multi-sig, because the greatest barrier to using multi-sig will be the ability to actually execute them in less than 14 steps.  And if every client implements it differently, there's even less chance it will be used (assuming the userbase reaches any level of client diversity).   
+> 
+> That is a laudable goal. 
+> 
+> So your proposal is about signing "Preformatted messages from sites" to make financial transactions more secure, not arbitrary user-to-user messages such as email. That really restricts the scope, which is good.
+> 
+> In this case there is no use for S/MIME, which deals with encoding/signing multipart mail messages. And no need to deal with MIME headers, html, or embedded images, and such. And we can simply require one character encoding, no need to support hundreds.
+> 
+> The "request signing" bitcoin URL makes sense in my eyes. Less copy/pasting is good. Do mind that there is usually a URL size limit (depending on the browser) so this cannot be used for long messages/contracts. A possible solution would be to make an option to pass the address where the message can be retrieved (and maybe also where the signature must be sent, to save a copy-paste back?).
+> 
+> Looking at existing solutions, the only other "sign request" that I know of is the CSR (https://en.wikipedia.org/wiki/Certificate_signing_request) but the functionality and goal is very different.
+> 
+> It'd be useful (and IMO most important) to write down some use-cases in which this makes P2SH easier and less involved. How many steps can be eliminated of the 14?
+> 
+> Wladimir
+> BTW: we also still need a BIP to define URL signing / authentication itself. 
+> 
+> ------------------------------------------------------------------------------
+> Better than sec? Nothing is better than sec when it comes to
+> monitoring Big Data applications. Try Boundary one-second 
+> resolution app monitoring today. Free.
+> http://p.sf.net/sfu/Boundary-dev2dev_______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+
+
+From mike at plan99.net  Wed Apr 11 15:32:18 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Wed, 11 Apr 2012 17:32:18 +0200
+Subject: [Bitcoin-development] BIP 31
+Message-ID: <CANEZrP09sw1YxK-f0W+m=eM222-ByZBAiB9fLSYsLN8SrihHDg@mail.gmail.com>
+
+Jeff asked for a BIP for the pong message, so here it is:
+
+https://en.bitcoin.it/wiki/BIP_0031
+
+
+
+From luke at dashjr.org  Wed Apr 11 15:42:45 2012
+From: luke at dashjr.org (Luke-Jr)
+Date: Wed, 11 Apr 2012 11:42:45 -0400
+Subject: [Bitcoin-development] BIP 31
+In-Reply-To: <CANEZrP09sw1YxK-f0W+m=eM222-ByZBAiB9fLSYsLN8SrihHDg@mail.gmail.com>
+References: <CANEZrP09sw1YxK-f0W+m=eM222-ByZBAiB9fLSYsLN8SrihHDg@mail.gmail.com>
+Message-ID: <201204111142.46151.luke@dashjr.org>
+
+On Wednesday, April 11, 2012 11:32:18 AM Mike Hearn wrote:
+> Jeff asked for a BIP for the pong message, so here it is:
+> 
+> https://en.bitcoin.it/wiki/BIP_0031
+
+I thought we were going with 60001 for the protocol version bump?
+
+
+
+From jgarzik at exmulti.com  Wed Apr 11 17:00:25 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Wed, 11 Apr 2012 13:00:25 -0400
+Subject: [Bitcoin-development] BIP 31
+In-Reply-To: <201204111142.46151.luke@dashjr.org>
+References: <CANEZrP09sw1YxK-f0W+m=eM222-ByZBAiB9fLSYsLN8SrihHDg@mail.gmail.com>
+	<201204111142.46151.luke@dashjr.org>
+Message-ID: <CA+8xBpf4SX8rR+4f3tBYsZSpc2X42E-Nmttf23Xf3n1Fz8AaOg@mail.gmail.com>
+
+On Wed, Apr 11, 2012 at 11:42 AM, Luke-Jr <luke at dashjr.org> wrote:
+> On Wednesday, April 11, 2012 11:32:18 AM Mike Hearn wrote:
+>> Jeff asked for a BIP for the pong message, so here it is:
+>>
+>> https://en.bitcoin.it/wiki/BIP_0031
+>
+> I thought we were going with 60001 for the protocol version bump?
+
+See pull #1081, which makes a few minor revisions along these lines.
+
+Mike's original pull still has my ACK, FWIW, too.  Can pull either.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From sirk390 at gmail.com  Wed Apr 11 18:39:40 2012
+From: sirk390 at gmail.com (Christian Bodt)
+Date: Wed, 11 Apr 2012 20:39:40 +0200
+Subject: [Bitcoin-development] Adding request/reply id in messages
+Message-ID: <CA+XhJbpNYUyPm2Ymcpg3grbfGnfERCsUJNJuByEJbJLsMMmMbQ@mail.gmail.com>
+
+Hi,
+
+I would like to discuss the following bitcoin protocol improvement proposal:
+
+         Adding request/reply id in all messages (in the message header,
+based on what was done for the "checksum" field)
+
+The original reason is that I found it very hard to implement robust
+blockchain downloading as we are missing context information:
+The download protocol relies on the other peer sending one (or more) "inv"
+reponse(s) to "getblocks" and sending the "hashContinue".
+But if the other peer doesn't send a response to getblock, send a partial
+response to getblocks, mixes it with some unrelated blocks inventories
+or doesn't send the "hashContinue" it is very hard to detect and handle
+(e.g. ban the peer and switch to another).  This could cause some DoS
+attacks by misbehaving peers.
+The problems are that 1/ we don't know how many "inv" messages to wait for
+after "getblocks" and 2/ we don't know how to distinguish between result of
+"getblocks" and spontaneous "inv" notifications.
+The same is true for  "addr" messages (it is both a notification and reply)
+but this is less of a problem as a lack of response to getaddr
+doesn't constitute a DoS.
+
+The idea would be to add a new "requestid" field in messages and define the
+following:
+      - verack sends back the requestid given in version.
+      - inv sends back the requestid given in getblocks or a special value
+in case of a notification.
+      - addr sends back the requestid given in getaddr or a special value
+in case of a notification.
+      - tx sends back the requestid  given in getdata.
+      - block sends back the requestid given in getdata
+      - headers sends back the requestid given in getheaders.
+      - reply sends back the requestid given in checkorder/submitorder.
+      - pong sends back the requestid given in ping.
+
+With the following rules:
+       - getblocks always results in a single"inv" reply (0-500 elements
+allowed).
+       - getdata still result in multiple 'tx' or 'block' 's (as currently).
+
+This is inspired by the common request/reply pattern (the id is sometimes
+called "correlation id").
+This would permit better asynchronous messaging (multiple request of the
+same type in parallel. This could be useful for
+getblocks/getdata/getheaders and future messages).
+
+Historic note: It seems similar to the existing mechanism of
+"CRequestTracker, hashReply & PushRequest" in the current bitcoin source
+code except requestId  would only be a 32bits instead of the 256bits
+of hashReply .
+
+I have implemented a prototype here: https://github.com/sirk390/bitcoin/
+This could allow to remove "hashContinue" in a second step like this:
+https://github.com/sirk390/bitcoin/tree/better_block_download
+
+I'm discussing it now as I read the PONG BIP and saw some similar nonce
+field added.
+I was not sure if this nonce field would still be required if we had
+request/reply ids .
+
+What do you think?
+
+Best Regards,
+Christian Bodt, France
+Note: I am working on a python implementation of bitcoin.
+See https://github.com/sirk390/coinpy
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120411/3b4afcbf/attachment.html>
+
+From gavinandresen at gmail.com  Thu Apr 12 15:41:05 2012
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Thu, 12 Apr 2012 11:41:05 -0400
+Subject: [Bitcoin-development] Adding request/reply id in messages
+In-Reply-To: <CA+XhJbpNYUyPm2Ymcpg3grbfGnfERCsUJNJuByEJbJLsMMmMbQ@mail.gmail.com>
+References: <CA+XhJbpNYUyPm2Ymcpg3grbfGnfERCsUJNJuByEJbJLsMMmMbQ@mail.gmail.com>
+Message-ID: <CABsx9T029cY-OJfZ9n-rSZc7i36e+CkOZPZixdi8EFL7oN4jhQ@mail.gmail.com>
+
+On Wed, Apr 11, 2012 at 2:39 PM, Christian Bodt <sirk390 at gmail.com> wrote:
+> I would like to discuss the following bitcoin protocol improvement proposal:
+>
+> ? ? ? ? ?Adding request/reply id in all messages (in the message header,
+> based on what was done for the "checksum" field)
+
+That seems like a perfectly reasonable protocol improvement to me.
+Anybody else have an opinion?
+
+-- 
+--
+Gavin Andresen
+
+
+
+From pieter.wuille at gmail.com  Thu Apr 12 16:01:54 2012
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Thu, 12 Apr 2012 18:01:54 +0200
+Subject: [Bitcoin-development] Adding request/reply id in messages
+In-Reply-To: <CABsx9T029cY-OJfZ9n-rSZc7i36e+CkOZPZixdi8EFL7oN4jhQ@mail.gmail.com>
+References: <CA+XhJbpNYUyPm2Ymcpg3grbfGnfERCsUJNJuByEJbJLsMMmMbQ@mail.gmail.com>
+	<CABsx9T029cY-OJfZ9n-rSZc7i36e+CkOZPZixdi8EFL7oN4jhQ@mail.gmail.com>
+Message-ID: <20120412160151.GA1100@vps7135.xlshosting.net>
+
+On Thu, Apr 12, 2012 at 11:41:05AM -0400, Gavin Andresen wrote:
+> On Wed, Apr 11, 2012 at 2:39 PM, Christian Bodt <sirk390 at gmail.com> wrote:
+> > I would like to discuss the following bitcoin protocol improvement proposal:
+> >
+> > ? ? ? ? ?Adding request/reply id in all messages (in the message header,
+> > based on what was done for the "checksum" field)
+> 
+> That seems like a perfectly reasonable protocol improvement to me.
+> Anybody else have an opinion?
+
+If there is a reasonable use for it, I have no objections.
+
+However: the bitcoin P2P protocol is not fully request-reply based, and trying to use
+it that may be be less intuitive than how it looks. For example, doing a second
+identical "getblocks" request will not result in more "inv" replies, as the client
+prevents retransmits. This is not a large problem, but maybe such an extension
+should also include an extra "denied" message, which is sent if the client is
+unwilling to answer (and may also be used to report transactions that are not
+accepted into the memory pool, for example).
+
+-- 
+Pieter
+
+
+
+From zgenjix at yahoo.com  Thu Apr 12 16:33:07 2012
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Thu, 12 Apr 2012 09:33:07 -0700 (PDT)
+Subject: [Bitcoin-development] Adding request/reply id in messages
+In-Reply-To: <20120412160151.GA1100@vps7135.xlshosting.net>
+References: <CA+XhJbpNYUyPm2Ymcpg3grbfGnfERCsUJNJuByEJbJLsMMmMbQ@mail.gmail.com>
+	<CABsx9T029cY-OJfZ9n-rSZc7i36e+CkOZPZixdi8EFL7oN4jhQ@mail.gmail.com>
+	<20120412160151.GA1100@vps7135.xlshosting.net>
+Message-ID: <1334248387.65842.YahooMailNeo@web121004.mail.ne1.yahoo.com>
+
+This is a bad idea. The bitcoin protocol is (mostly) stateless. Stateless protocols are more secure.
+
+
+
+________________________________
+ From: Pieter Wuille <pieter.wuille at gmail.com>
+To: Gavin Andresen <gavinandresen at gmail.com> 
+Cc: bitcoin-development at lists.sourceforge.net 
+Sent: Thursday, April 12, 2012 5:01 PM
+Subject: Re: [Bitcoin-development] Adding request/reply id in messages
+ 
+On Thu, Apr 12, 2012 at 11:41:05AM -0400, Gavin Andresen wrote:
+> On Wed, Apr 11, 2012 at 2:39 PM, Christian Bodt <sirk390 at gmail.com> wrote:
+> > I would like to discuss the following bitcoin protocol improvement proposal:
+> >
+> > ? ? ? ? ?Adding request/reply id in all messages (in the message header,
+> > based on what was done for the "checksum" field)
+> 
+> That seems like a perfectly reasonable protocol improvement to me.
+> Anybody else have an opinion?
+
+If there is a reasonable use for it, I have no objections.
+
+However: the bitcoin P2P protocol is not fully request-reply based, and trying to use
+it that may be be less intuitive than how it looks. For example, doing a second
+identical "getblocks" request will not result in more "inv" replies, as the client
+prevents retransmits. This is not a large problem, but maybe such an extension
+should also include an extra "denied" message, which is sent if the client is
+unwilling to answer (and may also be used to report transactions that are not
+accepted into the memory pool, for example).
+
+-- 
+Pieter
+
+------------------------------------------------------------------------------
+For Developers, A Lot Can Happen In A Second.
+Boundary is the first to Know...and Tell You.
+Monitor Your Applications in Ultra-Fine Resolution. Try it FREE!
+http://p.sf.net/sfu/Boundary-d2dvs2
+_______________________________________________
+Bitcoin-development mailing list
+Bitcoin-development at lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120412/b046c13c/attachment.html>
+
+From sirk390 at gmail.com  Thu Apr 12 16:54:29 2012
+From: sirk390 at gmail.com (Christian Bodt)
+Date: Thu, 12 Apr 2012 18:54:29 +0200
+Subject: [Bitcoin-development] Adding request/reply id in messages
+In-Reply-To: <CA+XhJbq01knW4XizF3DjaaXnzChvixsxwgFMzWiPPehYuvVk1w@mail.gmail.com>
+References: <CA+XhJbpNYUyPm2Ymcpg3grbfGnfERCsUJNJuByEJbJLsMMmMbQ@mail.gmail.com>
+	<CABsx9T029cY-OJfZ9n-rSZc7i36e+CkOZPZixdi8EFL7oN4jhQ@mail.gmail.com>
+	<20120412160151.GA1100@vps7135.xlshosting.net>
+	<CA+XhJbq01knW4XizF3DjaaXnzChvixsxwgFMzWiPPehYuvVk1w@mail.gmail.com>
+Message-ID: <CA+XhJboPopi-Wbg3u4mYsSDxD4CuM_Mu2vCcekaKWw_mL=C2uw@mail.gmail.com>
+
+> For example, doing a second
+> identical "getblocks" request will not result in more "inv" replies, as
+> the client
+> prevents retransmits.
+
+
+Yes, the current prototype implementation modifies that. "getblocks" always
+results in one "inv" with [0-500] elements.
+It also removes the filtering on previously transmitted block invs.
+see patch:
+https://github.com/sirk390/bitcoin/commit/17a27e3d56efa107697b53c193364a33951f1dd1
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120412/6d6d42f9/attachment.html>
+
+From jgarzik at exmulti.com  Thu Apr 12 17:12:09 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Thu, 12 Apr 2012 13:12:09 -0400
+Subject: [Bitcoin-development] Adding request/reply id in messages
+In-Reply-To: <CA+XhJbpNYUyPm2Ymcpg3grbfGnfERCsUJNJuByEJbJLsMMmMbQ@mail.gmail.com>
+References: <CA+XhJbpNYUyPm2Ymcpg3grbfGnfERCsUJNJuByEJbJLsMMmMbQ@mail.gmail.com>
+Message-ID: <CA+8xBpco-yPYB+cjoi_+srG2BkC2ZQBh-3HGNA5EaSB3FWNgog@mail.gmail.com>
+
+On Wed, Apr 11, 2012 at 2:39 PM, Christian Bodt <sirk390 at gmail.com> wrote:
+> Hi,
+>
+> I would like to discuss the following bitcoin protocol improvement proposal:
+>
+> ? ? ? ? ?Adding request/reply id in all messages (in the message header,
+> based on what was done for the "checksum" field)
+>
+> The original reason is that I found it very hard to implement robust
+> blockchain downloading as we are missing context information:
+> The download protocol relies on the other peer sending one (or more) "inv"
+> reponse(s) to "getblocks" and sending the "hashContinue".
+> But if the other peer doesn't send a response to getblock, send a partial
+> response to getblocks, mixes it with some unrelated blocks inventories
+> or?doesn't send the "hashContinue"?it is very hard to detect and handle
+> (e.g. ban the peer and switch to another). ?This could cause some DoS
+> attacks by misbehaving peers.
+
+If the peer is misbehaving, then disconnect.  Your protocol change
+does not offer any clear benefits in this area, as these sorts of
+attacks/misbehaviors/bugs are still just as possible, and just as
+damaging (or not).
+
+Just disconnect the strange peer!
+
+> The problems are that 1/ we don't know how many "inv" messages to wait for
+> after "getblocks"?and 2/ we don't know how to?distinguish between result of
+> "getblocks" and spontaneous "inv" notifications.
+> The same is true for ?"addr" messages (it is both a notification and reply)
+> but this is less of a problem as a lack of response to getaddr
+> doesn't?constitute?a DoS.
+>
+> The idea would be to add a new "requestid" field in messages and define the
+> following:
+
+
+Stateless protocols have a lot of value.  They are easiest to
+implement, and easier to prove correct.  Existing clients like
+ArtForz' half-a-node, variants of which are deployed all over the
+place in bitcoin-land, rely on the stateless-ness to one degree or
+another.
+
+Stateful protocols, too, have their problems as well.  One must add
+code to help remain "synchronized" between local and remote states,
+which your suggested change only hints at.  NFSv4 and RPC have a long
+history of dealing with stateful-ness issues.  Obviously bitcoin P2P
+is nowhere near as complex, but the history of NFS development offers
+several lessons applicable to your proposed change.
+
+Overall, IMO your listed reasons for needing this major change
+(stateless->stateful) do not really justify the change.  Handling
+initial block download can be accomplished in a number of ways, and
+peer(s) may crash or return odd results.  You must handle these cases
+properly, regardless of the presence of req/reply id's.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From zgenjix at yahoo.com  Thu Apr 12 17:24:18 2012
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Thu, 12 Apr 2012 10:24:18 -0700 (PDT)
+Subject: [Bitcoin-development] Adding request/reply id in messages
+In-Reply-To: <CA+8xBpco-yPYB+cjoi_+srG2BkC2ZQBh-3HGNA5EaSB3FWNgog@mail.gmail.com>
+References: <CA+XhJbpNYUyPm2Ymcpg3grbfGnfERCsUJNJuByEJbJLsMMmMbQ@mail.gmail.com>
+	<CA+8xBpco-yPYB+cjoi_+srG2BkC2ZQBh-3HGNA5EaSB3FWNgog@mail.gmail.com>
+Message-ID: <1334251458.43194.YahooMailNeo@web121005.mail.ne1.yahoo.com>
+
+Jeff elaborated the problems very well, but I just want to add this:
+
+Your change is essentially relying (trusting) the server to track a piece of information (your state). Anytime you start depending on another node in some way, it is opening yourself up to be exploited. Nodes should be doing their owning state maintainance, not relying on external parties.
+
+
+I am very much against the change. As someone who has implemented the complete bitcoin protocol, I had no problems implementing the blockchain download. In fact, I dislike that nodes have to store the last inventory they sent as part of a getblocks in order to trigger the next round. It's be better if there was no state whatsoever.
+
+________________________________
+From: Jeff Garzik <jgarzik at exmulti.com>
+To: sirk390 at gmail.com 
+Cc: bitcoin-development at lists.sourceforge.net 
+Sent: Thursday, April 12, 2012 6:12 PM
+Subject: Re: [Bitcoin-development] Adding request/reply id in messages
+
+On Wed, Apr 11, 2012 at 2:39 PM, Christian Bodt <sirk390 at gmail.com> wrote:
+> Hi,
+>
+> I would like to discuss the following bitcoin protocol improvement proposal:
+>
+> ? ? ? ? ?Adding request/reply id in all messages (in the message header,
+> based on what was done for the "checksum" field)
+>
+> The original reason is that I found it very hard to implement robust
+> blockchain downloading as we are missing context information:
+> The download protocol relies on the other peer sending one (or more) "inv"
+> reponse(s) to "getblocks" and sending the "hashContinue".
+> But if the other peer doesn't send a response to getblock, send a partial
+> response to getblocks, mixes it with some unrelated blocks inventories
+> or?doesn't send the "hashContinue"?it is very hard to detect and handle
+> (e.g. ban the peer and switch to another). ?This could cause some DoS
+> attacks by misbehaving peers.
+
+If the peer is misbehaving, then disconnect.? Your protocol change
+does not offer any clear benefits in this area, as these sorts of
+attacks/misbehaviors/bugs are still just as possible, and just as
+damaging (or not).
+
+Just disconnect the strange peer!
+
+> The problems are that 1/ we don't know how many "inv" messages to wait for
+> after "getblocks"?and 2/ we don't know how to?distinguish between result of
+> "getblocks" and spontaneous "inv" notifications.
+> The same is true for ?"addr" messages (it is both a notification and reply)
+> but this is less of a problem as a lack of response to getaddr
+> doesn't?constitute?a DoS.
+>
+> The idea would be to add a new "requestid" field in messages and define the
+> following:
+
+
+Stateless protocols have a lot of value.? They are easiest to
+implement, and easier to prove correct.? Existing clients like
+ArtForz' half-a-node, variants of which are deployed all over the
+place in bitcoin-land, rely on the stateless-ness to one degree or
+another.
+
+Stateful protocols, too, have their problems as well.? One must add
+code to help remain "synchronized" between local and remote states,
+which your suggested change only hints at.? NFSv4 and RPC have a long
+history of dealing with stateful-ness issues.? Obviously bitcoin P2P
+is nowhere near as complex, but the history of NFS development offers
+several lessons applicable to your proposed change.
+
+Overall, IMO your listed reasons for needing this major change
+(stateless->stateful) do not really justify the change.? Handling
+initial block download can be accomplished in a number of ways, and
+peer(s) may crash or return odd results.? You must handle these cases
+properly, regardless of the presence of req/reply id's.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+------------------------------------------------------------------------------
+For Developers, A Lot Can Happen In A Second.
+Boundary is the first to Know...and Tell You.
+Monitor Your Applications in Ultra-Fine Resolution. Try it FREE!
+http://p.sf.net/sfu/Boundary-d2dvs2
+_______________________________________________
+Bitcoin-development mailing list
+Bitcoin-development at lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+From peter at coinlab.com  Thu Apr 12 18:04:54 2012
+From: peter at coinlab.com (Peter Vessenes)
+Date: Thu, 12 Apr 2012 11:04:54 -0700
+Subject: [Bitcoin-development] Adding request/reply id in messages
+In-Reply-To: <1334251458.43194.YahooMailNeo@web121005.mail.ne1.yahoo.com>
+References: <CA+XhJbpNYUyPm2Ymcpg3grbfGnfERCsUJNJuByEJbJLsMMmMbQ@mail.gmail.com>
+	<CA+8xBpco-yPYB+cjoi_+srG2BkC2ZQBh-3HGNA5EaSB3FWNgog@mail.gmail.com>
+	<1334251458.43194.YahooMailNeo@web121005.mail.ne1.yahoo.com>
+Message-ID: <CAMGNxUvjUMYW-Bpr68d+jPQ33Y=2nOX8zPNuUwZ0uOdf9ZfJog@mail.gmail.com>
+
+I agree that it would be nice if the protocol stayed stateless.
+
+I also think we should try and keep in our heads the aggregate
+bitcoin-universe cost of implementing any protocol change; even a very
+small change, something that truly only takes one hour of time from each
+bitcoin node client developer to implement, test and bugfix (hah!) Has a
+cost in the (tens?) of thousands of USD added up across those who need to
+understand, implement, discuss, etc.
+
+Peter
+
+On Thu, Apr 12, 2012 at 10:24 AM, Amir Taaki <zgenjix at yahoo.com> wrote:
+
+> Jeff elaborated the problems very well, but I just want to add this:
+>
+> Your change is essentially relying (trusting) the server to track a piece
+> of information (your state). Anytime you start depending on another node in
+> some way, it is opening yourself up to be exploited. Nodes should be doing
+> their owning state maintainance, not relying on external parties.
+>
+>
+> I am very much against the change. As someone who has implemented the
+> complete bitcoin protocol, I had no problems implementing the blockchain
+> download. In fact, I dislike that nodes have to store the last inventory
+> they sent as part of a getblocks in order to trigger the next round. It's
+> be better if there was no state whatsoever.
+>
+> ________________________________
+> From: Jeff Garzik <jgarzik at exmulti.com>
+> To: sirk390 at gmail.com
+> Cc: bitcoin-development at lists.sourceforge.net
+> Sent: Thursday, April 12, 2012 6:12 PM
+> Subject: Re: [Bitcoin-development] Adding request/reply id in messages
+>
+> On Wed, Apr 11, 2012 at 2:39 PM, Christian Bodt <sirk390 at gmail.com> wrote:
+> > Hi,
+> >
+> > I would like to discuss the following bitcoin protocol improvement
+> proposal:
+> >
+> >          Adding request/reply id in all messages (in the message header,
+> > based on what was done for the "checksum" field)
+> >
+> > The original reason is that I found it very hard to implement robust
+> > blockchain downloading as we are missing context information:
+> > The download protocol relies on the other peer sending one (or more)
+> "inv"
+> > reponse(s) to "getblocks" and sending the "hashContinue".
+> > But if the other peer doesn't send a response to getblock, send a partial
+> > response to getblocks, mixes it with some unrelated blocks inventories
+> > or doesn't send the "hashContinue" it is very hard to detect and handle
+> > (e.g. ban the peer and switch to another).  This could cause some DoS
+> > attacks by misbehaving peers.
+>
+> If the peer is misbehaving, then disconnect.  Your protocol change
+> does not offer any clear benefits in this area, as these sorts of
+> attacks/misbehaviors/bugs are still just as possible, and just as
+> damaging (or not).
+>
+> Just disconnect the strange peer!
+>
+> > The problems are that 1/ we don't know how many "inv" messages to wait
+> for
+> > after "getblocks" and 2/ we don't know how to distinguish between result
+> of
+> > "getblocks" and spontaneous "inv" notifications.
+> > The same is true for  "addr" messages (it is both a notification and
+> reply)
+> > but this is less of a problem as a lack of response to getaddr
+> > doesn't constitute a DoS.
+> >
+> > The idea would be to add a new "requestid" field in messages and define
+> the
+> > following:
+>
+>
+> Stateless protocols have a lot of value.  They are easiest to
+> implement, and easier to prove correct.  Existing clients like
+> ArtForz' half-a-node, variants of which are deployed all over the
+> place in bitcoin-land, rely on the stateless-ness to one degree or
+> another.
+>
+> Stateful protocols, too, have their problems as well.  One must add
+> code to help remain "synchronized" between local and remote states,
+> which your suggested change only hints at.  NFSv4 and RPC have a long
+> history of dealing with stateful-ness issues.  Obviously bitcoin P2P
+> is nowhere near as complex, but the history of NFS development offers
+> several lessons applicable to your proposed change.
+>
+> Overall, IMO your listed reasons for needing this major change
+> (stateless->stateful) do not really justify the change.  Handling
+> initial block download can be accomplished in a number of ways, and
+> peer(s) may crash or return odd results.  You must handle these cases
+> properly, regardless of the presence of req/reply id's.
+>
+> --
+> Jeff Garzik
+> exMULTI, Inc.
+> jgarzik at exmulti.com
+>
+>
+> ------------------------------------------------------------------------------
+> For Developers, A Lot Can Happen In A Second.
+> Boundary is the first to Know...and Tell You.
+> Monitor Your Applications in Ultra-Fine Resolution. Try it FREE!
+> http://p.sf.net/sfu/Boundary-d2dvs2
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+> ------------------------------------------------------------------------------
+> For Developers, A Lot Can Happen In A Second.
+> Boundary is the first to Know...and Tell You.
+> Monitor Your Applications in Ultra-Fine Resolution. Try it FREE!
+> http://p.sf.net/sfu/Boundary-d2dvs2
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+
+
+
+-- 
+
+Peter J. Vessenes
+CEO, CoinLab
+M: 206.595.9839
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120412/d5e6f96d/attachment.html>
+
+From jgarzik at exmulti.com  Thu Apr 12 18:38:43 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Thu, 12 Apr 2012 14:38:43 -0400
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic behavior
+Message-ID: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+
+Not sure whether this rises to the level of a BIP or not, as it is
+largely an implementation change.
+
+One of my From-Day-One complaints about bitcoin is that transactions
+behavior could be far more deterministic (predictable), from a user
+standpoint.  Transactions in the current system can easily remain in
+limbo forever.
+
+One big step in making transactions behave more predictably would be
+to remove transactions from the memory pool, if they have not made it
+into a block for a couple days.  i.e.
+
+1.  N = 1 or 2 or whatever the community prefers.  Ideally enough time
+for a third-tier miner, mining strange TXs, finds a block.
+2.  H1 = height of block chain, when a TX is received
+3.  H2 = H1 + (144 * N)
+4.  If block chain height reaches H2, and TX has not made it into a
+block, drop TX from memory pool
+
+Although this only impacts a small amount of TX's ultimately, what it
+does do is give us the ability -- once miners have upgraded to this
+rule -- to tell bitcoin users that their transactions "expire" after N
+days.
+
+Backwards compatibility should not be an issue; clients are free to
+retransmit their TX at any time, as usual, thereby "resetting the
+clock" for all peers who have forgotten the TX in question.
+
+Once in place, clients may then implement code that notices a TX has
+expired (read: likely to have been forgotten by the network, assuming
+they themselves have stopped retransmitting it).  Then you can start
+working on wallet/coin recovery, perhaps resending with a higher fee
+etc.
+
+The above change is not really "fill-or-kill" but it should be a big
+step, opening the door to deterministic TX behavior.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From etotheipi at gmail.com  Thu Apr 12 19:19:39 2012
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Thu, 12 Apr 2012 15:19:39 -0400
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic
+	behavior
+In-Reply-To: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+References: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+Message-ID: <CALf2ePzvwW6VU0YA+6WNCBHzK2rGc5p1uXGvbYG2uS__S-bjoQ@mail.gmail.com>
+
+My one big concern about this that users find a way to exploit this
+behavior for themselves.  If it's too easy for users to create tx they know
+will get stuck and expire, it's no different than letting them cancel their
+zero-conf transactions.  i.e. I pay 0.5 BTC in a store for a candy bar, so
+I send it using a combination of inputs and fees that I know will lead to
+it being stuck and expire.
+
+On the other hand, if such conditions are deterministic enough, it could be
+detected by the recipient and flagged.
+
+It's not a huge deal, but it's something to consider.
+
+-Alan
+
+
+
+On Thu, Apr 12, 2012 at 2:38 PM, Jeff Garzik <jgarzik at exmulti.com> wrote:
+
+> Not sure whether this rises to the level of a BIP or not, as it is
+> largely an implementation change.
+>
+> One of my From-Day-One complaints about bitcoin is that transactions
+> behavior could be far more deterministic (predictable), from a user
+> standpoint.  Transactions in the current system can easily remain in
+> limbo forever.
+>
+> One big step in making transactions behave more predictably would be
+> to remove transactions from the memory pool, if they have not made it
+> into a block for a couple days.  i.e.
+>
+> 1.  N = 1 or 2 or whatever the community prefers.  Ideally enough time
+> for a third-tier miner, mining strange TXs, finds a block.
+> 2.  H1 = height of block chain, when a TX is received
+> 3.  H2 = H1 + (144 * N)
+> 4.  If block chain height reaches H2, and TX has not made it into a
+> block, drop TX from memory pool
+>
+> Although this only impacts a small amount of TX's ultimately, what it
+> does do is give us the ability -- once miners have upgraded to this
+> rule -- to tell bitcoin users that their transactions "expire" after N
+> days.
+>
+> Backwards compatibility should not be an issue; clients are free to
+> retransmit their TX at any time, as usual, thereby "resetting the
+> clock" for all peers who have forgotten the TX in question.
+>
+> Once in place, clients may then implement code that notices a TX has
+> expired (read: likely to have been forgotten by the network, assuming
+> they themselves have stopped retransmitting it).  Then you can start
+> working on wallet/coin recovery, perhaps resending with a higher fee
+> etc.
+>
+> The above change is not really "fill-or-kill" but it should be a big
+> step, opening the door to deterministic TX behavior.
+>
+> --
+> Jeff Garzik
+> exMULTI, Inc.
+> jgarzik at exmulti.com
+>
+>
+> ------------------------------------------------------------------------------
+> For Developers, A Lot Can Happen In A Second.
+> Boundary is the first to Know...and Tell You.
+> Monitor Your Applications in Ultra-Fine Resolution. Try it FREE!
+> http://p.sf.net/sfu/Boundary-d2dvs2
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120412/8ae4ec6d/attachment.html>
+
+From jgarzik at exmulti.com  Thu Apr 12 19:26:25 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Thu, 12 Apr 2012 15:26:25 -0400
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic
+	behavior
+In-Reply-To: <CALf2ePzvwW6VU0YA+6WNCBHzK2rGc5p1uXGvbYG2uS__S-bjoQ@mail.gmail.com>
+References: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+	<CALf2ePzvwW6VU0YA+6WNCBHzK2rGc5p1uXGvbYG2uS__S-bjoQ@mail.gmail.com>
+Message-ID: <CA+8xBpctyu=VHQJMUiENY7q82hsP5Eti7gc9r4QT6aRwWsNE+A@mail.gmail.com>
+
+On Thu, Apr 12, 2012 at 3:19 PM, Alan Reiner <etotheipi at gmail.com> wrote:
+> My one big concern about this that users find a way to exploit this behavior
+> for themselves. ?If it's too easy for users to create tx they know will get
+> stuck and expire, it's no different than letting them cancel their zero-conf
+> transactions. ?i.e. I pay 0.5 BTC in a store for a candy bar, so I send it
+> using a combination of inputs and fees that I know will lead to it being
+> stuck and expire.
+>
+> On the other hand, if such conditions are deterministic enough, it could be
+> detected by the recipient and flagged.
+>
+> It's not a huge deal, but it's something to consider.
+
+Do you have a -specific- concern that you feel may be exploited?
+
+Expiration already occurs at random, as nodes shut down and restart,
+log on and log off the network.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From sirk390 at gmail.com  Thu Apr 12 20:53:28 2012
+From: sirk390 at gmail.com (Christian Bodt)
+Date: Thu, 12 Apr 2012 22:53:28 +0200
+Subject: [Bitcoin-development] Adding request/reply id in messages
+In-Reply-To: <1334251458.43194.YahooMailNeo@web121005.mail.ne1.yahoo.com>
+References: <CA+XhJbpNYUyPm2Ymcpg3grbfGnfERCsUJNJuByEJbJLsMMmMbQ@mail.gmail.com>
+	<CA+8xBpco-yPYB+cjoi_+srG2BkC2ZQBh-3HGNA5EaSB3FWNgog@mail.gmail.com>
+	<1334251458.43194.YahooMailNeo@web121005.mail.ne1.yahoo.com>
+Message-ID: <CA+XhJbp8+ngso0esDAA415eoBVEZ3NGvuVY7G-hUU72K5wFstw@mail.gmail.com>
+
+On Thu, Apr 12, 2012 at 7:24 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+
+> Jeff elaborated the problems very well, but I just want to add this:
+>
+> Your change is essentially relying (trusting) the server to track a piece
+> of information (your state).
+
+
+No, it is more about distinguishing between replies (multiple asynchroneous
+request) and spontaneous notifications of the other peer.
+Every state would still be tracked locally on the client side.
+
+I don't understand why you say my proposal would make the protocol more
+stateful. I think it doesn't.
+Each reply is only  the result of the current request only, and there is no
+new session information.
+As you see in my implementation, there is not even a new variable.
+Request/reply id is a very robust pattern that is compatible with stateless
+protocols.
+
+Indead, this change doesn't directly improve on peer that don't answer
+requests: it only enables to do so easily in a secondary step. This step
+can only be done when all peers on the network are running the modified
+code.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120412/38e08138/attachment.html>
+
+From laanwj at gmail.com  Fri Apr 13 06:30:49 2012
+From: laanwj at gmail.com (Wladimir)
+Date: Fri, 13 Apr 2012 08:30:49 +0200
+Subject: [Bitcoin-development] Adding request/reply id in messages
+In-Reply-To: <CA+XhJbp8+ngso0esDAA415eoBVEZ3NGvuVY7G-hUU72K5wFstw@mail.gmail.com>
+References: <CA+XhJbpNYUyPm2Ymcpg3grbfGnfERCsUJNJuByEJbJLsMMmMbQ@mail.gmail.com>
+	<CA+8xBpco-yPYB+cjoi_+srG2BkC2ZQBh-3HGNA5EaSB3FWNgog@mail.gmail.com>
+	<1334251458.43194.YahooMailNeo@web121005.mail.ne1.yahoo.com>
+	<CA+XhJbp8+ngso0esDAA415eoBVEZ3NGvuVY7G-hUU72K5wFstw@mail.gmail.com>
+Message-ID: <CA+s+GJD4PFh1Xh+goVi3iqmYYQ+2e-L8D6_Q5_JD5gUDn0PaRQ@mail.gmail.com>
+
+>
+>
+> I don't understand why you say my proposal would make the protocol more
+> stateful. I think it doesn't.
+> Each reply is only  the result of the current request only, and there is
+> no new session information.
+>
+
+I also wondered this. My first thought was that it's basically the same as
+the PING message, a nonce that is repeated immediately on reply. This makes
+it easier to multiplex operations over a single channel. I'm not against
+this basic idea, and it is easy to ignore for clients that don't want to
+use it.
+
+I think the state comes in here:
+
+      - inv sends back the requestid given in getblocks or a special value
+in case of a notification.
+      - addr sends back the requestid given in getaddr or a special value
+in case of a notification.
+
+"*command1* sends back the requestid given in *command2*".
+
+This requires keeping state on the connection between command1 and
+command2. Arguably, this state already exists in the current protocol, but
+I'd rather see it reduced than extended.
+
+Also... Many of the described commands don't need this as they already have
+a natural "nonce". For example, the id of the requested block header. If
+this is passed in the reply, and the caller can correlate the request and
+reply without a special nonce administration.
+
+Wladimir
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120413/1e75c810/attachment.html>
+
+From andyparkins at gmail.com  Fri Apr 13 08:35:28 2012
+From: andyparkins at gmail.com (Andy Parkins)
+Date: Fri, 13 Apr 2012 09:35:28 +0100
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic
+	behavior
+In-Reply-To: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+References: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+Message-ID: <201204130935.35227.andyparkins@gmail.com>
+
+On 2012 April 12 Thursday, Jeff Garzik wrote:
+ 
+> One of my From-Day-One complaints about bitcoin is that transactions
+> behavior could be far more deterministic (predictable), from a user
+> standpoint.  Transactions in the current system can easily remain in
+> limbo forever.
+> 
+> One big step in making transactions behave more predictably would be
+> to remove transactions from the memory pool, if they have not made it
+> into a block for a couple days.  i.e.
+
+A change I've wished for for a while (but I suspect it is too big a change to 
+ever make it) is that a transaction announcement include the block the user 
+wants to base on.  It would only be in the protocol message, not the 
+transaction stored in the blockchain.
+
+The advantage is that (1) it protects against double spends without needing a 
+confirmation period; as a merchant I can instantly spend a 1-confirmation 
+transaction by creating my transaction with that 1-confirm as its "base".  (2) 
+your expiry from memory pool becomes easy -- if the "base" is more than N 
+blocks below the current head, then that transaction won't be included.
+
+Retransmission is possible with the base updated.
+
+
+
+Andy
+
+-- 
+Dr Andy Parkins
+andyparkins at gmail.com
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 198 bytes
+Desc: This is a digitally signed message part.
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120413/d9e35fe5/attachment.sig>
+
+From walter at stani.sh  Fri Apr 13 09:34:20 2012
+From: walter at stani.sh (Walter Stanish)
+Date: Fri, 13 Apr 2012 16:34:20 +0700
+Subject: [Bitcoin-development] Announcing the IFEX Project
+Message-ID: <CACwuEiPSXLOLwQiia2pv5RbD1sQPMBcD6h0R2K4Nrpx=i3ZKpw@mail.gmail.com>
+
+The Internet Financial EXchange (IFEX) Project is an open body for the
+discussion and development of financial standards for the internet
+community.  The project seeks to focus on enhancing interoperability
+between financial settlement systems of all types, including
+conventional financial systems, emerging digital currencies,
+alternative financial communities, and financial service providers.
+
+Interested parties are invited to review the proposals on the website
+at http://www.ifex-project.org/ and join the mailing list at
+http://group.ifex-project.org/
+
+Two items on the site that may be of particular interest:
+
+(1) The latest version of the IIBAN Proposal (v1) for financial
+endpoint identification at
+http://www.ifex-project.org/our-proposals/iiban.  This latest version
+includes initial IANA registry contents and a reference mechanism for
+financial endpoint transcription error correction. (Relevance: In
+contrast to settlement system-specific financial endpoint identifiers,
+IIBAN provides a democratically allocated, 13 character identifier
+that is already familiar in format to users in Europe and other
+countries and is theoretically compatible with conventional banking
+infrastructure in those regions.  In addition, IIBAN is not tied to
+any specific financial commodity or settlement system, and provides
+strong protection against identifier transcription errors.)
+
+(2) The IFEX Protocol is a *work in progress* that hopes to bridge the
+gap between conventional financial systems, emerging digital
+currencies, alternative financial communities, and financial service
+providers by providing a standard protocol for transaction and
+settlement path negotiation with arbitrary financial instruments,
+currencies or assets.  (Relevance: better connectivity, lower
+settlement fees, real time redundant financial routing, arbitrary
+instrument/currency/asset handling)
+
+How IFEX's proposed infrastructure differs from existing projects:
+ - Not a currency, not a settlement-network, but a mechanism for bridging them.
+ - Broader and more inclusive scope than existing vendor-specific APIs
+and conventional finance industry networking protocols. Global focus.
+No legacy 'features'. No artificial barriers to innovators.
+
+The hope is to move towards an open source implementation of the (work
+in progress) IFEX protocol that interoperates with major and emerging
+settlement networks for the benefit of all parts of the community. We
+have already had expressions of interest from representatives in a
+range of communities (Bitcoin, CES, Ripple, W3C Web Payments, digital
+currency exchange developers, etc.), and look forward your input on
+the mailing list.
+
+Happy Friday the 13th!
+
+Regards,
+Walter Stanish
+The IFEX Project
+http://www.ifex-project.org/
+
+
+
+From mike at plan99.net  Fri Apr 13 10:04:07 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Fri, 13 Apr 2012 12:04:07 +0200
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic
+	behavior
+In-Reply-To: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+References: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+Message-ID: <CANEZrP28Wf6RVOgd85COkE-vLdtCbyQYa0b9QvPFt9W1DzNJag@mail.gmail.com>
+
+It sounds OK as long as you exclude nLockTimed transactions.
+
+That said, if you broadcast a transaction that does not meet the fee
+rules, you should be able to notice that it wasn't accepted by your
+peers immediately. Today it's painful because the protocol isn't very
+chatty - in bitcoinj I plan to do this by announcing to half the
+connected peers and waiting to see if the transaction comes back on
+the other half. Getting a response from a peer that the TX was dropped
+for reasons {x,y,z} is a better design but needs another protocol
+change.
+
+So having transactions expire would address the case where somebody
+broadcasts a transaction that successfully propagates across the
+network, but then isn't actually accepted by miners for some reason.
+For instance due to a change in the default fee schedules. That risk
+can be mitigated somewhat by being careful about such changes (timed
+phase ins set multiple months out so people have time to upgrade,
+alerts announcing it, etc).
+
+I'm not sure we should be encouraging users to attach fees to
+transactions though. Even if you can replace a transaction after a
+couple of days, the user experience of trying to get the fee "right"
+is atrocious. I don't think any sensible merchant will actually be
+willing to put their customers through this nonsense. If somebody
+broadcasts a transaction that successfully propagates across a big
+chunk of the network but then gets stuck due to lacking sufficient
+fees, the best fix is for the merchant to broadcast another
+transaction that spends the first and increases the fees on it that
+way. After this happens a few times, if I was a merchant I'd be
+tempted to just ask buyers to submit the TX to me directly and I'll
+handle keeping up with what miners currently charge and attaching
+fees. I don't want my customers to have to think about this and have
+trades spuriously fail when they forget.
+
+That design requires a minor change to how fees are calculated inside
+the memory pool, to include fees on un-included dependencies. But that
+seems fairly uncontroversial to me. It's best for users, merchants and
+miners to not leave chains of transactions in limbo when together
+their fees add up to the minimum required amount.
+
+
+
+From g.rowe at froot.co.uk  Fri Apr 13 10:16:07 2012
+From: g.rowe at froot.co.uk (Gary Rowe)
+Date: Fri, 13 Apr 2012 11:16:07 +0100
+Subject: [Bitcoin-development] Announcing the IFEX Project
+In-Reply-To: <CACwuEiPSXLOLwQiia2pv5RbD1sQPMBcD6h0R2K4Nrpx=i3ZKpw@mail.gmail.com>
+References: <CACwuEiPSXLOLwQiia2pv5RbD1sQPMBcD6h0R2K4Nrpx=i3ZKpw@mail.gmail.com>
+Message-ID: <CAKm8k+3Ep4FhQnFqeD23k4i+ifCd3opBWdkF_Lwv1=qx7jfAaw@mail.gmail.com>
+
+Hi Walter,
+
+This could be of interest to the XChange project. See GitHub:
+https://github.com/timmolter/XChange
+
+The aim of this project is to provide a unifed API for applications to
+access financial exchanges. At present it supports Bitcoin exchanges (MtGox
+and Intersango are the primary focus with others to follow). It is in the
+very early stages of development, but is likely to be integrated into the
+MultiBit Bitcoin client (see http://multibit.org) in the near future (early
+prototypes are available directly from sources).
+
+One problem that the XChange development team faces is that each exchange
+rolls its own data model and uses its own protocol (web socket, socket IO,
+direct socket and so on). To provide a reference implementation of how an
+exchange should publish its data would be beneficial.
+
+Kind regards,
+
+Gary
+
+On 13 April 2012 10:34, Walter Stanish <walter at stani.sh> wrote:
+
+> The Internet Financial EXchange (IFEX) Project is an open body for the
+> discussion and development of financial standards for the internet
+> community.  The project seeks to focus on enhancing interoperability
+> between financial settlement systems of all types, including
+> conventional financial systems, emerging digital currencies,
+> alternative financial communities, and financial service providers.
+>
+> Interested parties are invited to review the proposals on the website
+> at http://www.ifex-project.org/ and join the mailing list at
+> http://group.ifex-project.org/
+>
+> Two items on the site that may be of particular interest:
+>
+> (1) The latest version of the IIBAN Proposal (v1) for financial
+> endpoint identification at
+> http://www.ifex-project.org/our-proposals/iiban.  This latest version
+> includes initial IANA registry contents and a reference mechanism for
+> financial endpoint transcription error correction. (Relevance: In
+> contrast to settlement system-specific financial endpoint identifiers,
+> IIBAN provides a democratically allocated, 13 character identifier
+> that is already familiar in format to users in Europe and other
+> countries and is theoretically compatible with conventional banking
+> infrastructure in those regions.  In addition, IIBAN is not tied to
+> any specific financial commodity or settlement system, and provides
+> strong protection against identifier transcription errors.)
+>
+> (2) The IFEX Protocol is a *work in progress* that hopes to bridge the
+> gap between conventional financial systems, emerging digital
+> currencies, alternative financial communities, and financial service
+> providers by providing a standard protocol for transaction and
+> settlement path negotiation with arbitrary financial instruments,
+> currencies or assets.  (Relevance: better connectivity, lower
+> settlement fees, real time redundant financial routing, arbitrary
+> instrument/currency/asset handling)
+>
+> How IFEX's proposed infrastructure differs from existing projects:
+>  - Not a currency, not a settlement-network, but a mechanism for bridging
+> them.
+>  - Broader and more inclusive scope than existing vendor-specific APIs
+> and conventional finance industry networking protocols. Global focus.
+> No legacy 'features'. No artificial barriers to innovators.
+>
+> The hope is to move towards an open source implementation of the (work
+> in progress) IFEX protocol that interoperates with major and emerging
+> settlement networks for the benefit of all parts of the community. We
+> have already had expressions of interest from representatives in a
+> range of communities (Bitcoin, CES, Ripple, W3C Web Payments, digital
+> currency exchange developers, etc.), and look forward your input on
+> the mailing list.
+>
+> Happy Friday the 13th!
+>
+> Regards,
+> Walter Stanish
+> The IFEX Project
+> http://www.ifex-project.org/
+>
+>
+> ------------------------------------------------------------------------------
+> For Developers, A Lot Can Happen In A Second.
+> Boundary is the first to Know...and Tell You.
+> Monitor Your Applications in Ultra-Fine Resolution. Try it FREE!
+> http://p.sf.net/sfu/Boundary-d2dvs2
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120413/af7ebaac/attachment.html>
+
+From jgarzik at exmulti.com  Fri Apr 13 16:41:19 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Fri, 13 Apr 2012 12:41:19 -0400
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic
+	behavior
+In-Reply-To: <CANEZrP28Wf6RVOgd85COkE-vLdtCbyQYa0b9QvPFt9W1DzNJag@mail.gmail.com>
+References: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+	<CANEZrP28Wf6RVOgd85COkE-vLdtCbyQYa0b9QvPFt9W1DzNJag@mail.gmail.com>
+Message-ID: <CA+8xBpcNd-s9S-zDGO6gGwnd1sFSUikH1fAnCUoG1WiL5kkmVg@mail.gmail.com>
+
+On Fri, Apr 13, 2012 at 6:04 AM, Mike Hearn <mike at plan99.net> wrote:
+> It sounds OK as long as you exclude nLockTimed transactions.
+
+ACK, agreed
+
+> That said, if you broadcast a transaction that does not meet the fee
+> rules, you should be able to notice that it wasn't accepted by your
+> peers immediately. Today it's painful because the protocol isn't very
+> chatty - in bitcoinj I plan to do this by announcing to half the
+> connected peers and waiting to see if the transaction comes back on
+> the other half. Getting a response from a peer that the TX was dropped
+> for reasons {x,y,z} is a better design but needs another protocol
+> change.
+>
+> So having transactions expire would address the case where somebody
+> broadcasts a transaction that successfully propagates across the
+> network, but then isn't actually accepted by miners for some reason.
+
+Correct.  As mentioned, this change should impact few TXs on the
+existing network.
+
+It's mostly about getting everyone to collectively agree that
+transactions should expire, if they don't make it into a block.
+(excl. nLockTime stuff)  A minor technical step, but also a useful
+policy step.
+
+> For instance due to a change in the default fee schedules. That risk
+> can be mitigated somewhat by being careful about such changes (timed
+> phase ins set multiple months out so people have time to upgrade,
+> alerts announcing it, etc).
+>
+> I'm not sure we should be encouraging users to attach fees to
+> transactions though. Even if you can replace a transaction after a
+> couple of days, the user experience of trying to get the fee "right"
+> is atrocious.
+
+Yes -- I think there is near-universal agreement on this user experience point.
+
+> I don't think any sensible merchant will actually be
+> willing to put their customers through this nonsense. If somebody
+> broadcasts a transaction that successfully propagates across a big
+> chunk of the network but then gets stuck due to lacking sufficient
+> fees, the best fix is for the merchant to broadcast another
+> transaction that spends the first and increases the fees on it that
+> way. After this happens a few times, if I was a merchant I'd be
+> tempted to just ask buyers to submit the TX to me directly and I'll
+> handle keeping up with what miners currently charge and attaching
+> fees. I don't want my customers to have to think about this and have
+> trades spuriously fail when they forget.
+>
+> That design requires a minor change to how fees are calculated inside
+> the memory pool, to include fees on un-included dependencies. But that
+> seems fairly uncontroversial to me. It's best for users, merchants and
+> miners to not leave chains of transactions in limbo when together
+> their fees add up to the minimum required amount.
+
+So, to be specific... a A->B chain of transactions, that collectively
+meet the network's fee requirements?  It seems quite reasonable to
+accept that, sure.  ACK on concept.  A chain of length 2 seems like it
+would be most common, and limiting total chain length (to 10? 100?)
+for any one chain in the memory pool seems prudent.
+
+As to the larger issue of fees...  I will readily admit I have no good ideas.
+
+The user's experience is pretty poor:  while it might make economic
+sense, from the network's standpoint, to charge for the service of
+verifying and storing a transaction, the user has limited means to
+determine an ideal fee.  There are also other valid economic models
+(receiver pays fee) out there that may successfully sustain the
+network.
+
+Ideally the fee, if any, is market based and negotiated.  The current
+method is loose-consensus, mainly aimed at (a) combating dust spam or
+(b) ensuring it becomes increasingly more expensive to fill a block,
+up to the current 1MB maximum.  I think almost everyone agrees the
+current fee system is an ugly, warty hack.  Problem is... like
+democracy, no matter how ugly it is, people have trouble finding a
+better system :)
+
+Furthermore, many of these ideas -- like sending TX's directly to the
+merchant -- involve far more direct payee<->payer communication on the
+part of the wallet client than is currently envisioned by the bitcoin
+P2P network design, which is broadcast-oriented.  So, it remains an
+open question whether we want the base bitcoin layer to even worry
+about real-time fee negotiation and direct TX transmission.
+
+It is possible that an instant-payments layer evolves on top of the
+base bitcoin block chain layer, with bitcoin transactions evolving
+largely into settlements between instant-payment intermediaries large
+and small.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From mike at plan99.net  Sat Apr 14 15:13:47 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Sat, 14 Apr 2012 17:13:47 +0200
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic
+	behavior
+In-Reply-To: <CA+8xBpcNd-s9S-zDGO6gGwnd1sFSUikH1fAnCUoG1WiL5kkmVg@mail.gmail.com>
+References: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+	<CANEZrP28Wf6RVOgd85COkE-vLdtCbyQYa0b9QvPFt9W1DzNJag@mail.gmail.com>
+	<CA+8xBpcNd-s9S-zDGO6gGwnd1sFSUikH1fAnCUoG1WiL5kkmVg@mail.gmail.com>
+Message-ID: <CANEZrP33d9zHaf9A9+2BG-YHZEf_pA2SSTNL-_Ht4tT22qV6Xw@mail.gmail.com>
+
+> So, to be specific... a A->B chain of transactions, that collectively
+> meet the network's fee requirements?
+
+Yes.
+
+> Ideally the fee, if any, is market based and negotiated. Problem is... like
+> democracy, no matter how ugly it is, people have trouble finding a
+> better system :)
+
+I think this is something we can explore over the coming years. I
+favor having people commonly pass transactions around outside the
+broadcast network with the transactions and their dependencies being
+broadcast only when there's a lack of trust between recipient and
+sender. The block chain is an optional service after all.
+
+> Furthermore, many of these ideas -- like sending TX's directly to the
+> merchant -- involve far more direct payee<->payer communication on the
+> part of the wallet client than is currently envisioned
+
+Yes, though it's worth remembering that the original Bitcoin design
+did have participants communicate directly. When I talked with Satoshi
+in 2009 he saw the pay-to-IP-address mode imagined as the normal way
+to make payments, with pay-to-address being used as a kind of backup
+for when the recipient was offline.
+
+In the end that's not how things evolved, but it the pendulum could
+easily swing back the other way.
+
+
+
+From jgarzik at exmulti.com  Sat Apr 14 20:20:50 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Sat, 14 Apr 2012 16:20:50 -0400
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic
+	behavior
+In-Reply-To: <CANEZrP33d9zHaf9A9+2BG-YHZEf_pA2SSTNL-_Ht4tT22qV6Xw@mail.gmail.com>
+References: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+	<CANEZrP28Wf6RVOgd85COkE-vLdtCbyQYa0b9QvPFt9W1DzNJag@mail.gmail.com>
+	<CA+8xBpcNd-s9S-zDGO6gGwnd1sFSUikH1fAnCUoG1WiL5kkmVg@mail.gmail.com>
+	<CANEZrP33d9zHaf9A9+2BG-YHZEf_pA2SSTNL-_Ht4tT22qV6Xw@mail.gmail.com>
+Message-ID: <CA+8xBpfKpzeq7qSUV5w6JNtTE1-zu58Zg_KCbFAx0JTGeeUG1g@mail.gmail.com>
+
+On Sat, Apr 14, 2012 at 11:13 AM, Mike Hearn <mike at plan99.net> wrote:
+>> So, to be specific... a A->B chain of transactions, that collectively
+>> meet the network's fee requirements?
+>
+> Yes.
+
+ACK on the concept
+
+>> Ideally the fee, if any, is market based and negotiated. Problem is... like
+>> democracy, no matter how ugly it is, people have trouble finding a
+>> better system :)
+>
+> I think this is something we can explore over the coming years. I
+> favor having people commonly pass transactions around outside the
+> broadcast network with the transactions and their dependencies being
+> broadcast only when there's a lack of trust between recipient and
+> sender. The block chain is an optional service after all.
+
+Agreed.  A TX is just a signed message.  No reason why it -must- use
+mainnet's distributed notary service.
+
+>> Furthermore, many of these ideas -- like sending TX's directly to the
+>> merchant -- involve far more direct payee<->payer communication on the
+>> part of the wallet client than is currently envisioned
+>
+> Yes, though it's worth remembering that the original Bitcoin design
+> did have participants communicate directly. When I talked with Satoshi
+> in 2009 he saw the pay-to-IP-address mode imagined as the normal way
+> to make payments, with pay-to-address being used as a kind of backup
+> for when the recipient was offline.
+>
+> In the end that's not how things evolved, but it the pendulum could
+> easily swing back the other way.
+
+IIRC pay-to-IP was removed because it was unreliable -and- detrimental
+to privacy?  ISTR Satoshi specifically disliking the privacy elements
+of p2ip.
+
+But I also have a "gut feeling" that these sorts of payments and
+direct communication should be done via a wholly separate protocol
+than the bitcoin P2P protocol.  Doing p2ip as it was done originally,
+inside the bitcoin P2P protocol, was a mistake.  Extensible as it is,
+I think a better job -- and faster evolution -- can be done with a
+separate protocol on a separate port.
+
+Some HTTP derivative would probably make life easier for mobile
+payments and firewalled scenarios, and for client->merchant
+communications, for instance.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From pieter.wuille at gmail.com  Sat Apr 14 21:27:16 2012
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Sat, 14 Apr 2012 23:27:16 +0200
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic
+ behavior
+In-Reply-To: <CA+8xBpfKpzeq7qSUV5w6JNtTE1-zu58Zg_KCbFAx0JTGeeUG1g@mail.gmail.com>
+References: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+	<CANEZrP28Wf6RVOgd85COkE-vLdtCbyQYa0b9QvPFt9W1DzNJag@mail.gmail.com>
+	<CA+8xBpcNd-s9S-zDGO6gGwnd1sFSUikH1fAnCUoG1WiL5kkmVg@mail.gmail.com>
+	<CANEZrP33d9zHaf9A9+2BG-YHZEf_pA2SSTNL-_Ht4tT22qV6Xw@mail.gmail.com>
+	<CA+8xBpfKpzeq7qSUV5w6JNtTE1-zu58Zg_KCbFAx0JTGeeUG1g@mail.gmail.com>
+Message-ID: <20120414212715.GA6131@vps7135.xlshosting.net>
+
+On Sat, Apr 14, 2012 at 04:20:50PM -0400, Jeff Garzik wrote:
+> >> Furthermore, many of these ideas -- like sending TX's directly to the
+> >> merchant -- involve far more direct payee<->payer communication on the
+> >> part of the wallet client than is currently envisioned
+> >
+> > Yes, though it's worth remembering that the original Bitcoin design
+> > did have participants communicate directly. When I talked with Satoshi
+> > in 2009 he saw the pay-to-IP-address mode imagined as the normal way
+> > to make payments, with pay-to-address being used as a kind of backup
+> > for when the recipient was offline.
+> >
+> > In the end that's not how things evolved, but it the pendulum could
+> > easily swing back the other way.
+> 
+> But I also have a "gut feeling" that these sorts of payments and
+> direct communication should be done via a wholly separate protocol
+> than the bitcoin P2P protocol.  Doing p2ip as it was done originally,
+> inside the bitcoin P2P protocol, was a mistake.  Extensible as it is,
+> I think a better job -- and faster evolution -- can be done with a
+> separate protocol on a separate port.
+> 
+> Some HTTP derivative would probably make life easier for mobile
+> payments and firewalled scenarios, and for client->merchant
+> communications, for instance.
+
+Have you ever read https://gist.github.com/1237788 ?
+
+-- 
+Pieter
+
+
+
+From jgarzik at exmulti.com  Sat Apr 14 22:49:18 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Sat, 14 Apr 2012 18:49:18 -0400
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic
+	behavior
+In-Reply-To: <20120414212715.GA6131@vps7135.xlshosting.net>
+References: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+	<CANEZrP28Wf6RVOgd85COkE-vLdtCbyQYa0b9QvPFt9W1DzNJag@mail.gmail.com>
+	<CA+8xBpcNd-s9S-zDGO6gGwnd1sFSUikH1fAnCUoG1WiL5kkmVg@mail.gmail.com>
+	<CANEZrP33d9zHaf9A9+2BG-YHZEf_pA2SSTNL-_Ht4tT22qV6Xw@mail.gmail.com>
+	<CA+8xBpfKpzeq7qSUV5w6JNtTE1-zu58Zg_KCbFAx0JTGeeUG1g@mail.gmail.com>
+	<20120414212715.GA6131@vps7135.xlshosting.net>
+Message-ID: <CA+8xBpdpnJOqrGvSV9YmJ4fNpHA0Dy0XUshbJWk5ezq0xV7Rhw@mail.gmail.com>
+
+On Sat, Apr 14, 2012 at 5:27 PM, Pieter Wuille <pieter.wuille at gmail.com> wrote:
+> On Sat, Apr 14, 2012 at 04:20:50PM -0400, Jeff Garzik wrote:
+>> Some HTTP derivative would probably make life easier for mobile
+>> payments and firewalled scenarios, and for client->merchant
+>> communications, for instance.
+>
+> Have you ever read https://gist.github.com/1237788 ?
+
+Looks like you're already headed in the right direction :)
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From thiagocmartinsc at gmail.com  Sun Apr 15 04:32:30 2012
+From: thiagocmartinsc at gmail.com (=?ISO-2022-JP?B?TWFydGlueCAtIBskQiU4JSchPCVgJTobKEI=?=)
+Date: Sun, 15 Apr 2012 01:32:30 -0300
+Subject: [Bitcoin-development] Announcement: libcoin
+In-Reply-To: <B4616B21-7C05-4793-8452-376EE4122BEC@ceptacle.com>
+References: <D55C3D18-8286-44E9-B877-6FCE7C05E980@ceptacle.com>
+	<CAJSM8J0zqF2=Poknzc8R7TrTJ0DWCMBw2-K9gGhUP_Qf+J6eFg@mail.gmail.com>
+	<4FF4A408-F8C9-4A50-8B13-13D3686BEB09@ceptacle.com>
+	<CAJSM8J3bZYfpE9EATcYe=79s_RxvGG9BrdRQR9ivwtZnuPsL0w@mail.gmail.com>
+	<CAJSM8J2nhoKsOnAeF8qBW3zOfp=sJ25sd8gnw2dMJ3GgkohDjQ@mail.gmail.com>
+	<C3C58158-0DED-41A1-B4D2-BF746AFE717A@ceptacle.com>
+	<CAJSM8J3255LpXbHRF+zEi0QRoM0mwuRP3FSNbSwSyz-_ge=Few@mail.gmail.com>
+	<3C518667-C2A6-4D1F-988D-888964925489@ceptacle.com>
+	<CAJSM8J2-+uHKJg9xjqtz785HBNY8wXtJLnw70jP0_HgNspx4Tg@mail.gmail.com>
+	<AB5AEA73-93BD-440E-89F0-F0951047D71A@ceptacle.com>
+	<CAJSM8J2ytXR0RSL=3+Se6mggH+pDmnkSx+CUp-bcod4qmJ3ObA@mail.gmail.com>
+	<07A82C1E-AE1D-44DC-AF02-38A3D755FA35@ceptacle.com>
+	<CAJSM8J2cjazkGn9vCdoqEKtDP0y1geftn7pJLcTmAGa4FH9BTA@mail.gmail.com>
+	<264BCBC5-8ADC-46FA-B756-6CEEC18CAE75@ceptacle.com>
+	<CAMGNxUsnz853vo=tBj9PNfcct8ZSrrm7Rcugud3ikGqU-W=LLg@mail.gmail.com>
+	<CAJSM8J2JpByLfJO5v=nSEHc-UJ7mN58UTJvpQKmYXZRuXqnd0Q@mail.gmail.com>
+	<B4616B21-7C05-4793-8452-376EE4122BEC@ceptacle.com>
+Message-ID: <CAJSM8J0aAm-ur+a-OUjr7Msbi_8-7yUhDPU2KnqLf3J8DR3AZg@mail.gmail.com>
+
+Guys!
+
+ Only for the record, I'll integrate BitcoinJS (app) into Diaspora and, the
+server side will be based on libcoin!
+ Of course, this code will be part of Diaspora and every single Diaspora*
+Pod will be able to host its own users's wallets...  ;-)
+ I appreciate any help during this development!
+
+Cheers!
+Thiago
+
+2012/3/28 Michael Gr?nager <gronager at ceptacle.com>
+
+> Fixed in latest git - it was in src/coin/version.in: export.h -> Export.h
+>
+> Also added a couple of other fixes and everything now build on ubuntu
+> (with boost 1.42/46)
+>
+> /M
+>
+> On 27/03/2012, at 11:58, Martinx - ????? wrote:
+>
+> > Hi!
+> >
+> >  I'm trying to compile libcoin again and I'm seeing the following error:
+> >
+> > libcoin at xapado:~/libcoin$ make
+> > Scanning dependencies of target coin
+> > [  1%] Building CXX object src/coin/CMakeFiles/coin.dir/util.o
+> > In file included from
+> /home/libcoin/libcoin/include/coin/serialize.h:22:0,
+> >                  from /home/libcoin/libcoin/include/coin/uint256.h:8,
+> >                  from /home/libcoin/libcoin/include/coin/util.h:10,
+> >                  from /home/libcoin/libcoin/src/coin/util.cpp:6:
+> > /home/libcoin/libcoin/include/coin/Version.h:5:25: fatal error:
+> coin/export.h: No such file or directory
+> > compilation terminated.
+> > make[2]: *** [src/coin/CMakeFiles/coin.dir/util.o] Error 1
+> > make[1]: *** [src/coin/CMakeFiles/coin.dir/all] Error 2
+> > make: *** [all] Error 2
+> >
+> >  Any help?!
+> >
+> > Thanks!
+> > Thiago
+> >
+> ------------------------------------------------------------------------------
+> > This SF email is sponsosred by:
+> > Try Windows Azure free for 90 days Click Here
+> >
+> http://p.sf.net/sfu/sfd2d-msazure_______________________________________________
+> > Bitcoin-development mailing list
+> > Bitcoin-development at lists.sourceforge.net
+> > https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+> Michael Gronager, PhD
+> Director, Ceptacle
+> Jens Juels Gade 33
+> 2100 Copenhagen E
+> Mobile: +45 31 45 14 01
+> E-mail: gronager at ceptacle.com
+> Web: http://www.ceptacle.com/
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120415/11fa696c/attachment.html>
+
+From andreas at schildbach.de  Sun Apr 15 08:12:37 2012
+From: andreas at schildbach.de (Andreas Schildbach)
+Date: Sun, 15 Apr 2012 10:12:37 +0200
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic
+	behavior
+In-Reply-To: <CA+8xBpfKpzeq7qSUV5w6JNtTE1-zu58Zg_KCbFAx0JTGeeUG1g@mail.gmail.com>
+References: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+	<CANEZrP28Wf6RVOgd85COkE-vLdtCbyQYa0b9QvPFt9W1DzNJag@mail.gmail.com>
+	<CA+8xBpcNd-s9S-zDGO6gGwnd1sFSUikH1fAnCUoG1WiL5kkmVg@mail.gmail.com>
+	<CANEZrP33d9zHaf9A9+2BG-YHZEf_pA2SSTNL-_Ht4tT22qV6Xw@mail.gmail.com>
+	<CA+8xBpfKpzeq7qSUV5w6JNtTE1-zu58Zg_KCbFAx0JTGeeUG1g@mail.gmail.com>
+Message-ID: <jmdvtm$c1j$1@dough.gmane.org>
+
+On 04/14/2012 10:20 PM, Jeff Garzik wrote:
+
+>>> Furthermore, many of these ideas -- like sending TX's directly to the
+>>> merchant -- involve far more direct payee<->payer communication on the
+>>> part of the wallet client than is currently envisioned
+>>
+>> Yes, though it's worth remembering that the original Bitcoin design
+>> did have participants communicate directly. When I talked with Satoshi
+>> in 2009 he saw the pay-to-IP-address mode imagined as the normal way
+>> to make payments, with pay-to-address being used as a kind of backup
+>> for when the recipient was offline.
+>>
+>> In the end that's not how things evolved, but it the pendulum could
+>> easily swing back the other way.
+> 
+> IIRC pay-to-IP was removed because it was unreliable -and- detrimental
+> to privacy?  ISTR Satoshi specifically disliking the privacy elements
+> of p2ip.
+> 
+> But I also have a "gut feeling" that these sorts of payments and
+> direct communication should be done via a wholly separate protocol
+> than the bitcoin P2P protocol.  Doing p2ip as it was done originally,
+> inside the bitcoin P2P protocol, was a mistake.  Extensible as it is,
+> I think a better job -- and faster evolution -- can be done with a
+> separate protocol on a separate port.
+
+Just to let you know, Bitcoin Wallet for Android already supports
+directly sending transactions via NFC and QR-Code. Currently, receiving
+such a transaction is handled the same way as if it was received via P2P.
+
+This means the sender does not need to have internet access the moment
+he pays. The transaction is being broadcast into the P2P network by the
+receiver.
+
+Cheers,
+
+Andreas
+
+
+
+
+From timon.elviejo at gmail.com  Sun Apr 15 10:54:23 2012
+From: timon.elviejo at gmail.com (=?ISO-8859-1?Q?Jorge_Tim=F3n?=)
+Date: Sun, 15 Apr 2012 12:54:23 +0200
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic
+	behavior
+In-Reply-To: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+References: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+Message-ID: <CAGQP0AGbLYZYwKGb0AHOPx3BadBQ399A67ntEo98mpm=kKgZ+g@mail.gmail.com>
+
+On 4/12/12, Jeff Garzik <jgarzik at exmulti.com> wrote:
+> 1.  N = 1 or 2 or whatever the community prefers.  Ideally enough time
+> for a third-tier miner, mining strange TXs, finds a block.
+> 2.  H1 = height of block chain, when a TX is received
+> 3.  H2 = H1 + (144 * N)
+> 4.  If block chain height reaches H2, and TX has not made it into a
+> block, drop TX from memory pool
+
+Why not just adding a field expiration_block = H2?
+It seems more explicit and flexible than using a 144 * N constant.
+You're changing the protocol anyway, right?
+
+Another question, aren't different peers going to get different H1 for
+the same tx?
+
+
+
+From jgarzik at exmulti.com  Sun Apr 15 15:17:04 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Sun, 15 Apr 2012 11:17:04 -0400
+Subject: [Bitcoin-development] Bitcoin TX fill-or-kill deterministic
+	behavior
+In-Reply-To: <CAGQP0AGbLYZYwKGb0AHOPx3BadBQ399A67ntEo98mpm=kKgZ+g@mail.gmail.com>
+References: <CA+8xBpc5CZ9Sx4MwPdeS0-5frnV9B+mJ5OwcPoUVrygTawiJBg@mail.gmail.com>
+	<CAGQP0AGbLYZYwKGb0AHOPx3BadBQ399A67ntEo98mpm=kKgZ+g@mail.gmail.com>
+Message-ID: <CA+8xBpehkZZaJEEnxH0_gzz5n=LNCvDBMS0uD3ErW1p-=uaE6Q@mail.gmail.com>
+
+2012/4/15 Jorge Tim?n <timon.elviejo at gmail.com>:
+> On 4/12/12, Jeff Garzik <jgarzik at exmulti.com> wrote:
+>> 1. ?N = 1 or 2 or whatever the community prefers. ?Ideally enough time
+>> for a third-tier miner, mining strange TXs, finds a block.
+>> 2. ?H1 = height of block chain, when a TX is received
+>> 3. ?H2 = H1 + (144 * N)
+>> 4. ?If block chain height reaches H2, and TX has not made it into a
+>> block, drop TX from memory pool
+>
+> Why not just adding a field expiration_block = H2?
+> It seems more explicit and flexible than using a 144 * N constant.
+> You're changing the protocol anyway, right?
+
+No, not changing the protocol.
+
+Further, adding a field to TX would imply the client needed to rewrite
+the TX for each retransmit, changing the hash.  Not good at all.
+
+> Another question, aren't different peers going to get different H1 for
+> the same tx?
+
+Typically no, because 99.9% of TX's make it throughout the network in
+seconds.  But yes it is possible, just like it is possible today to
+receive a TX at various times.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From zgenjix at yahoo.com  Tue Apr 24 17:21:14 2012
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Tue, 24 Apr 2012 10:21:14 -0700 (PDT)
+Subject: [Bitcoin-development] AreInputsStandard() mistake
+Message-ID: <1335288074.68316.YahooMailNeo@web121006.mail.ne1.yahoo.com>
+
+Hey,
+
+Only a small thing - I think the first check in that function should be an assert. There is a problem if that function is called a coinbase tx.
+
+
+
+
+From pete at petertodd.org  Thu Apr 26 15:49:28 2012
+From: pete at petertodd.org (Peter Todd)
+Date: Thu, 26 Apr 2012 11:49:28 -0400
+Subject: [Bitcoin-development] Trusted identities
+Message-ID: <20120426154928.GA13737@savin.lan>
+
+It recently occured to me that we can use the public nature of the block
+chain to create trusted identities, for a specific form of trust.
+
+Lets suppose Alice has some bitcoins held at bitcoin address A. She
+wants to establish trust in the "identity" associated with the ECC
+keypair associated with A, for instance for the purpose of having other
+users trust her not to attempt to double spend. Since the trust she
+seeks is financial in nature, she can do this by valuing the identity
+associated with A, by delibrately throwing away resources. A simple way
+to do this would of course be to transfer coins to a null address,
+provably incurring a cost to her.
+
+A more socially responsible way would be for her to create a series of
+transactions that happen to have large, and equal, transaction fees.
+Bitcoin makes the assumption that no one entity controls more than 50%
+of the network, so if she makes n of these transactions consecutively,
+each spending m BTC to transaction fees, there is a high probability
+that she has given up at least n/2 * m BTC of value. This of course is
+all public knowledge, recorded in the block chain. It also increases the
+transaction fees for miners, which will be very important for the
+network in the future.
+
+Now Bob can easily examine the block chain, and upon verifying Alice's
+trust purchase, can decide to accept a zero-confirmation transaction at
+face value. If Alice breaks that promise, he simply publishes her signed
+transaction proving that Alice is a fraudster, and future Bob's will
+distrust Alice's trusted identity, thus destroying the value needed to
+create it.
+
+In effect, we now have a distributed green address system.
+
+Now Alice could try to mount a double-spend attack on a whole bunch of
+people at once, hoping to have them all accept the transaction. However
+as it is the "just trust them" model works pretty well already.
+
+
+A good usecase for this idea, beyond the obvious fast payments
+application, is a distributed anonymizer. Alice can now publish her
+request to anonymize coins, and other trusted identities can make their
+bids. If Alice accepts a bid from Bob, she will want Bob to send her the
+anonymized coins *prior* to her transaction going through, thus breaking
+the temporal connection between the transactions. Now Alice can give Bob
+the signed payment transaction, and Bob can submit his payment
+transaction to the network first, knowing that Alice isn't going to try
+to rip him off. Bob can also have a trusted identity which signed the
+contract for the anonymizer transaction, and similarly if he rips Alice
+off, she can publish it for the world to see.
+
+A more subtle effect, is this makes sybil attacks more difficult. To
+pretend to be a thousand identities is going to now require 1,000 * n
+coins, and attempting to pull this attack off inherently strengthens the
+bitcoin network. Obviously we can apply this principle to other things
+like tor nodes as well.
+
+-- 
+http://petertodd.org 'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 490 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120426/1547a5a1/attachment.sig>
+
+From peter at coinlab.com  Thu Apr 26 17:11:51 2012
+From: peter at coinlab.com (Peter Vessenes)
+Date: Thu, 26 Apr 2012 10:11:51 -0700
+Subject: [Bitcoin-development] Trusted identities
+In-Reply-To: <20120426154928.GA13737@savin.lan>
+References: <20120426154928.GA13737@savin.lan>
+Message-ID: <CAMGNxUs3eDaYHpg=ZqXQPC5+kQXZwhqUngH2t2OFaTa4x7vPcw@mail.gmail.com>
+
+These are interesting thoughts, karma for bitcoins essentially.
+
+I would like CoinLab to publish a 'cost of subverting 1-n transactions with
+90% probability' metric soon, and I think it would help everyone to
+understand what that number is.
+
+When we started out, you probably needed to wait 5 blocks for $10 or $20 of
+bitcoin value transfer.
+
+Now, I'd happily accept a $1k transaction with 1 confirmation.
+
+More difficulty shortens the safe time we can transact large volumes in,
+which is good for the network.
+
+I'm not sure of the current implementation of replacement transactions, can
+anyone on the core team speak to this? Can I replace transactions, or is
+that part of the spec unimplemented or deprecated right now?
+
+Peter
+
+
+On Thu, Apr 26, 2012 at 8:49 AM, Peter Todd <pete at petertodd.org> wrote:
+
+> It recently occured to me that we can use the public nature of the block
+> chain to create trusted identities, for a specific form of trust.
+>
+> Lets suppose Alice has some bitcoins held at bitcoin address A. She
+> wants to establish trust in the "identity" associated with the ECC
+> keypair associated with A, for instance for the purpose of having other
+> users trust her not to attempt to double spend. Since the trust she
+> seeks is financial in nature, she can do this by valuing the identity
+> associated with A, by delibrately throwing away resources. A simple way
+> to do this would of course be to transfer coins to a null address,
+> provably incurring a cost to her.
+>
+> A more socially responsible way would be for her to create a series of
+> transactions that happen to have large, and equal, transaction fees.
+> Bitcoin makes the assumption that no one entity controls more than 50%
+> of the network, so if she makes n of these transactions consecutively,
+> each spending m BTC to transaction fees, there is a high probability
+> that she has given up at least n/2 * m BTC of value. This of course is
+> all public knowledge, recorded in the block chain. It also increases the
+> transaction fees for miners, which will be very important for the
+> network in the future.
+>
+> Now Bob can easily examine the block chain, and upon verifying Alice's
+> trust purchase, can decide to accept a zero-confirmation transaction at
+> face value. If Alice breaks that promise, he simply publishes her signed
+> transaction proving that Alice is a fraudster, and future Bob's will
+> distrust Alice's trusted identity, thus destroying the value needed to
+> create it.
+>
+> In effect, we now have a distributed green address system.
+>
+> Now Alice could try to mount a double-spend attack on a whole bunch of
+> people at once, hoping to have them all accept the transaction. However
+> as it is the "just trust them" model works pretty well already.
+>
+>
+> A good usecase for this idea, beyond the obvious fast payments
+> application, is a distributed anonymizer. Alice can now publish her
+> request to anonymize coins, and other trusted identities can make their
+> bids. If Alice accepts a bid from Bob, she will want Bob to send her the
+> anonymized coins *prior* to her transaction going through, thus breaking
+> the temporal connection between the transactions. Now Alice can give Bob
+> the signed payment transaction, and Bob can submit his payment
+> transaction to the network first, knowing that Alice isn't going to try
+> to rip him off. Bob can also have a trusted identity which signed the
+> contract for the anonymizer transaction, and similarly if he rips Alice
+> off, she can publish it for the world to see.
+>
+> A more subtle effect, is this makes sybil attacks more difficult. To
+> pretend to be a thousand identities is going to now require 1,000 * n
+> coins, and attempting to pull this attack off inherently strengthens the
+> bitcoin network. Obviously we can apply this principle to other things
+> like tor nodes as well.
+>
+> --
+> http://petertodd.org 'peter'[:-1]@petertodd.org
+>
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1.4.10 (GNU/Linux)
+>
+> iQEcBAEBAgAGBQJPmW6EAAoJEH+rEUJn5PoEZfEH/ixptlMX9MzP71bCHMkj7YN1
+> y6GEkc1vNhyHu01NX77vzSqR4trbVnWJeJ5hH8EB5tgYRwmI17XoQW6Iz8yEXXgO
+> JqUKCTBBexGE+F5RfBkizJ9ap5wXwVrAOIMy/KurSdST+PWMXIPQFaGark01uKcG
+> M4VXg3U9fc/0Zz1QyKpRTI5O7ZSBqPzEh/Xf4TujR39nUtaI5mkT/bmA3+Te7oRT
+> 34QO7ryF7U001Xz2VJCfm9AE8mPPZjMavLTs/XvPSqTdliVCZpjGGHzcJ2BPrni5
+> LEPBsBBxNsuwFGjnRobQwrkPtmYGFntseMLzCJ3iGXWYwedssBg2LLOx9QaXG04=
+> =PftQ
+> -----END PGP SIGNATURE-----
+>
+>
+> ------------------------------------------------------------------------------
+> Live Security Virtual Conference
+> Exclusive live event will cover all the ways today's security and
+> threat landscape has changed and how IT managers can respond. Discussions
+> will include endpoint security, mobile security and the latest in malware
+> threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+
+
+-- 
+Peter J. Vessenes
+CEO, CoinLab
+M: 206.595.9839
+Skype: vessenes
+Google+ <https://plus.google.com/112885659993091300749>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120426/cd25bb9f/attachment.html>
+
+From pete at petertodd.org  Thu Apr 26 17:30:00 2012
+From: pete at petertodd.org (Peter Todd)
+Date: Thu, 26 Apr 2012 13:30:00 -0400
+Subject: [Bitcoin-development] Trusted identities
+In-Reply-To: <CAMGNxUs3eDaYHpg=ZqXQPC5+kQXZwhqUngH2t2OFaTa4x7vPcw@mail.gmail.com>
+References: <20120426154928.GA13737@savin.lan>
+	<CAMGNxUs3eDaYHpg=ZqXQPC5+kQXZwhqUngH2t2OFaTa4x7vPcw@mail.gmail.com>
+Message-ID: <20120426173000.GB16099@savin.lan>
+
+On Thu, Apr 26, 2012 at 10:11:51AM -0700, Peter Vessenes wrote:
+> These are interesting thoughts, karma for bitcoins essentially.
+> 
+> I would like CoinLab to publish a 'cost of subverting 1-n transactions with
+> 90% probability' metric soon, and I think it would help everyone to
+> understand what that number is.
+
+There's gotta be a lot of subtlies there. For instance, if I just want
+to double-spend, the easiest approach would be to first buy a whole
+bunch of VPS's, each with different /16's for their IP address to defeat
+that anti-sybil measure. Then figure out what is the set of nodes
+closest to my target - easier for an active target that makes a lot of
+transactions.
+
+Then it's just a matter of giving them my transaction, and immediately
+flooding the network faster with my nodes than their single node. It's
+not block-replacement, but it would be effective against people who
+accept 0-confirmations. (although as Gavin has pointed out elsewhere, in
+the future miners may be very happy to replace transactions for more
+fees in that kind of circumstance)
+
+Of course, this whole trusted identities business could be equally used
+for the bitcoin flood network as a whole to prevent sybil's, and perhaps
+even get guarantees of behavior like "My node respects nLockTime and
+won't ignore it for a higher-fee transaction replacement"
+
+> When we started out, you probably needed to wait 5 blocks for $10 or $20 of
+> bitcoin value transfer.
+> 
+> Now, I'd happily accept a $1k transaction with 1 confirmation.
+
+Yup, especially when a human is in the loop.
+
+> More difficulty shortens the safe time we can transact large volumes in,
+> which is good for the network.
+> 
+> I'm not sure of the current implementation of replacement transactions, can
+> anyone on the core team speak to this? Can I replace transactions, or is
+> that part of the spec unimplemented or deprecated right now?
+
+My understanding is it's completely disabled.
+
+-- 
+http://petertodd.org 'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 490 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120426/6028de45/attachment.sig>
+
+From zgenjix at yahoo.com  Thu Apr 26 17:59:45 2012
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Thu, 26 Apr 2012 10:59:45 -0700 (PDT)
+Subject: [Bitcoin-development] Trusted identities
+In-Reply-To: <CAMGNxUs3eDaYHpg=ZqXQPC5+kQXZwhqUngH2t2OFaTa4x7vPcw@mail.gmail.com>
+References: <20120426154928.GA13737@savin.lan>
+	<CAMGNxUs3eDaYHpg=ZqXQPC5+kQXZwhqUngH2t2OFaTa4x7vPcw@mail.gmail.com>
+Message-ID: <1335463185.72832.YahooMailNeo@web121004.mail.ne1.yahoo.com>
+
+look at the first line of the if statement
+
+
+????// Check for conflicts with in-memory transactions
+????CTransaction* ptxOld = NULL;
+????for (unsigned int i = 0; i < tx.vin.size(); i++)
+????{
+????????COutPoint outpoint = tx.vin[i].prevout;
+????????if (mapNextTx.count(outpoint))
+????????{
+????????????// Disable replacement feature for now
+????????????return false;
+
+????????????// Allow replacing with a newer version of the same transaction
+????????????if (i != 0)
+????????????????return false;
+????????????ptxOld = mapNextTx[outpoint].ptx;
+????????????if (ptxOld->IsFinal())
+????????????????return false;
+????????????if (!tx.IsNewerThan(*ptxOld))
+????????????????return false;
+????????????for (unsigned int i = 0; i < tx.vin.size(); i++)
+????????????{
+????????????????COutPoint outpoint = tx.vin[i].prevout;
+????????????????if (!mapNextTx.count(outpoint) || mapNextTx[outpoint].ptx != ptxOld)
+????????????????????return false;
+????????????}
+????????????break;
+????????}
+????}
+
+
+________________________________
+From: Peter Vessenes <peter at coinlab.com>
+To: Peter Todd <pete at petertodd.org> 
+Cc: bitcoin-development at lists.sourceforge.net 
+Sent: Thursday, April 26, 2012 6:11 PM
+Subject: Re: [Bitcoin-development] Trusted identities
+
+
+These are interesting thoughts, karma for bitcoins essentially.
+
+I would like CoinLab to publish a 'cost of subverting 1-n transactions with 90% probability' metric soon, and I think it would help everyone to understand what that number is.
+
+When we started out, you probably needed to wait 5 blocks for $10 or $20 of bitcoin value transfer.
+
+Now, I'd happily accept a $1k transaction with 1 confirmation.?
+
+More difficulty shortens the safe time we can transact large volumes in, which is good for the network.
+
+I'm not sure of the current implementation of replacement transactions, can anyone on the core team speak to this? Can I replace transactions, or is that part of the spec unimplemented or deprecated right now?
+
+Peter
+
+
+
+On Thu, Apr 26, 2012 at 8:49 AM, Peter Todd <pete at petertodd.org> wrote:
+
+It recently occured to me that we can use the public nature of the block
+>chain to create trusted identities, for a specific form of trust.
+>
+>Lets suppose Alice has some bitcoins held at bitcoin address A. She
+>wants to establish trust in the "identity" associated with the ECC
+>keypair associated with A, for instance for the purpose of having other
+>users trust her not to attempt to double spend. Since the trust she
+>seeks is financial in nature, she can do this by valuing the identity
+>associated with A, by delibrately throwing away resources. A simple way
+>to do this would of course be to transfer coins to a null address,
+>provably incurring a cost to her.
+>
+>A more socially responsible way would be for her to create a series of
+>transactions that happen to have large, and equal, transaction fees.
+>Bitcoin makes the assumption that no one entity controls more than 50%
+>of the network, so if she makes n of these transactions consecutively,
+>each spending m BTC to transaction fees, there is a high probability
+>that she has given up at least n/2 * m BTC of value. This of course is
+>all public knowledge, recorded in the block chain. It also increases the
+>transaction fees for miners, which will be very important for the
+>network in the future.
+>
+>Now Bob can easily examine the block chain, and upon verifying Alice's
+>trust purchase, can decide to accept a zero-confirmation transaction at
+>face value. If Alice breaks that promise, he simply publishes her signed
+>transaction proving that Alice is a fraudster, and future Bob's will
+>distrust Alice's trusted identity, thus destroying the value needed to
+>create it.
+>
+>In effect, we now have a distributed green address system.
+>
+>Now Alice could try to mount a double-spend attack on a whole bunch of
+>people at once, hoping to have them all accept the transaction. However
+>as it is the "just trust them" model works pretty well already.
+>
+>
+>A good usecase for this idea, beyond the obvious fast payments
+>application, is a distributed anonymizer. Alice can now publish her
+>request to anonymize coins, and other trusted identities can make their
+>bids. If Alice accepts a bid from Bob, she will want Bob to send her the
+>anonymized coins *prior* to her transaction going through, thus breaking
+>the temporal connection between the transactions. Now Alice can give Bob
+>the signed payment transaction, and Bob can submit his payment
+>transaction to the network first, knowing that Alice isn't going to try
+>to rip him off. Bob can also have a trusted identity which signed the
+>contract for the anonymizer transaction, and similarly if he rips Alice
+>off, she can publish it for the world to see.
+>
+>A more subtle effect, is this makes sybil attacks more difficult. To
+>pretend to be a thousand identities is going to now require 1,000 * n
+>coins, and attempting to pull this attack off inherently strengthens the
+>bitcoin network. Obviously we can apply this principle to other things
+>like tor nodes as well.
+>
+>--
+>http://petertodd.org 'peter'[:-1]@petertodd.org
+>
+>-----BEGIN PGP SIGNATURE-----
+>Version: GnuPG v1.4.10 (GNU/Linux)
+>
+>iQEcBAEBAgAGBQJPmW6EAAoJEH+rEUJn5PoEZfEH/ixptlMX9MzP71bCHMkj7YN1
+>y6GEkc1vNhyHu01NX77vzSqR4trbVnWJeJ5hH8EB5tgYRwmI17XoQW6Iz8yEXXgO
+>JqUKCTBBexGE+F5RfBkizJ9ap5wXwVrAOIMy/KurSdST+PWMXIPQFaGark01uKcG
+>M4VXg3U9fc/0Zz1QyKpRTI5O7ZSBqPzEh/Xf4TujR39nUtaI5mkT/bmA3+Te7oRT
+>34QO7ryF7U001Xz2VJCfm9AE8mPPZjMavLTs/XvPSqTdliVCZpjGGHzcJ2BPrni5
+>LEPBsBBxNsuwFGjnRobQwrkPtmYGFntseMLzCJ3iGXWYwedssBg2LLOx9QaXG04=
+>=PftQ
+>-----END PGP SIGNATURE-----
+>
+>------------------------------------------------------------------------------
+>Live Security Virtual Conference
+>Exclusive live event will cover all the ways today's security and
+>threat landscape has changed and how IT managers can respond. Discussions
+>will include endpoint security, mobile security and the latest in malware
+>threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+>_______________________________________________
+>Bitcoin-development mailing list
+>Bitcoin-development at lists.sourceforge.net
+>https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+
+
+-- 
+
+Peter J. Vessenes
+CEO, CoinLab
+M: 206.595.9839
+Skype: vessenes
+Google+ 
+
+------------------------------------------------------------------------------
+Live Security Virtual Conference
+Exclusive live event will cover all the ways today's security and 
+threat landscape has changed and how IT managers can respond. Discussions 
+will include endpoint security, mobile security and the latest in malware 
+threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+_______________________________________________
+Bitcoin-development mailing list
+Bitcoin-development at lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/bitcoin-development?
+
+
+
+From etotheipi at gmail.com  Thu Apr 26 18:00:59 2012
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Thu, 26 Apr 2012 14:00:59 -0400
+Subject: [Bitcoin-development] Trusted identities
+In-Reply-To: <20120426173000.GB16099@savin.lan>
+References: <20120426154928.GA13737@savin.lan>	<CAMGNxUs3eDaYHpg=ZqXQPC5+kQXZwhqUngH2t2OFaTa4x7vPcw@mail.gmail.com>
+	<20120426173000.GB16099@savin.lan>
+Message-ID: <4F998D5B.9070708@gmail.com>
+
+On 04/26/2012 01:30 PM, Peter Todd wrote:
+>
+>> More difficulty shortens the safe time we can transact large volumes in,
+>> which is good for the network.
+>>
+>> I'm not sure of the current implementation of replacement transactions, can
+>> anyone on the core team speak to this? Can I replace transactions, or is
+>> that part of the spec unimplemented or deprecated right now?
+> My understanding is it's completely disabled.
+
+Went on a scavenger hunt with Gavin a couple weeks concerning tx 
+replacement.  The conclusion was that if,
+(1) Transaction has lock-time in the future  AND
+(2) Transaction has non-maximum sequence number
+
+Then the transaction will both propagate and be accepted into nodes' 
+memory pools, but will not go into any block until locktime expires.  If 
+the lock-time is in the past OR sequence number on all TxIns is 
+0xffffffff, then it will be immediately valid and included in the 
+blockchain.
+
+But the actual "replacement" mechanism is disabled.  Therefore, the 
+nodes accept the tx as if it's replaceable, but don't allow it to be 
+replaced.  This means that it is effectively replaceable *once*, but 
+only if you inject a final transaction into the blockchain.   You can't 
+broadcast a final version of the same tx, because it will conflict with 
+the non-final one sitting in all the other nodes' memory pools.  You 
+need a miner to agree to remove the non-final tx from their memory pool 
+and specifically include your replacement.
+
+-Alan
+
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120426/ad9ce2e4/attachment.html>
+
+From zgenjix at yahoo.com  Sun Apr 29 11:08:45 2012
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Sun, 29 Apr 2012 04:08:45 -0700 (PDT)
+Subject: [Bitcoin-development] bitcoin.org luke-jr/multiclient branch
+Message-ID: <1335697725.30786.YahooMailNeo@web121007.mail.ne1.yahoo.com>
+
+Hi,
+
+Can we pull this? It's been there for almost 20 days now.
+
+
+https://github.com/bitcoin/bitcoin.org/pull/32
+
+My comment:
+"As a first step, this should probably be pulled right away and then 
+any improvements can be made after. Lets get the ball rolling rather 
+than debating the colour of the bike-shed!
+http://hackerspaces.org/wiki/The_Bikeshed_Anti-Pattern
+
+Although I agree with Mike Hearn - far better would be a grid of 4 
+columns and X rows. Each box has a linkable title, a picture and then 
+850 word blurb from the project. I mean where would libbitcoin fit in 
+here? I'd want to say the design philosophy behind it and that there's 
+Python bindings - a circular peg that doesn't fit in the square boxes of this table. Although whatever, that's not important. I'm just happy to 
+see MultiBit, Electrum and Armory get exposure."
+
+Anyone that wants to see what it looks like can add this to their hosts file:
+
+176.31.24.241? bitcoin.org
+
+Then navigate to http://bitcoin.org
+
+
+
+
+From rebroad+sourceforge.net at gmail.com  Mon Apr 30 16:40:18 2012
+From: rebroad+sourceforge.net at gmail.com (Rebroad (sourceforge))
+Date: Mon, 30 Apr 2012 17:40:18 +0100
+Subject: [Bitcoin-development] BIP to improve the availability of blocks
+Message-ID: <CAFBxzABqQBNdy9SbrKeePLsMdwwXDE7ghifh1GoOWscmpAZ+Tw@mail.gmail.com>
+
+Dear Bitcoin developers,
+
+In brief, the proposal I have is to extend the protocol to allow
+partial block download and upload. This is for people with
+intermittent connectivity or restricted connectivity. e.g. my own
+internet connection is quite slow, and my ISP routinely sends RSTs to
+both sides of connections to severe them. This often happens during
+block download and upload. I also often encounter the reception of
+blocks I have already received, further wasting bandwidth. This
+happens as quite often it can be far more than 2 minutes before block
+reception occurs following the getdata request, by which time my node
+has already sent a new getdata to another node requesting the same
+block.
+
+My proposal is that in addition to the size (which is advertised in
+the header), the hash is also advertised in the header (of a block).
+This would help nodes to determine whether they wanted to reject the
+download. (e.g. if it already had a block matching that hash). This of
+course wouldn't prevent a rogue node from sending an incorrect hash,
+but this would aid in saving bandwidth amongst behaving nodes.
+
+The other part of the proposal is to allow nodes to request upload and
+download blocks that have already been partially downloaded.
+
+This could be done by modifying the existing methods of upload,
+download, or by adding a new method, perhaps even using HTTP/HTTPS or
+something similar. This would also help nodes to obtain the blockchain
+who have restrictive ISPs, especially if they are being served on port
+80 or 443. This could perhaps also allow web caches to keep caches of
+the blockchain, thereby making it also more available also.
+
+Currently, without this?functionality, nodes with restrictive (or
+slow) internet have some options, such as going via a tor proxy, but
+due to the latency, the problem with multiple receptions of the same
+block still occur.
+
+Hopefully, not too clueless a post for my first post to this mailing list.
+
+Regards,
+Ed
+
+
+
+From zgenjix at yahoo.com  Mon Apr 30 17:50:39 2012
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Mon, 30 Apr 2012 10:50:39 -0700 (PDT)
+Subject: [Bitcoin-development] new bitcoin.org clients page
+Message-ID: <1335808239.18613.YahooMailNeo@web121006.mail.ne1.yahoo.com>
+
+Check it :) https://github.com/bitcoin/bitcoin.org/pull/34
+
+
+
+From etotheipi at gmail.com  Mon Apr 30 18:23:08 2012
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Mon, 30 Apr 2012 14:23:08 -0400
+Subject: [Bitcoin-development] new bitcoin.org clients page
+In-Reply-To: <1335808239.18613.YahooMailNeo@web121006.mail.ne1.yahoo.com>
+References: <1335808239.18613.YahooMailNeo@web121006.mail.ne1.yahoo.com>
+Message-ID: <CALf2ePwm9_aGngzVTKte+3_+yHF=-pcNqTAO0hmkR5rcimEX3g@mail.gmail.com>
+
+Hey, looks good!  I'm glad to see them sorted alphabetically :)
+
+A couple comments:  I don't think the entries for "wallet security" and
+"backups" accurately describe Armory.  Wallet Security should say
+"Encrypt/Offline" or something to to that effect -- after all, offline
+wallets are the holy grail feature of the Armory.  And backups should say
+something like "One-time Printable" if it fits within the box.
+
+Otherwise, I really like the layout and design.  Although despite the fact
+I enjoy being first on the list, I think Bitcoin-Qt should still go first.
+ It is the "reference" client, and I think it's relevant that it is the
+"de-facto" client for the majority of users, and the one with the most
+quality control and stability.
+
+-Alan
+
+
+On Mon, Apr 30, 2012 at 1:50 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+
+> Check it :) https://github.com/bitcoin/bitcoin.org/pull/34
+>
+>
+> ------------------------------------------------------------------------------
+> Live Security Virtual Conference
+> Exclusive live event will cover all the ways today's security and
+> threat landscape has changed and how IT managers can respond. Discussions
+> will include endpoint security, mobile security and the latest in malware
+> threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120430/50608d5f/attachment.html>
+
+From laanwj at gmail.com  Mon Apr 30 18:26:26 2012
+From: laanwj at gmail.com (Wladimir)
+Date: Mon, 30 Apr 2012 20:26:26 +0200
+Subject: [Bitcoin-development] BIP to improve the availability of blocks
+In-Reply-To: <CAFBxzABqQBNdy9SbrKeePLsMdwwXDE7ghifh1GoOWscmpAZ+Tw@mail.gmail.com>
+References: <CAFBxzABqQBNdy9SbrKeePLsMdwwXDE7ghifh1GoOWscmpAZ+Tw@mail.gmail.com>
+Message-ID: <CA+s+GJCy4Utm14S_2KWofSORfsVuTJBYpwB0a7M26XHn1QQVYw@mail.gmail.com>
+
+On Mon, Apr 30, 2012 at 6:40 PM, Rebroad (sourceforge) <
+rebroad+sourceforge.net at gmail.com> wrote:
+
+>
+> My proposal is that in addition to the size (which is advertised in
+> the header), the hash is also advertised in the header (of a block).
+> This would help nodes to determine whether they wanted to reject the
+> download. (e.g. if it already had a block matching that hash). This of
+> course wouldn't prevent a rogue node from sending an incorrect hash,
+> but this would aid in saving bandwidth amongst behaving nodes.
+>
+
+I suppose it would make sense for clients to be able to reject blocks that
+they already have, if that's not currently possible.
+
+The other part of the proposal is to allow nodes to request upload and
+> download blocks that have already been partially downloaded.
+>
+> This could be done by modifying the existing methods of upload,
+> download, or by adding a new method, perhaps even using HTTP/HTTPS or
+> something similar. This would also help nodes to obtain the blockchain
+> who have restrictive ISPs, especially if they are being served on port
+> 80 or 443. This could perhaps also allow web caches to keep caches of
+> the blockchain, thereby making it also more available also.
+>
+
+You don't need a BIP if you want to somehow fetch the (initial) block chain
+outside the bitcoin protocol. You could download it from some http server
+or even pass it along on an USB stick. Then with a simple client change you
+can import it: https://github.com/bitcoin/bitcoin/pull/883 .
+
+Currently, without this functionality, nodes with restrictive (or
+> slow) internet have some options, such as going via a tor proxy, but
+> due to the latency, the problem with multiple receptions of the same
+> block still occur.
+>
+
+If you're behind such a slow internet connection, and concerned about every
+bit of bandwidth, it is better to run a lightweight node. For example,
+Electrum.
+
+Even if you could reduce the wasted bandwidth a bit by puzzling around with
+partial blocks, the download will still be substantial (and that's going to
+get worse before it gets better).
+
+Wladimir
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120430/874d7838/attachment.html>
+
+From zgenjix at yahoo.com  Mon Apr 30 18:31:03 2012
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Mon, 30 Apr 2012 11:31:03 -0700 (PDT)
+Subject: [Bitcoin-development] new bitcoin.org clients page
+In-Reply-To: <CALf2ePwm9_aGngzVTKte+3_+yHF=-pcNqTAO0hmkR5rcimEX3g@mail.gmail.com>
+References: <1335808239.18613.YahooMailNeo@web121006.mail.ne1.yahoo.com>
+	<CALf2ePwm9_aGngzVTKte+3_+yHF=-pcNqTAO0hmkR5rcimEX3g@mail.gmail.com>
+Message-ID: <1335810663.39838.YahooMailNeo@web121007.mail.ne1.yahoo.com>
+
+Are we looking at the same list? Because here is the order I added: Bitcoin-Qt, Armory, Electrum and MultiBit. Maybe try CTRL-F5 to force a refresh of your browser.
+
+Also about the descriptions: yeah I know. I think it's better to put this up first and then have everyone submit their own descriptions and screenshots. Otherwise it'll be a nightmare to coordinate until everything is perfect. I did message you on IRC today but maybe you were offline.
+
+I didn't copy paste the Armory description from the website because it really sounds too spammy like a sales pitch. Here I was trying to give an even handed balanced overview of all the clients. For each client I was trying to empaphise a 'theme'. Bitcoin-Qt is stability. Armory is advanced. Electrum is convenient. MultiBit is ease of use.
+
+________________________________
+From: Alan Reiner <etotheipi at gmail.com>
+To: Amir Taaki <zgenjix at yahoo.com> 
+Cc: "bitcoin-development at lists.sourceforge.net" <bitcoin-development at lists.sourceforge.net> 
+Sent: Monday, April 30, 2012 7:23 PM
+Subject: Re: [Bitcoin-development] new bitcoin.org clients page
+
+
+Hey, looks good! ?I'm glad to see them sorted alphabetically :)
+
+A couple comments: ?I don't think the entries for "wallet security" and "backups" accurately describe Armory. ?Wallet Security should say "Encrypt/Offline" or something to to that effect -- after all, offline wallets are the holy grail feature of the Armory. ?And backups should say something like "One-time Printable" if it fits within the box. ?
+
+Otherwise, I really like the layout and design. ?Although despite the fact I enjoy being first on the list, I think Bitcoin-Qt should still go first. ?It is the "reference" client, and I think it's relevant that it is the "de-facto" client for the majority of users, and the one with the most quality control and stability.
+
+-Alan
+
+
+
+On Mon, Apr 30, 2012 at 1:50 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+
+Check it :) https://github.com/bitcoin/bitcoin.org/pull/34
+>
+>------------------------------------------------------------------------------
+>Live Security Virtual Conference
+>Exclusive live event will cover all the ways today's security and
+>threat landscape has changed and how IT managers can respond. Discussions
+>will include endpoint security, mobile security and the latest in malware
+>threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+>_______________________________________________
+>Bitcoin-development mailing list
+>Bitcoin-development at lists.sourceforge.net
+>https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+
+
+
+From zgenjix at yahoo.com  Mon Apr 30 19:11:18 2012
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Mon, 30 Apr 2012 12:11:18 -0700 (PDT)
+Subject: [Bitcoin-development] BIP to improve the availability of blocks
+In-Reply-To: <CA+s+GJCy4Utm14S_2KWofSORfsVuTJBYpwB0a7M26XHn1QQVYw@mail.gmail.com>
+References: <CAFBxzABqQBNdy9SbrKeePLsMdwwXDE7ghifh1GoOWscmpAZ+Tw@mail.gmail.com>
+	<CA+s+GJCy4Utm14S_2KWofSORfsVuTJBYpwB0a7M26XHn1QQVYw@mail.gmail.com>
+Message-ID: <1335813078.98321.YahooMailNeo@web121004.mail.ne1.yahoo.com>
+
+This is optimisation where it isn't needed. Bandwidth is not the bottleneck of the Bitcoin system. It is the immense time needed to validate the blockchain.
+
+And clients should never send blocks first. They always send an inv packet, then you request the block. It is a disruptive change and brings little.
+
+We don't need to optimise every aspect of Bitcoin :) Just focus on the big bits that matter, while keeping everything working with minimal changes.
+
+For instance say we did this and to maintain backwards compatible, we introduced a new message called "hash+block". Now there are 2 code branches that must be maintained - urgh.
+
+
+________________________________
+From: Wladimir <laanwj at gmail.com>
+To: Rebroad (sourceforge) <rebroad+sourceforge.net at gmail.com> 
+Cc: bitcoin-development at lists.sourceforge.net 
+Sent: Monday, April 30, 2012 7:26 PM
+Subject: Re: [Bitcoin-development] BIP to improve the availability of blocks
+
+
+On Mon, Apr 30, 2012 at 6:40 PM, Rebroad (sourceforge) <rebroad+sourceforge.net at gmail.com> wrote: 
+
+
+>My proposal is that in addition to the size (which is advertised in
+>the header), the hash is also advertised in the header (of a block).
+>This would help nodes to determine whether they wanted to reject the
+>download. (e.g. if it already had a block matching that hash). This of
+>course wouldn't prevent a rogue node from sending an incorrect hash,
+>but this would aid in saving bandwidth amongst behaving nodes.
+>
+
+I suppose it would make sense for clients to be able to reject blocks that they already have, if that's not currently possible.
+
+
+The other part of the proposal is to allow nodes to request upload and
+>download blocks that have already been partially downloaded.
+>
+>This could be done by modifying the existing methods of upload,
+>download, or by adding a new method, perhaps even using HTTP/HTTPS or
+>something similar. This would also help nodes to obtain the blockchain
+>who have restrictive ISPs, especially if they are being served on port
+>80 or 443. This could perhaps also allow web caches to keep caches of
+>the blockchain, thereby making it also more available also.
+>
+
+You don't need a BIP if you want to somehow fetch the (initial) block chain 
+outside the bitcoin protocol. You could download it from some http 
+server or even pass it along on an USB stick. Then with a simple client change you can import it: https://github.com/bitcoin/bitcoin/pull/883 .
+
+
+Currently, without this?functionality, nodes with restrictive (or
+>slow) internet have some options, such as going via a tor proxy, but
+>due to the latency, the problem with multiple receptions of the same
+>block still occur.
+>
+
+If you're behind such a slow internet connection, and concerned about 
+every bit of bandwidth, it is better to run a lightweight node. For example, Electrum.
+
+Even if you could reduce the wasted bandwidth a bit by puzzling 
+around with partial blocks, the download will still be substantial (and that's going to get worse before it gets better). 
+
+Wladimir
+
+
+------------------------------------------------------------------------------
+Live Security Virtual Conference
+Exclusive live event will cover all the ways today's security and 
+threat landscape has changed and how IT managers can respond. Discussions 
+will include endpoint security, mobile security and the latest in malware 
+threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+_______________________________________________
+Bitcoin-development mailing list
+Bitcoin-development at lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+From etotheipi at gmail.com  Mon Apr 30 19:51:49 2012
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Mon, 30 Apr 2012 15:51:49 -0400
+Subject: [Bitcoin-development] new bitcoin.org clients page
+In-Reply-To: <1335810663.39838.YahooMailNeo@web121007.mail.ne1.yahoo.com>
+References: <1335808239.18613.YahooMailNeo@web121006.mail.ne1.yahoo.com>
+	<CALf2ePwm9_aGngzVTKte+3_+yHF=-pcNqTAO0hmkR5rcimEX3g@mail.gmail.com>
+	<1335810663.39838.YahooMailNeo@web121007.mail.ne1.yahoo.com>
+Message-ID: <CALf2ePx_+SaANDfvyuTpv=M8rquvjAqSGV5+Uo=wkYKb-oOrLQ@mail.gmail.com>
+
+Actually I was looking at a screenshot someone sent me because I couldn't
+seem to access it even after changing the hosts file (I assumed it was
+recent, but I guess not).  It just looked like the regular Bitcoin page
+(despite doing a ping on the command line and seeing the expected IP).  Was
+there a specific link to click on?    Am I blind?
+
+Is there a process we should use to submit how we think our program should
+be represented on the clients page?
+
+-Alan
+
+
+On Mon, Apr 30, 2012 at 2:31 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+
+> Are we looking at the same list? Because here is the order I added:
+> Bitcoin-Qt, Armory, Electrum and MultiBit. Maybe try CTRL-F5 to force a
+> refresh of your browser.
+>
+> Also about the descriptions: yeah I know. I think it's better to put this
+> up first and then have everyone submit their own descriptions and
+> screenshots. Otherwise it'll be a nightmare to coordinate until everything
+> is perfect. I did message you on IRC today but maybe you were offline.
+>
+> I didn't copy paste the Armory description from the website because it
+> really sounds too spammy like a sales pitch. Here I was trying to give an
+> even handed balanced overview of all the clients. For each client I was
+> trying to empaphise a 'theme'. Bitcoin-Qt is stability. Armory is advanced.
+> Electrum is convenient. MultiBit is ease of use.
+>
+> ________________________________
+> From: Alan Reiner <etotheipi at gmail.com>
+> To: Amir Taaki <zgenjix at yahoo.com>
+> Cc: "bitcoin-development at lists.sourceforge.net" <
+> bitcoin-development at lists.sourceforge.net>
+> Sent: Monday, April 30, 2012 7:23 PM
+> Subject: Re: [Bitcoin-development] new bitcoin.org clients page
+>
+>
+> Hey, looks good!  I'm glad to see them sorted alphabetically :)
+>
+> A couple comments:  I don't think the entries for "wallet security" and
+> "backups" accurately describe Armory.  Wallet Security should say
+> "Encrypt/Offline" or something to to that effect -- after all, offline
+> wallets are the holy grail feature of the Armory.  And backups should say
+> something like "One-time Printable" if it fits within the box.
+>
+> Otherwise, I really like the layout and design.  Although despite the fact
+> I enjoy being first on the list, I think Bitcoin-Qt should still go first.
+>  It is the "reference" client, and I think it's relevant that it is the
+> "de-facto" client for the majority of users, and the one with the most
+> quality control and stability.
+>
+> -Alan
+>
+>
+>
+> On Mon, Apr 30, 2012 at 1:50 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+>
+> Check it :) https://github.com/bitcoin/bitcoin.org/pull/34
+> >
+>
+> >------------------------------------------------------------------------------
+> >Live Security Virtual Conference
+> >Exclusive live event will cover all the ways today's security and
+> >threat landscape has changed and how IT managers can respond. Discussions
+> >will include endpoint security, mobile security and the latest in malware
+> >threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> >_______________________________________________
+> >Bitcoin-development mailing list
+> >Bitcoin-development at lists.sourceforge.net
+> >https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+> >
+>
+>
+> ------------------------------------------------------------------------------
+> Live Security Virtual Conference
+> Exclusive live event will cover all the ways today's security and
+> threat landscape has changed and how IT managers can respond. Discussions
+> will include endpoint security, mobile security and the latest in malware
+> threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120430/4f639830/attachment.html>
+
+From zellfaze at yahoo.com  Mon Apr 30 20:02:47 2012
+From: zellfaze at yahoo.com (Zell Faze)
+Date: Mon, 30 Apr 2012 13:02:47 -0700 (PDT)
+Subject: [Bitcoin-development] BIP to improve the availability of blocks
+In-Reply-To: <1335813078.98321.YahooMailNeo@web121004.mail.ne1.yahoo.com>
+Message-ID: <1335816167.89493.YahooMailClassic@web120904.mail.ne1.yahoo.com>
+
+Although quite true, I actually agree though that there should be some sort of checksum for the blocks.  Bandwidth may not be a bottleneck now (or ever), but it may be at some point.  This change will help Bitcoin scale.
+
+------------------------
+"It stopped being just a website a long time ago. For many of us, most of us, Wikipedia has become an indispensable part of our daily lives."
+? Jimmy Wales, Founder of Wikipedia 
+Help protect it now. Please make a donation today: http://www.wikimediafoundation.org/wiki/Donate
+
+
+
+--- On Mon, 4/30/12, Amir Taaki <zgenjix at yahoo.com> wrote:
+
+> From: Amir Taaki <zgenjix at yahoo.com>
+> Subject: Re: [Bitcoin-development] BIP to improve the availability of blocks
+> To: "bitcoin-development at lists.sourceforge.net" <bitcoin-development at lists.sourceforge.net>
+> Date: Monday, April 30, 2012, 3:11 PM
+> This is optimisation where it isn't
+> needed. Bandwidth is not the bottleneck of the Bitcoin
+> system. It is the immense time needed to validate the
+> blockchain.
+> 
+> And clients should never send blocks first. They always send
+> an inv packet, then you request the block. It is a
+> disruptive change and brings little.
+> 
+> We don't need to optimise every aspect of Bitcoin :) Just
+> focus on the big bits that matter, while keeping everything
+> working with minimal changes.
+> 
+> For instance say we did this and to maintain backwards
+> compatible, we introduced a new message called "hash+block".
+> Now there are 2 code branches that must be maintained -
+> urgh.
+> 
+> 
+> ________________________________
+> From: Wladimir <laanwj at gmail.com>
+> To: Rebroad (sourceforge) <rebroad+sourceforge.net at gmail.com>
+> 
+> Cc: bitcoin-development at lists.sourceforge.net
+> 
+> Sent: Monday, April 30, 2012 7:26 PM
+> Subject: Re: [Bitcoin-development] BIP to improve the
+> availability of blocks
+> 
+> 
+> On Mon, Apr 30, 2012 at 6:40 PM, Rebroad (sourceforge)
+> <rebroad+sourceforge.net at gmail.com>
+> wrote: 
+> 
+> 
+> >My proposal is that in addition to the size (which is
+> advertised in
+> >the header), the hash is also advertised in the header
+> (of a block).
+> >This would help nodes to determine whether they wanted
+> to reject the
+> >download. (e.g. if it already had a block matching that
+> hash). This of
+> >course wouldn't prevent a rogue node from sending an
+> incorrect hash,
+> >but this would aid in saving bandwidth amongst behaving
+> nodes.
+> >
+> 
+> I suppose it would make sense for clients to be able to
+> reject blocks that they already have, if that's not
+> currently possible.
+> 
+> 
+> The other part of the proposal is to allow nodes to request
+> upload and
+> >download blocks that have already been partially
+> downloaded.
+> >
+> >This could be done by modifying the existing methods of
+> upload,
+> >download, or by adding a new method, perhaps even using
+> HTTP/HTTPS or
+> >something similar. This would also help nodes to obtain
+> the blockchain
+> >who have restrictive ISPs, especially if they are being
+> served on port
+> >80 or 443. This could perhaps also allow web caches to
+> keep caches of
+> >the blockchain, thereby making it also more available
+> also.
+> >
+> 
+> You don't need a BIP if you want to somehow fetch the
+> (initial) block chain 
+> outside the bitcoin protocol. You could download it from
+> some http 
+> server or even pass it along on an USB stick. Then with a
+> simple client change you can import it: https://github.com/bitcoin/bitcoin/pull/883 .
+> 
+> 
+> Currently, without this?functionality, nodes with
+> restrictive (or
+> >slow) internet have some options, such as going via a
+> tor proxy, but
+> >due to the latency, the problem with multiple receptions
+> of the same
+> >block still occur.
+> >
+> 
+> If you're behind such a slow internet connection, and
+> concerned about 
+> every bit of bandwidth, it is better to run a lightweight
+> node. For example, Electrum.
+> 
+> Even if you could reduce the wasted bandwidth a bit by
+> puzzling 
+> around with partial blocks, the download will still be
+> substantial (and that's going to get worse before it gets
+> better). 
+> 
+> Wladimir
+> 
+> 
+> ------------------------------------------------------------------------------
+> Live Security Virtual Conference
+> Exclusive live event will cover all the ways today's
+> security and 
+> threat landscape has changed and how IT managers can
+> respond. Discussions 
+> will include endpoint security, mobile security and the
+> latest in malware 
+> threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+> 
+> ------------------------------------------------------------------------------
+> Live Security Virtual Conference
+> Exclusive live event will cover all the ways today's
+> security and 
+> threat landscape has changed and how IT managers can
+> respond. Discussions 
+> will include endpoint security, mobile security and the
+> latest in malware 
+> threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+> 
+
+
+
+From peter at coinlab.com  Mon Apr 30 20:54:37 2012
+From: peter at coinlab.com (Peter Vessenes)
+Date: Mon, 30 Apr 2012 13:54:37 -0700
+Subject: [Bitcoin-development] BIP to improve the availability of blocks
+In-Reply-To: <1335816167.89493.YahooMailClassic@web120904.mail.ne1.yahoo.com>
+References: <1335813078.98321.YahooMailNeo@web121004.mail.ne1.yahoo.com>
+	<1335816167.89493.YahooMailClassic@web120904.mail.ne1.yahoo.com>
+Message-ID: <CAMGNxUvBRjDM5MykRv6P_k=yxgsTxbL+shu9_3henAn4TG_LjA@mail.gmail.com>
+
+Blocks already checksum; they hash to a low number.
+
+Also inre: block headers, you are furnished with a previous hash in the
+first 80 bytes of the block. You can always cut the connection at that
+moment if you've already seen the block headers.
+
+Peter
+
+
+On Mon, Apr 30, 2012 at 1:02 PM, Zell Faze <zellfaze at yahoo.com> wrote:
+
+> Although quite true, I actually agree though that there should be some
+> sort of checksum for the blocks.  Bandwidth may not be a bottleneck now (or
+> ever), but it may be at some point.  This change will help Bitcoin scale.
+>
+> ------------------------
+> "It stopped being just a website a long time ago. For many of us, most of
+> us, Wikipedia has become an indispensable part of our daily lives."
+> ? Jimmy Wales, Founder of Wikipedia
+> Help protect it now. Please make a donation today:
+> http://www.wikimediafoundation.org/wiki/Donate
+>
+>
+>
+> --- On Mon, 4/30/12, Amir Taaki <zgenjix at yahoo.com> wrote:
+>
+> > From: Amir Taaki <zgenjix at yahoo.com>
+> > Subject: Re: [Bitcoin-development] BIP to improve the availability of
+> blocks
+> > To: "bitcoin-development at lists.sourceforge.net" <
+> bitcoin-development at lists.sourceforge.net>
+> > Date: Monday, April 30, 2012, 3:11 PM
+> > This is optimisation where it isn't
+> > needed. Bandwidth is not the bottleneck of the Bitcoin
+> > system. It is the immense time needed to validate the
+> > blockchain.
+> >
+> > And clients should never send blocks first. They always send
+> > an inv packet, then you request the block. It is a
+> > disruptive change and brings little.
+> >
+> > We don't need to optimise every aspect of Bitcoin :) Just
+> > focus on the big bits that matter, while keeping everything
+> > working with minimal changes.
+> >
+> > For instance say we did this and to maintain backwards
+> > compatible, we introduced a new message called "hash+block".
+> > Now there are 2 code branches that must be maintained -
+> > urgh.
+> >
+> >
+> > ________________________________
+> > From: Wladimir <laanwj at gmail.com>
+> > To: Rebroad (sourceforge) <rebroad+sourceforge.net at gmail.com>
+> >
+> > Cc: bitcoin-development at lists.sourceforge.net
+> >
+> > Sent: Monday, April 30, 2012 7:26 PM
+> > Subject: Re: [Bitcoin-development] BIP to improve the
+> > availability of blocks
+> >
+> >
+> > On Mon, Apr 30, 2012 at 6:40 PM, Rebroad (sourceforge)
+> > <rebroad+sourceforge.net at gmail.com>
+> > wrote:
+> >
+> >
+> > >My proposal is that in addition to the size (which is
+> > advertised in
+> > >the header), the hash is also advertised in the header
+> > (of a block).
+> > >This would help nodes to determine whether they wanted
+> > to reject the
+> > >download. (e.g. if it already had a block matching that
+> > hash). This of
+> > >course wouldn't prevent a rogue node from sending an
+> > incorrect hash,
+> > >but this would aid in saving bandwidth amongst behaving
+> > nodes.
+> > >
+> >
+> > I suppose it would make sense for clients to be able to
+> > reject blocks that they already have, if that's not
+> > currently possible.
+> >
+> >
+> > The other part of the proposal is to allow nodes to request
+> > upload and
+> > >download blocks that have already been partially
+> > downloaded.
+> > >
+> > >This could be done by modifying the existing methods of
+> > upload,
+> > >download, or by adding a new method, perhaps even using
+> > HTTP/HTTPS or
+> > >something similar. This would also help nodes to obtain
+> > the blockchain
+> > >who have restrictive ISPs, especially if they are being
+> > served on port
+> > >80 or 443. This could perhaps also allow web caches to
+> > keep caches of
+> > >the blockchain, thereby making it also more available
+> > also.
+> > >
+> >
+> > You don't need a BIP if you want to somehow fetch the
+> > (initial) block chain
+> > outside the bitcoin protocol. You could download it from
+> > some http
+> > server or even pass it along on an USB stick. Then with a
+> > simple client change you can import it:
+> https://github.com/bitcoin/bitcoin/pull/883 .
+> >
+> >
+> > Currently, without this functionality, nodes with
+> > restrictive (or
+> > >slow) internet have some options, such as going via a
+> > tor proxy, but
+> > >due to the latency, the problem with multiple receptions
+> > of the same
+> > >block still occur.
+> > >
+> >
+> > If you're behind such a slow internet connection, and
+> > concerned about
+> > every bit of bandwidth, it is better to run a lightweight
+> > node. For example, Electrum.
+> >
+> > Even if you could reduce the wasted bandwidth a bit by
+> > puzzling
+> > around with partial blocks, the download will still be
+> > substantial (and that's going to get worse before it gets
+> > better).
+> >
+> > Wladimir
+> >
+> >
+> >
+> ------------------------------------------------------------------------------
+> > Live Security Virtual Conference
+> > Exclusive live event will cover all the ways today's
+> > security and
+> > threat landscape has changed and how IT managers can
+> > respond. Discussions
+> > will include endpoint security, mobile security and the
+> > latest in malware
+> > threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> > _______________________________________________
+> > Bitcoin-development mailing list
+> > Bitcoin-development at lists.sourceforge.net
+> > https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+> >
+> >
+> ------------------------------------------------------------------------------
+> > Live Security Virtual Conference
+> > Exclusive live event will cover all the ways today's
+> > security and
+> > threat landscape has changed and how IT managers can
+> > respond. Discussions
+> > will include endpoint security, mobile security and the
+> > latest in malware
+> > threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> > _______________________________________________
+> > Bitcoin-development mailing list
+> > Bitcoin-development at lists.sourceforge.net
+> > https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+> >
+>
+>
+> ------------------------------------------------------------------------------
+> Live Security Virtual Conference
+> Exclusive live event will cover all the ways today's security and
+> threat landscape has changed and how IT managers can respond. Discussions
+> will include endpoint security, mobile security and the latest in malware
+> threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+
+
+
+-- 
+Peter J. Vessenes
+CEO, CoinLab
+M: 206.595.9839
+Skype: vessenes
+Google+ <https://plus.google.com/112885659993091300749>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120430/6ef5f65b/attachment.html>
+

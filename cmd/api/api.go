@@ -3,7 +3,10 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/blevesearch/bleve"
+	"math"
 	"net/http"
+	"regexp"
 	"strconv"
 
 	"github.com/urfave/cli"
@@ -31,7 +34,7 @@ func runAPI(ctx *cli.Context) {
 	router := gin.Default()
 	corsConfig := cors.DefaultConfig()
 	if config.GetBool("api.production") {
-		corsConfig.AllowOrigins = []string{"https://www.openchart.org/","http://10.40.81.103:23485","http://45.43.60.97:23485"}
+		corsConfig.AllowOrigins = []string{"https://www.openchart.org/", "http://10.40.81.103:23485", "http://45.43.60.97:23485"}
 	} else {
 		corsConfig.AllowOrigins = []string{"*"}
 	}
@@ -57,6 +60,8 @@ func runAPI(ctx *cli.Context) {
 		api.GET("/getMempoolEntries", getCachedMempoolEntries)
 		api.GET("/getRecentFeerateAPIData", getRecentFeerateAPIEntries)
 		api.GET("/getBlockEntries", getBlockEntries)
+
+		api.GET("/archiveSearch/:keywords", searchSpecialArchives)
 	}
 
 	portString := ":" + config.GetString("api.port")
@@ -197,6 +202,46 @@ func getHistoricalMempool(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, mempoolStates)
+}
+
+func searchSpecialArchives(c *gin.Context) {
+	keywords := c.Param("keywords")
+	if keywords == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Invalid input error",
+		})
+		return
+	}
+	index, err := bleve.Open("bitcoin.archive.db")
+	if err != nil {
+		fmt.Println("bleve.Open err:", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "bleve open err",
+		})
+		return
+	}
+	query := bleve.NewQueryStringQuery(keywords)
+	searchRequest := bleve.NewSearchRequest(query)
+	searchRequest.Size = math.MaxInt
+	searchResult, err := index.Search(searchRequest)
+	if err != nil {
+		fmt.Println("bleve.search err:", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "bleve search err",
+		})
+		return
+	}
+	fmt.Println(searchResult)
+
+	pattern := `\d{4}-[a-zA-Z]+\.txt`
+	reg, err := regexp.Compile(pattern)
+	if err != nil {
+		panic(err)
+	}
+
+	matchs := reg.FindAllString(fmt.Sprintf("%s", searchResult), -1)
+
+	c.JSON(http.StatusOK, matchs)
 }
 
 func getTransactionStats(c *gin.Context) {

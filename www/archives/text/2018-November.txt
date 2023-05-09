@@ -1,0 +1,3641 @@
+From weiji.g at gmail.com  Tue Nov  6 16:16:41 2018
+From: weiji.g at gmail.com (Weiji Guo)
+Date: Wed, 7 Nov 2018 00:16:41 +0800
+Subject: [bitcoin-dev]  BIP- & SLIP-0039 -- better multi-language support
+In-Reply-To: <mailman.1087.1541036387.10264.bitcoin-dev@lists.linuxfoundation.org>
+References: <mailman.1087.1541036387.10264.bitcoin-dev@lists.linuxfoundation.org>
+Message-ID: <CA+ydi=LM+q-9WKewb=65tWCqM1cPMoWEeWq5XAxdqg4rz=ZJ6g@mail.gmail.com>
+
+Hello everyone,
+
+I just realized that BIP-0039 is language dependent. I was assuming the
+other way till I looked closer. The way the seed is derived from a BIP-0039
+entropy, as is shown below, depends on which language to generate the
+mnemonic sentence:
+
+   Entropy <=> Mnemonic Sentence => PBKDF2 => BIP-0032 Seed
+
+Therefore when a user choose a non-English mnemonic code he or she is stuck
+with that language. Meanwhile only a few native languages are supported.
+
+SLIP-0039 does not solve this issue in a user friendly way by providing
+only an English wordlist. That's understandable as it aims to provide SSS
+capability. However those users who do not speak English or recognize
+English words will suffer.
+
+What I am trying to bring to attention of the community is that, no matter
+if we make a new version of BIP-0039, or a new BIP (with SSS support), or
+to enhance SLIP-0039, we really need to address this language issue.
+
+Here are what I propose:
+
+1. The mnemonic code should be only a representation of underlying entropy
+or (pre) master secret, seed, whatever. In this way, the same seed/secret
+could be displayed in English or in Chinese or other languages. Then there
+could be 3rd party conversion tools to support translations in case any
+wallet software or device does not support all specified languages. Now it
+looks like:
+
+   Mnemonic Sentence <=> Entropy => PBKDF2 => BIP-0032 Seed
+
+2. Given that only 8 languages are supported in BIP-0039, we should allow
+the seed/secret to be represented in decimal numbers, each ranging from 0
+to 2047. So those who cannot find a native language support yet having
+difficulty coping words in other languages could choose to just use numbers.
+
+So far I don't have a preference how this should be implemented. I'd like
+to hear from community first.
+
+Thanks,
+
+Weiji Guo
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181107/88677440/attachment.html>
+
+From nothingmuch at woobling.org  Tue Nov  6 15:50:38 2018
+From: nothingmuch at woobling.org (Yuval Kogman)
+Date: Tue, 6 Nov 2018 15:50:38 +0000
+Subject: [bitcoin-dev] draft proposal: change forwarding (improved
+ fungibility through wallet interoperability)
+Message-ID: <CAAQdECAGuScCLoG_62g6G__yiyN8KRiPDBGYJ2pDBwxRCNFtZQ@mail.gmail.com>
+
+Hello,
+
+I would like to propose a method based on BIP32 (and optionally BIP44) for
+improving fungibility and on chain privacy with wallets for which this is
+not a primary concern, requiring minimal changes to allow such wallets to
+safely forward change outputs to more specialized wallets. This is intended
+to complement more comprehensive proposals such as BIP79.
+
+Note that this draft is still incomplete, there are open questions about
+the particular format to use. In its current form it proposes two viable
+options (and two more are included completeness) and though I have a slight
+preference for the first option, I remain undecided given the tradeoffs,
+and so I am writing the mailing list to solicit inputs/criticism.
+
+https://gist.github.com/nothingmuch/652f3a98089a0600637eadab738b2d6a
+
+Thanks to SirMeow, Adam Ficsor, and Adam Gibson for reviewing earlier
+versions and providing valuable feedback and suggestions.
+
+Regards,
+Yuval
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181106/3f05c79a/attachment.html>
+
+From rzeqeu at gmail.com  Tue Nov  6 21:21:11 2018
+From: rzeqeu at gmail.com (rze)
+Date: Tue, 6 Nov 2018 23:21:11 +0200
+Subject: [bitcoin-dev] Considering starting a toy full-node implementation.
+	Any advice?
+Message-ID: <1D59197E-93ED-42CE-9DB1-EC3219540C02@gmail.com>
+
+Hello,
+
+I'm considering to start developing a toy full validating node implementation (no wallet, no mining) for educational purposes.
+
+Some questions:
+
+1) which resource do you suggest for as a reference for the protocol?
+2) which part do you suggest to start with?
+3) I was thinking to use btcd as a reference since I'm not familiar with C++ (bitcoind)
+4) are there any other general advice or tips for such endeavours?
+
+Thanks in advance.
+
+
+From theartlav at gmail.com  Wed Nov  7 13:20:00 2018
+From: theartlav at gmail.com (=?UTF-8?B?0JDRgNGC0ZHQvCDQm9C40YLQstC40L3QvtCy0LjRhw==?=)
+Date: Wed, 7 Nov 2018 16:20:00 +0300
+Subject: [bitcoin-dev] Considering starting a toy full-node
+ implementation. Any advice?
+In-Reply-To: <mailman.37.1541592011.22359.bitcoin-dev@lists.linuxfoundation.org>
+References: <mailman.37.1541592011.22359.bitcoin-dev@lists.linuxfoundation.org>
+Message-ID: <CAJRVQkCn6Kd90q9BBkZuB2cUOUA0JuBmXcaj06RkrnnG3CVEVA@mail.gmail.com>
+
+Hi there.
+
+Been there, done that.
+
+-Don't try to set big goals at once.
+Start small and aim for small steps, i.e. by connecting to nodes, then
+getting some data from them, then downloading blocks, then parsing
+blocks, then building an UTXO set, etc.
+My first long term goal was to simply compute the balance of an address.
+
+-Expect to work with huge and varied sets of data.
+You'll have to build and use tens of Gb of indexes, for example.
+Early transactions also have all sorts of non-standard scripts, and
+testnet have all sorts of weird non-standard scripts, so plan
+accordingly.
+
+-Don't write off making a wallet or mining.
+The latter is easy to do on CPU on testnet and learning to make valid
+blocks helps a lot in understanding how things work.
+A wallet, on the other hand, gives you good understanding of keys and
+transactions, especially if you want to try doing all the EC math
+yourself.
+I also wrote things to be generic between several forks and chains,
+like Litecoin, Doge, Zcash and a bunch of now-dead alts - there is so
+little difference between many of them that all it takes is a
+parameter or two. Helps with perspective.
+Naturally, stay away from mainnets and real money if you do your own
+wallet and crypto.
+
+-Don't get too excited when you'd see exploitable signatures.
+All of them were plundered years ago, and by now no one makes mistakes
+like that.
+Also, there are plenty of bots which are constantly scanning the chain
+for weak keys and signatures, any new ones will be gone in a few
+seconds.
+
+-Expect cthulhus. There used to be plenty of artwork and puzzles in
+the early blockchain.
+Here is a short write up with a few of the things i found: https www
+dot ribbonfarm dot
+com/2017/07/20/the-ominouslier-roar-of-the-bitcoin-wave/
+
+
+For references, good ones i found and used were:
+https bitcoin dot org/en/developer-reference
+https en dot bitcoin dot it/wiki/Protocol_documentation
+Also, BIPs contain a lot of specific details: https github dot com/bitcoin/bips
+That should get you started, and by the time you get into the devilish
+details you'll have to look at the code for reference.
+
+No idea about 3), haven't looked at it.
+
+Good luck and have fun.
+-Artem
+
+??, 7 ????. 2018 ?. ? 15:01, <bitcoin-dev-request at lists.linuxfoundation.org>:
+>
+> Date: Tue, 6 Nov 2018 23:21:11 +0200
+> From: rze <rzeqeu at gmail.com>
+> To: bitcoin-dev at lists.linuxfoundation.org
+> Subject: [bitcoin-dev] Considering starting a toy full-node implementation. Any advice?
+>
+> Hello,
+>
+> I'm considering to start developing a toy full validating node implementation (no wallet, no mining) for educational purposes.
+>
+> Some questions:
+>
+> 1) which resource do you suggest for as a reference for the protocol?
+> 2) which part do you suggest to start with?
+> 3) I was thinking to use btcd as a reference since I'm not familiar with C++ (bitcoind)
+> 4) are there any other general advice or tips for such endeavours?
+>
+> Thanks in advance.
+>
+
+From adam.ficsor73 at gmail.com  Wed Nov  7 14:09:53 2018
+From: adam.ficsor73 at gmail.com (Adam Ficsor)
+Date: Wed, 7 Nov 2018 21:09:53 +0700
+Subject: [bitcoin-dev] BIP Proposal - Address Paste Improvement
+Message-ID: <CAEPKjgeJX7-LaJNkVk0GKbC5KhOE0aT+otpa-N1EVtwC35m9LQ@mail.gmail.com>
+
+BIP: ?
+Layer: Applications
+Title: Address Paste Improvement
+Author: nopara73 <adam.ficsor73 at gmail.com>, David Molnar <
+molnardavid84 at gmail.com>
+Type: Standard Track
+Created: 2018-11-07
+
+Abstract. End-users often copy-paste addresses. This BIP aims to facilitate
+the user experience regarding this process.
+
+Motivation. Some services already implemented autopaste functions, which is
+done as follows: the user clicks to the address box and a Bitcoin address
+automatically gets pasted from the clipboard. Depending on the
+implementation, this could be either annoying or not permissive enough if
+it completely replaces the possibility of manually entering a Bitcoin
+address.
+
+The BIP Proposal can be found here:
+https://gist.github.com/nopara73/322dbd263a5c45267da87cffc36de6f6
+
+An implementation will soon follow in Wasabi Wallet.
+
+Regards,
+nopara73
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181107/65afea63/attachment.html>
+
+From andreas at schildbach.de  Wed Nov  7 21:28:54 2018
+From: andreas at schildbach.de (Andreas Schildbach)
+Date: Wed, 7 Nov 2018 22:28:54 +0100
+Subject: [bitcoin-dev] BIP Proposal - Address Paste Improvement
+In-Reply-To: <CAEPKjgeJX7-LaJNkVk0GKbC5KhOE0aT+otpa-N1EVtwC35m9LQ@mail.gmail.com>
+References: <CAEPKjgeJX7-LaJNkVk0GKbC5KhOE0aT+otpa-N1EVtwC35m9LQ@mail.gmail.com>
+Message-ID: <prvlaj$8er$1@blaine.gmane.org>
+
+Copying addresses to the clipboard should be discouraged, rather than
+supported.
+
+It is an inherently insecure mechanism. Regardless of the OS used, any
+application can monitor the clipboard for Bitcoin addresses and replace
+any address with their own, usually without any specific permission or
+confirmation by the user. Effectively this steals Bitcoins if the user
+doesn't compare addresses manually.
+
+This is a real risk, as this kind of malware has already been seen.
+
+Never copy & paste Bitcoin addresses!
+
+
+On 07/11/2018 15.09, Adam Ficsor via bitcoin-dev wrote:
+> BIP: ?
+> Layer: Applications
+> Title: Address Paste Improvement
+> Author: nopara73 <adam.ficsor73 at gmail.com
+> <mailto:adam.ficsor73 at gmail.com>>, David Molnar <molnardavid84 at gmail.com
+> <mailto:molnardavid84 at gmail.com>>
+> Type: Standard Track
+> Created: 2018-11-07
+> ??
+> Abstract. End-users often copy-paste addresses. This BIP aims to
+> facilitate the user experience regarding this process.? ??
+> 
+> Motivation. Some services already implemented autopaste functions, which
+> is done as follows: the user clicks to the address box and a Bitcoin
+> address automatically gets pasted from the clipboard. Depending on the
+> implementation, this could be either annoying or not permissive enough
+> if it completely replaces the possibility of manually entering a Bitcoin
+> address.
+> 
+> The BIP Proposal can be found
+> here:?https://gist.github.com/nopara73/322dbd263a5c45267da87cffc36de6f6
+> 
+> An implementation will soon follow in Wasabi Wallet.
+> 
+> Regards,
+> nopara73
+> 
+> 
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> 
+
+
+
+From john at netpurgatory.com  Wed Nov  7 16:19:26 2018
+From: john at netpurgatory.com (John C. Vernaleo)
+Date: Wed, 7 Nov 2018 11:19:26 -0500 (EST)
+Subject: [bitcoin-dev] Considering starting a toy full-node
+ implementation. Any advice?
+In-Reply-To: <CAJRVQkCn6Kd90q9BBkZuB2cUOUA0JuBmXcaj06RkrnnG3CVEVA@mail.gmail.com>
+References: <mailman.37.1541592011.22359.bitcoin-dev@lists.linuxfoundation.org>
+	<CAJRVQkCn6Kd90q9BBkZuB2cUOUA0JuBmXcaj06RkrnnG3CVEVA@mail.gmail.com>
+Message-ID: <alpine.DEB.2.20.1811071117150.31667@triforce>
+
+One point on the dataset issue that I learned early on in the btcd days:
+you will be downloading the blockchain over and over again and that is not 
+good for an ssd or even worse an sd card.  I broke more than one sd card 
+making sure btcd worked on a raspberry pi.
+
+-------------------------------------------------------
+John C. Vernaleo, Ph.D.
+www.netpurgatory.com
+john at netpurgatory.com
+-------------------------------------------------------
+
+On Wed, 7 Nov 2018, ????? ?????????? via bitcoin-dev wrote:
+
+> Hi there.
+>
+> Been there, done that.
+>
+> -Don't try to set big goals at once.
+> Start small and aim for small steps, i.e. by connecting to nodes, then
+> getting some data from them, then downloading blocks, then parsing
+> blocks, then building an UTXO set, etc.
+> My first long term goal was to simply compute the balance of an address.
+>
+> -Expect to work with huge and varied sets of data.
+> You'll have to build and use tens of Gb of indexes, for example.
+> Early transactions also have all sorts of non-standard scripts, and
+> testnet have all sorts of weird non-standard scripts, so plan
+> accordingly.
+>
+> -Don't write off making a wallet or mining.
+> The latter is easy to do on CPU on testnet and learning to make valid
+> blocks helps a lot in understanding how things work.
+> A wallet, on the other hand, gives you good understanding of keys and
+> transactions, especially if you want to try doing all the EC math
+> yourself.
+> I also wrote things to be generic between several forks and chains,
+> like Litecoin, Doge, Zcash and a bunch of now-dead alts - there is so
+> little difference between many of them that all it takes is a
+> parameter or two. Helps with perspective.
+> Naturally, stay away from mainnets and real money if you do your own
+> wallet and crypto.
+>
+> -Don't get too excited when you'd see exploitable signatures.
+> All of them were plundered years ago, and by now no one makes mistakes
+> like that.
+> Also, there are plenty of bots which are constantly scanning the chain
+> for weak keys and signatures, any new ones will be gone in a few
+> seconds.
+>
+> -Expect cthulhus. There used to be plenty of artwork and puzzles in
+> the early blockchain.
+> Here is a short write up with a few of the things i found: https www
+> dot ribbonfarm dot
+> com/2017/07/20/the-ominouslier-roar-of-the-bitcoin-wave/
+>
+>
+> For references, good ones i found and used were:
+> https bitcoin dot org/en/developer-reference
+> https en dot bitcoin dot it/wiki/Protocol_documentation
+> Also, BIPs contain a lot of specific details: https github dot com/bitcoin/bips
+> That should get you started, and by the time you get into the devilish
+> details you'll have to look at the code for reference.
+>
+> No idea about 3), haven't looked at it.
+>
+> Good luck and have fun.
+> -Artem
+>
+> ??, 7 ????. 2018 ?. ? 15:01, <bitcoin-dev-request at lists.linuxfoundation.org>:
+>>
+>> Date: Tue, 6 Nov 2018 23:21:11 +0200
+>> From: rze <rzeqeu at gmail.com>
+>> To: bitcoin-dev at lists.linuxfoundation.org
+>> Subject: [bitcoin-dev] Considering starting a toy full-node implementation. Any advice?
+>>
+>> Hello,
+>>
+>> I'm considering to start developing a toy full validating node implementation (no wallet, no mining) for educational purposes.
+>>
+>> Some questions:
+>>
+>> 1) which resource do you suggest for as a reference for the protocol?
+>> 2) which part do you suggest to start with?
+>> 3) I was thinking to use btcd as a reference since I'm not familiar with C++ (bitcoind)
+>> 4) are there any other general advice or tips for such endeavours?
+>>
+>> Thanks in advance.
+>>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+From dp at simplexum.com  Thu Nov  8 08:11:30 2018
+From: dp at simplexum.com (Dmitry Petukhov)
+Date: Thu, 8 Nov 2018 13:11:30 +0500
+Subject: [bitcoin-dev] BIP Proposal - Address Paste Improvement
+In-Reply-To: <prvlaj$8er$1@blaine.gmane.org>
+References: <CAEPKjgeJX7-LaJNkVk0GKbC5KhOE0aT+otpa-N1EVtwC35m9LQ@mail.gmail.com>
+	<prvlaj$8er$1@blaine.gmane.org>
+Message-ID: <20181108131130.134b2d43@simplexum.com>
+
+
+> Copying addresses to the clipboard should be discouraged, rather than
+> supported.
+
+Do you know any reasonably convenient mechanism for end user to
+transfer an address from, say, a web page to the wallet address
+input field ?
+
+The clipboard is just a low-hanging fruit for malware, anyway. It just
+the most easy point to replace an address. If the computer is
+compromized, malware can edit the web page in the memory of the browser
+process, for example. If it shown as QR code, malware can decode,
+detect that it is an address, and replace the image of QR code.
+
+I think that the only way to protect from this is to add some form of
+authentication for an address - 2fa (transfer checksum via second
+channel), visual fingerprints for addresses, that will are hard to
+detect (and hence, replace) for malware, signing the destination address
+with the key of an address that is already known and checking the
+signature, etc.
+
+The problem will be to come up with an address authentication procedure
+that will be convenient for users and widely supported, as a result.
+
+From somber.night at protonmail.com  Thu Nov  8 10:37:50 2018
+From: somber.night at protonmail.com (SomberNight)
+Date: Thu, 08 Nov 2018 10:37:50 +0000
+Subject: [bitcoin-dev] BIP- & SLIP-0039 -- better multi-language support
+Message-ID: <bANNM0nNJ1cJdrNjvBZfx6O-zwAQ_bg4qPgoYCQGGNQxc0I4AHF0nQCqPYGqYQzLMP07URApaPCOBBPC4whZ77M8amvUdfIo3TFhQjpzNpY=@protonmail.com>
+
+Do you specifically want to support changing the language of seed
+words, while keeping the bip32 root seed they generate unchanged?
+What is the usecase for this?
+
+You mention that BIP39 already supports a few different languages.
+While this is true, many (I would guess most!) wallets only
+support the English wordlist.
+There are doubts even from the authors of the BIP whether it was
+a good idea in the first place to support multiple languages [0].
+I don't find this surprising as it seems bad design to have to fix and
+maintain a wordlist for every language as the checksum depends on it.
+The supported wordlists are effectively a part of the specification,
+and every new list would just make that specification larger.
+
+If changing the language of seeds is not a requirement, then look
+into Electrum seeds. They are language/wordlist agnostic.
+
+Mnemonic Sentence => PBKDF2 => BIP-0032 Seed
+
+The bip32 seed is derived by hashing the normalized mnemonic, and the
+checksum is derived the same way but by using a different cheaper
+hash (single round of HMAC-SHA512; generation grinds until it matches
+a pattern) [1]. For example, "9dk" is a valid segwit electrum seed.
+
+
+[0]: https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-January/015507.html
+[1]: http://docs.electrum.org/en/latest/seedphrase.html
+
+
+> Date: Wed, 7 Nov 2018 00:16:41 +0800
+> From: Weiji Guo weiji.g at gmail.com
+> Subject: [bitcoin-dev] BIP- & SLIP-0039 -- better multi-language
+> support
+>
+> Hello everyone,
+>
+> I just realized that BIP-0039 is language dependent. I was assuming the
+> other way till I looked closer. The way the seed is derived from a BIP-0039
+> entropy, as is shown below, depends on which language to generate the
+> mnemonic sentence:
+>
+> Entropy <=> Mnemonic Sentence => PBKDF2 => BIP-0032 Seed
+>
+> Therefore when a user choose a non-English mnemonic code he or she is stuck
+> with that language. Meanwhile only a few native languages are supported.
+>
+> SLIP-0039 does not solve this issue in a user friendly way by providing
+> only an English wordlist. That's understandable as it aims to provide SSS
+> capability. However those users who do not speak English or recognize
+> English words will suffer.
+>
+> What I am trying to bring to attention of the community is that, no matter
+> if we make a new version of BIP-0039, or a new BIP (with SSS support), or
+> to enhance SLIP-0039, we really need to address this language issue.
+>
+> Here are what I propose:
+>
+> 1.  The mnemonic code should be only a representation of underlying entropy
+>     or (pre) master secret, seed, whatever. In this way, the same seed/secret
+>     could be displayed in English or in Chinese or other languages. Then there
+>     could be 3rd party conversion tools to support translations in case any
+>     wallet software or device does not support all specified languages. Now it
+>     looks like:
+>
+>     Mnemonic Sentence <=> Entropy => PBKDF2 => BIP-0032 Seed
+>
+>
+> 2. Given that only 8 languages are supported in BIP-0039, we should allow
+> the seed/secret to be represented in decimal numbers, each ranging from 0
+> to 2047. So those who cannot find a native language support yet having
+> difficulty coping words in other languages could choose to just use numbers.
+>
+> So far I don't have a preference how this should be implemented. I'd like
+> to hear from community first.
+
+
+From andreas at schildbach.de  Thu Nov  8 15:28:41 2018
+From: andreas at schildbach.de (Andreas Schildbach)
+Date: Thu, 8 Nov 2018 16:28:41 +0100
+Subject: [bitcoin-dev] BIP Proposal - Address Paste Improvement
+In-Reply-To: <20181108131130.134b2d43@simplexum.com>
+References: <CAEPKjgeJX7-LaJNkVk0GKbC5KhOE0aT+otpa-N1EVtwC35m9LQ@mail.gmail.com>
+	<prvlaj$8er$1@blaine.gmane.org> <20181108131130.134b2d43@simplexum.com>
+Message-ID: <ps1kj6$fk5$1@blaine.gmane.org>
+
+On 08/11/2018 09.11, Dmitry Petukhov via bitcoin-dev wrote:
+
+>> Copying addresses to the clipboard should be discouraged, rather than
+>> supported.
+> 
+> Do you know any reasonably convenient mechanism for end user to
+> transfer an address from, say, a web page to the wallet address
+> input field ?
+
+- QR code scanning of a Bitcoin URI
+- On Android: A "bitcoin:" URI intent or a BIP70 payment message intent
+- On desktop OSes there are similar mechanisms to launch Apps from the
+browser (e.g. for mailto: links)
+
+> The clipboard is just a low-hanging fruit for malware, anyway. It just
+> the most easy point to replace an address. If the computer is
+> compromized, malware can edit the web page in the memory of the browser
+> process, for example. If it shown as QR code, malware can decode,
+> detect that it is an address, and replace the image of QR code.
+
+For editing the clipboard your computer doesn't need to be compromised!
+*Any* app can do it, without special permission.
+
+> I think that the only way to protect from this is to add some form of
+> authentication for an address - 2fa (transfer checksum via second
+> channel), visual fingerprints for addresses, that will are hard to
+> detect (and hence, replace) for malware, signing the destination address
+> with the key of an address that is already known and checking the
+> signature, etc.
+
+For cases where the payee is a well-known entity the BIP70 payment
+protocol has authentication via certificates. That doesn't work for the
+"the person in front of you is the only trust anchor you have" usecase
+though.
+
+
+From jp at eeqj.com  Thu Nov  8 17:12:17 2018
+From: jp at eeqj.com (Jeffrey Paul)
+Date: Thu, 8 Nov 2018 09:12:17 -0800
+Subject: [bitcoin-dev] BIP Proposal - Address Paste Improvement
+In-Reply-To: <prvlaj$8er$1@blaine.gmane.org>
+References: <CAEPKjgeJX7-LaJNkVk0GKbC5KhOE0aT+otpa-N1EVtwC35m9LQ@mail.gmail.com>
+	<prvlaj$8er$1@blaine.gmane.org>
+Message-ID: <87B5B4C0-380C-4DFC-85D0-D40D941F212C@eeqj.com>
+
+
+
+> On Nov 7, 2018, at 13:28, Andreas Schildbach via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> 
+> Copying addresses to the clipboard should be discouraged, rather than
+> supported.
+> 
+> It is an inherently insecure mechanism. Regardless of the OS used, any
+> application can monitor the clipboard for Bitcoin addresses and replace
+> any address with their own, usually without any specific permission or
+> confirmation by the user. Effectively this steals Bitcoins if the user
+> doesn't compare addresses manually.
+> 
+> This is a real risk, as this kind of malware has already been seen.
+
+One can also make the argument that if the user's clipboard is able to be read/modified, then their working environment is already compromised and that the responsibility is already not upon specific application software, but the user or OS.
+
+Down here in the real world, an application that does not support copying and pasting of addresses is not an application that is very useful (to say the least) to many people who want to manage their own wallet, though I understand your desire to avoid such.  Perhaps offering alternatives such as supporting signed BIP70 payment requests is what you mean to do.
+
+That said, I still think working around specific malware threats and vectors isn't the application's job, especially when doing so for a tiny, tiny fraction of users that have malware outweighs the needs of the 95%+ that need to support the "I have an address on my clipboard I need to pay" case.
+
+Best,
+-jp
+
+-- 
+Jeffrey Paul
++1 312 361 0355
++49 176 8058 2122 (signal)
+
+From ethan.scruples at gmail.com  Thu Nov  8 17:43:36 2018
+From: ethan.scruples at gmail.com (Moral Agent)
+Date: Thu, 8 Nov 2018 12:43:36 -0500
+Subject: [bitcoin-dev] BIP Proposal - Address Paste Improvement
+In-Reply-To: <20181108131130.134b2d43@simplexum.com>
+References: <CAEPKjgeJX7-LaJNkVk0GKbC5KhOE0aT+otpa-N1EVtwC35m9LQ@mail.gmail.com>
+	<prvlaj$8er$1@blaine.gmane.org> <20181108131130.134b2d43@simplexum.com>
+Message-ID: <CACiOHGzot7AFg4qS5FgSMxMjZWm+u6T6+eWW49g8dfK=PDtfkg@mail.gmail.com>
+
+>The problem will be to come up with an address authentication
+procedure that will be convenient for users and widely supported, as a
+result.
+
+You could locally hash the destination address and from the hash derive a
+BIP39 style list of 12 words for visual comparison. I would advise against
+using color or graphics -- the brain is too good at "snapping" to an
+expected perception when it is running in graphics mode instead of symbolic
+mode.
+
+
+On Thu, Nov 8, 2018 at 4:41 AM Dmitry Petukhov via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+>
+> > Copying addresses to the clipboard should be discouraged, rather than
+> > supported.
+>
+> Do you know any reasonably convenient mechanism for end user to
+> transfer an address from, say, a web page to the wallet address
+> input field ?
+>
+> The clipboard is just a low-hanging fruit for malware, anyway. It just
+> the most easy point to replace an address. If the computer is
+> compromized, malware can edit the web page in the memory of the browser
+> process, for example. If it shown as QR code, malware can decode,
+> detect that it is an address, and replace the image of QR code.
+>
+> I think that the only way to protect from this is to add some form of
+> authentication for an address - 2fa (transfer checksum via second
+> channel), visual fingerprints for addresses, that will are hard to
+> detect (and hence, replace) for malware, signing the destination address
+> with the key of an address that is already known and checking the
+> signature, etc.
+>
+> The problem will be to come up with an address authentication procedure
+> that will be convenient for users and widely supported, as a result.
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181108/2123a8e6/attachment.html>
+
+From dp at simplexum.com  Thu Nov  8 18:00:04 2018
+From: dp at simplexum.com (Dmitry Petukhov)
+Date: Thu, 8 Nov 2018 23:00:04 +0500
+Subject: [bitcoin-dev] BIP Proposal - Address Paste Improvement
+In-Reply-To: <ps1kj6$fk5$1@blaine.gmane.org>
+References: <CAEPKjgeJX7-LaJNkVk0GKbC5KhOE0aT+otpa-N1EVtwC35m9LQ@mail.gmail.com>
+	<prvlaj$8er$1@blaine.gmane.org>
+	<20181108131130.134b2d43@simplexum.com>
+	<ps1kj6$fk5$1@blaine.gmane.org>
+Message-ID: <20181108230004.3f9cabcb@simplexum.com>
+
+
+> > Do you know any reasonably convenient mechanism for end user to
+> > transfer an address from, say, a web page to the wallet address
+> > input field ?  
+> 
+> - QR code scanning of a Bitcoin URI
+> - On Android: A "bitcoin:" URI intent or a BIP70 payment message
+> intent
+> - On desktop OSes there are similar mechanisms to launch Apps from the
+> browser (e.g. for mailto: links)
+
+This works if the author of the web page thought about this, and
+created appropriate liks/qr codes. In many cases, addresses are
+just presented for users as text, to copy.
+
+People also send addresses in message apps and emails. Maybe if
+applications start to autodetect bitcoin addresses and convert them to
+bitcoin: links, there will be less need to copy-paste. But I suspect
+that this feature will not be quickly adopted by applications.
+
+> For cases where the payee is a well-known entity the BIP70 payment
+> protocol has authentication via certificates. That doesn't work for
+> the "the person in front of you is the only trust anchor you have"
+> usecase though.
+
+There are also BIP75 and BIP47 that may help, but the number of wallets
+that support these protocols is small (I think in part because of
+relative complexity of these protocols).
+
+From junderwood at bitcoinbank.co.jp  Fri Nov  9 05:17:30 2018
+From: junderwood at bitcoinbank.co.jp (Jonathan Underwood)
+Date: Fri, 9 Nov 2018 14:17:30 +0900
+Subject: [bitcoin-dev] BIP- & SLIP-0039 -- better multi-language support
+In-Reply-To: <bANNM0nNJ1cJdrNjvBZfx6O-zwAQ_bg4qPgoYCQGGNQxc0I4AHF0nQCqPYGqYQzLMP07URApaPCOBBPC4whZ77M8amvUdfIo3TFhQjpzNpY=@protonmail.com>
+References: <bANNM0nNJ1cJdrNjvBZfx6O-zwAQ_bg4qPgoYCQGGNQxc0I4AHF0nQCqPYGqYQzLMP07URApaPCOBBPC4whZ77M8amvUdfIo3TFhQjpzNpY=@protonmail.com>
+Message-ID: <CAMpN3m+Zo6LG1wCkW7tLZy7VzpF8YpjHQqq7StO78C0P-8y0Ew@mail.gmail.com>
+
+>  as it seems bad design to have to fix and maintain a wordlist for every
+language as the checksum depends on it.
+
+>From BIP39:
+
+> The conversion of the mnemonic sentence to a binary seed is completely
+independent from generating the sentence. This results in rather simple
+code; there are no constraints on sentence structure and clients are free
+to implement their own wordlists or even whole sentence generators,
+allowing for flexibility in wordlists for typo detection or other purposes.
+>
+> Although using a mnemonic not generated by the algorithm described in
+"Generating the mnemonic" section is possible, this is not advised and
+software must compute a checksum for the mnemonic sentence using a wordlist
+and issue a warning if it is invalid.
+
+So BIP39 states "no constraints on sentence structure and clients are free
+to implement their own wordlists or even whole sentence generators" and yet
+at the same time one paragraph later "this is not advised and software must
+compute a checksum for the mnemonic sentence using a wordlist and issue a
+warning if it is invalid"...
+
+My interpretation of this:
+
+1. ChecksumCheck function attempts to 1. find the wordlist 2. calculate the
+checksum.
+2. If it fails to find the wordlist, return false
+3. If the checksum doesn't match return false
+4. If ChecksumCheck returns false, "issue a warning" but do not block seed
+generation. "We couldn't check if your phrase is correct... you're on your
+own"
+
+99.99% of implementing apps interpretation: (remember, error handling for
+userspace is not done by the BIP39 library, but the app that uses it)
+
+1. Run ChecksumCheck
+2. If False, hard fail, do not allow seed generation.
+
+If more apps would implement to the word of the BIP39 spec, multiple
+languages make sense, but since reality is no one follows the spec (/the
+spec is way too open to interpretation) then expecting every app to load
+every language is unreasonable.
+
+Electrum actually handles BIP39 recovery the way the BIP specifies. I can
+restore random strings if I want, and it warns me, and I can ignore it if I
+wish.
+
+
+Anywho. The BIP39 multi-language feature is crucial for non-English
+speakers especially from Asia. Maybe northern Europeans have no problem
+with English word spelling, but watching a normal Japanese person write
+down their English mnemonic is painful.
+
+One letter at a time, worried they wrote it wrong... still make mistakes...
+lose money because of it.
+
+Whereas users of Copay etc. that support Japanese wordlist write down their
+seed easily, and I have never heard of a Japanese newbie complaining about
+"but I'm writing it just how I have it written down" about their Japanese
+seed... only English.
+
+Not trying to give anyone a hard time, just telling the facts: lack of
+localized words for recovery phrase causes more money loss than supporting
+it. (When push comes to shove, at the very least Electrum will always
+support their recovery because it lets you hash anything)
+
+This is all anecdotal of course. Just sharing my experience evangelizing in
+Japan.
+
+Thanks,
+Jon
+
+
+2018?11?8?(?) 21:16 SomberNight via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org>:
+
+> Do you specifically want to support changing the language of seed
+> words, while keeping the bip32 root seed they generate unchanged?
+> What is the usecase for this?
+>
+> You mention that BIP39 already supports a few different languages.
+> While this is true, many (I would guess most!) wallets only
+> support the English wordlist.
+> There are doubts even from the authors of the BIP whether it was
+> a good idea in the first place to support multiple languages [0].
+> I don't find this surprising as it seems bad design to have to fix and
+> maintain a wordlist for every language as the checksum depends on it.
+> The supported wordlists are effectively a part of the specification,
+> and every new list would just make that specification larger.
+>
+> If changing the language of seeds is not a requirement, then look
+> into Electrum seeds. They are language/wordlist agnostic.
+>
+> Mnemonic Sentence => PBKDF2 => BIP-0032 Seed
+>
+> The bip32 seed is derived by hashing the normalized mnemonic, and the
+> checksum is derived the same way but by using a different cheaper
+> hash (single round of HMAC-SHA512; generation grinds until it matches
+> a pattern) [1]. For example, "9dk" is a valid segwit electrum seed.
+>
+>
+> [0]:
+> https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-January/015507.html
+> [1]: http://docs.electrum.org/en/latest/seedphrase.html
+>
+>
+> > Date: Wed, 7 Nov 2018 00:16:41 +0800
+> > From: Weiji Guo weiji.g at gmail.com
+> > Subject: [bitcoin-dev] BIP- & SLIP-0039 -- better multi-language
+> > support
+> >
+> > Hello everyone,
+> >
+> > I just realized that BIP-0039 is language dependent. I was assuming the
+> > other way till I looked closer. The way the seed is derived from a
+> BIP-0039
+> > entropy, as is shown below, depends on which language to generate the
+> > mnemonic sentence:
+> >
+> > Entropy <=> Mnemonic Sentence => PBKDF2 => BIP-0032 Seed
+> >
+> > Therefore when a user choose a non-English mnemonic code he or she is
+> stuck
+> > with that language. Meanwhile only a few native languages are supported.
+> >
+> > SLIP-0039 does not solve this issue in a user friendly way by providing
+> > only an English wordlist. That's understandable as it aims to provide SSS
+> > capability. However those users who do not speak English or recognize
+> > English words will suffer.
+> >
+> > What I am trying to bring to attention of the community is that, no
+> matter
+> > if we make a new version of BIP-0039, or a new BIP (with SSS support), or
+> > to enhance SLIP-0039, we really need to address this language issue.
+> >
+> > Here are what I propose:
+> >
+> > 1.  The mnemonic code should be only a representation of underlying
+> entropy
+> >     or (pre) master secret, seed, whatever. In this way, the same
+> seed/secret
+> >     could be displayed in English or in Chinese or other languages. Then
+> there
+> >     could be 3rd party conversion tools to support translations in case
+> any
+> >     wallet software or device does not support all specified languages.
+> Now it
+> >     looks like:
+> >
+> >     Mnemonic Sentence <=> Entropy => PBKDF2 => BIP-0032 Seed
+> >
+> >
+> > 2. Given that only 8 languages are supported in BIP-0039, we should allow
+> > the seed/secret to be represented in decimal numbers, each ranging from 0
+> > to 2047. So those who cannot find a native language support yet having
+> > difficulty coping words in other languages could choose to just use
+> numbers.
+> >
+> > So far I don't have a preference how this should be implemented. I'd like
+> > to hear from community first.
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+
+
+-- 
+-----------------
+Jonathan Underwood
+??????? ??????????????
+-----------------
+
+???????????????????????????????
+
+??: 0xCE5EA9476DE7D3E45EBC3FDAD998682F3590FEA3
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181109/f93c2a37/attachment-0001.html>
+
+From weiji.g at gmail.com  Fri Nov  9 08:20:21 2018
+From: weiji.g at gmail.com (Weiji Guo)
+Date: Fri, 9 Nov 2018 16:20:21 +0800
+Subject: [bitcoin-dev] bitcoin-dev Digest, Vol 42, Issue 4
+In-Reply-To: <mailman.800.1541743907.19477.bitcoin-dev@lists.linuxfoundation.org>
+References: <mailman.800.1541743907.19477.bitcoin-dev@lists.linuxfoundation.org>
+Message-ID: <CA+ydi=+=v5X8Q3PTuULQO6+JUYQ3PXy8-aJkxrBwfxTS+ZEpvQ@mail.gmail.com>
+
+> Do you specifically want to support changing the language of seed
+words, while keeping the bip32 root seed they generate unchanged?
+What is the usecase for this?
+
+Yes and no. Yes that the inter-operability will be much better if the
+same seed could be recorded as in English and in other languages
+as well. There could be a standalone 3rd party tool to convert
+mnemonic sentences from one language to another so wallets
+do not have to support all languages. This, in reality, does not make
+any wallet more complicated or increase any dev costs.
+
+No that I don't think anyone would switch language for fun.
+
+And I think the symmetric function in SLIP-0039 is a good
+idea to help with migration the existing wallets. So this will look like:
+
+Chinese
+English
+Japanese                      <=> entropy <=> sym. KDF <==> BIP32 seed
+......
+Decimal numbers
+
+>If changing the language of seeds is not a requirement, then look
+into Electrum seeds. They are language/wordlist agnostic.
+
+So, changing the language is not a requirement. However, the current BIP-39
+makes the seed dependent on the language. And I'd like to see it changed.
+The change will not further complicates the wallets as we can rely on 3rd
+conversion tools to handle different languages.
+
+One additional benefit multiple language support could bring up is, we can
+write down the mnemonic sentence in two or more different languages
+simultaneously, as a way to do checksum each other.
+
+Regarding Jon's comments:
+>lack of localized words for recovery phrase causes more money loss than
+supporting it.
+
+This also worries me.
+
+Think of the situation that one day, crypto currencies are all over the
+world.
+Everyone has some coins. Among them many just cannot handle English.
+We must provide a way for them to master their crypto assets. Therefore,
+as Jon had stressed, it is very important to support multiple languages.
+I really don't like it if only English could be used.
+
+And then think of those who do not have a native language wordlist. Allowing
+representing the seed in decimal numbers will be helpful.
+
+Thanks,
+Weiji
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181109/8f432b2e/attachment.html>
+
+From adam.ficsor73 at gmail.com  Mon Nov 12 03:23:53 2018
+From: adam.ficsor73 at gmail.com (Adam Ficsor)
+Date: Mon, 12 Nov 2018 10:23:53 +0700
+Subject: [bitcoin-dev] BIP Proposal - Address Paste Improvement
+In-Reply-To: <20181108230004.3f9cabcb@simplexum.com>
+References: <CAEPKjgeJX7-LaJNkVk0GKbC5KhOE0aT+otpa-N1EVtwC35m9LQ@mail.gmail.com>
+	<prvlaj$8er$1@blaine.gmane.org> <20181108131130.134b2d43@simplexum.com>
+	<ps1kj6$fk5$1@blaine.gmane.org> <20181108230004.3f9cabcb@simplexum.com>
+Message-ID: <CAEPKjge8+BsV7Mo2wRtEVWyfF-8LJq4y2tY5qmtVLE41ahcsRg@mail.gmail.com>
+
+Thank you for all your comments. To sum up:
+
+- There were no comments related to the implementation details.
+- There are concerns about this may incentivize users to use copypaste
+functionality extensively.
+- A counter argument was made that crypto hijackers use the clipboard,
+because that is the most convenient thing to hijack, not because they can
+only hijack that and, if Bitcoin users would move to other ways of
+specifying destinations, that may end up being just as an issue, too.
+- The rest of the conversation was about crypto hijackers, which I think is
+off topic in this thread.
+
+Finally I'd like to note, there's already a work in progress implementation
+in Wasabi: https://github.com/zkSNACKs/WalletWasabi/pull/825
+
+On Fri, Nov 9, 2018 at 1:14 AM Dmitry Petukhov via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+>
+> > > Do you know any reasonably convenient mechanism for end user to
+> > > transfer an address from, say, a web page to the wallet address
+> > > input field ?
+> >
+> > - QR code scanning of a Bitcoin URI
+> > - On Android: A "bitcoin:" URI intent or a BIP70 payment message
+> > intent
+> > - On desktop OSes there are similar mechanisms to launch Apps from the
+> > browser (e.g. for mailto: links)
+>
+> This works if the author of the web page thought about this, and
+> created appropriate liks/qr codes. In many cases, addresses are
+> just presented for users as text, to copy.
+>
+> People also send addresses in message apps and emails. Maybe if
+> applications start to autodetect bitcoin addresses and convert them to
+> bitcoin: links, there will be less need to copy-paste. But I suspect
+> that this feature will not be quickly adopted by applications.
+>
+> > For cases where the payee is a well-known entity the BIP70 payment
+> > protocol has authentication via certificates. That doesn't work for
+> > the "the person in front of you is the only trust anchor you have"
+> > usecase though.
+>
+> There are also BIP75 and BIP47 that may help, but the number of wallets
+> that support these protocols is small (I think in part because of
+> relative complexity of these protocols).
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+
+
+-- 
+Best,
+?d?m
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181112/2c148c33/attachment.html>
+
+From junderwood at bitcoinbank.co.jp  Fri Nov 16 14:05:50 2018
+From: junderwood at bitcoinbank.co.jp (Jonathan Underwood)
+Date: Fri, 16 Nov 2018 23:05:50 +0900
+Subject: [bitcoin-dev] BIP- & SLIP-0039 -- better multi-language support
+In-Reply-To: <20181116140335.GA11584@boiler.chaos.net>
+References: <bANNM0nNJ1cJdrNjvBZfx6O-zwAQ_bg4qPgoYCQGGNQxc0I4AHF0nQCqPYGqYQzLMP07URApaPCOBBPC4whZ77M8amvUdfIo3TFhQjpzNpY=@protonmail.com>
+	<CAMpN3m+Zo6LG1wCkW7tLZy7VzpF8YpjHQqq7StO78C0P-8y0Ew@mail.gmail.com>
+	<20181116140335.GA11584@boiler.chaos.net>
+Message-ID: <CAMpN3mLRUD+cobNHtK=5dCL2hpGZJaR2TYzKb_643BC-wM5feQ@mail.gmail.com>
+
+Nope.
+
+This is how Electrum treats BIP39 restoring as well, try it out.
+
+-Jon
+
+2018?11?16?(?) 23:04?Neill Miller ???neillm at thecodefactory.org???????:
+
+> On Fri, Nov 09, 2018 at 02:17:30PM +0900, Jonathan Underwood via
+> bitcoin-dev wrote:
+> > If more apps would implement to the word of the BIP39 spec, multiple
+> > languages make sense, but since reality is no one follows the spec (/the
+> > spec is way too open to interpretation) then expecting every app to load
+> > every language is unreasonable.
+> >
+> > Electrum actually handles BIP39 recovery the way the BIP specifies. I can
+> > restore random strings if I want, and it warns me, and I can ignore it
+> if I
+> > wish.
+>
+> Electrum mnemonics are not based on BIP39, which is why it can do
+> this.
+>
+> -Neill.
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181116/545faa2c/attachment.html>
+
+From neillm at thecodefactory.org  Fri Nov 16 14:15:10 2018
+From: neillm at thecodefactory.org (Neill Miller)
+Date: Fri, 16 Nov 2018 09:15:10 -0500
+Subject: [bitcoin-dev] BIP- & SLIP-0039 -- better multi-language support
+In-Reply-To: <CAMpN3mLRUD+cobNHtK=5dCL2hpGZJaR2TYzKb_643BC-wM5feQ@mail.gmail.com>
+References: <bANNM0nNJ1cJdrNjvBZfx6O-zwAQ_bg4qPgoYCQGGNQxc0I4AHF0nQCqPYGqYQzLMP07URApaPCOBBPC4whZ77M8amvUdfIo3TFhQjpzNpY=@protonmail.com>
+	<CAMpN3m+Zo6LG1wCkW7tLZy7VzpF8YpjHQqq7StO78C0P-8y0Ew@mail.gmail.com>
+	<20181116140335.GA11584@boiler.chaos.net>
+	<CAMpN3mLRUD+cobNHtK=5dCL2hpGZJaR2TYzKb_643BC-wM5feQ@mail.gmail.com>
+Message-ID: <20181116141510.GB11584@boiler.chaos.net>
+
+Ah, ok.  I've worked with the non-BIP39 Electrum mnemonics, which have
+this behaviour, but haven't tried the BIP39 support within it.
+
+Thanks,
+-Neill.
+
+On Fri, Nov 16, 2018 at 11:05:50PM +0900, Jonathan Underwood wrote:
+> Nope.
+> 
+> This is how Electrum treats BIP39 restoring as well, try it out.
+> 
+> -Jon
+> 
+> 2018?11?16?(?) 23:04?Neill Miller ???neillm at thecodefactory.org???????:
+> 
+> > On Fri, Nov 09, 2018 at 02:17:30PM +0900, Jonathan Underwood via
+> > bitcoin-dev wrote:
+> > > If more apps would implement to the word of the BIP39 spec, multiple
+> > > languages make sense, but since reality is no one follows the spec (/the
+> > > spec is way too open to interpretation) then expecting every app to load
+> > > every language is unreasonable.
+> > >
+> > > Electrum actually handles BIP39 recovery the way the BIP specifies. I can
+> > > restore random strings if I want, and it warns me, and I can ignore it
+> > if I
+> > > wish.
+> >
+> > Electrum mnemonics are not based on BIP39, which is why it can do
+> > this.
+> >
+> > -Neill.
+> >
+> >
+
+From neillm at thecodefactory.org  Fri Nov 16 14:03:35 2018
+From: neillm at thecodefactory.org (Neill Miller)
+Date: Fri, 16 Nov 2018 09:03:35 -0500
+Subject: [bitcoin-dev] BIP- & SLIP-0039 -- better multi-language support
+In-Reply-To: <CAMpN3m+Zo6LG1wCkW7tLZy7VzpF8YpjHQqq7StO78C0P-8y0Ew@mail.gmail.com>
+References: <bANNM0nNJ1cJdrNjvBZfx6O-zwAQ_bg4qPgoYCQGGNQxc0I4AHF0nQCqPYGqYQzLMP07URApaPCOBBPC4whZ77M8amvUdfIo3TFhQjpzNpY=@protonmail.com>
+	<CAMpN3m+Zo6LG1wCkW7tLZy7VzpF8YpjHQqq7StO78C0P-8y0Ew@mail.gmail.com>
+Message-ID: <20181116140335.GA11584@boiler.chaos.net>
+
+On Fri, Nov 09, 2018 at 02:17:30PM +0900, Jonathan Underwood via bitcoin-dev wrote:
+> If more apps would implement to the word of the BIP39 spec, multiple
+> languages make sense, but since reality is no one follows the spec (/the
+> spec is way too open to interpretation) then expecting every app to load
+> every language is unreasonable.
+> 
+> Electrum actually handles BIP39 recovery the way the BIP specifies. I can
+> restore random strings if I want, and it warns me, and I can ignore it if I
+> wish.
+
+Electrum mnemonics are not based on BIP39, which is why it can do
+this.
+
+-Neill.
+
+
+From shatzakis at gmail.com  Mon Nov 19 19:54:01 2018
+From: shatzakis at gmail.com (Steven Hatzakis)
+Date: Mon, 19 Nov 2018 21:54:01 +0200
+Subject: [bitcoin-dev] BIP- & SLIP-0039 -- better multi-language support
+In-Reply-To: <CABsxsG27bJN0vGRJOP3=zriPvkL+G8n3t2nd6Y8L6KwW4ePdeg@mail.gmail.com>
+References: <CABsxsG27bJN0vGRJOP3=zriPvkL+G8n3t2nd6Y8L6KwW4ePdeg@mail.gmail.com>
+Message-ID: <CABsxsG1QZ7h9Cxs=rzuBEOsMY+oJ1n4q5zhRxVE1JsS1e-hgew@mail.gmail.com>
+
+Hi Weiji, and Everyone,
+
+I think this is an important topic so sharing my two cents in case in
+helps: It makes sense for users to know that they can't merely just
+translate a word from one language into another and expect the same
+underlying entropy to be mapped, as the wordlists are not the same (i.e.
+words differ at the same index values across languages).
+
+However, while the words for each language cannot translate directly to
+their equivalent in another language, in terms of entropy (bits), the
+underlying entropy is, in fact, the same, when comparing mnemonics
+generated across languages (see English/Spanish comparison below) when
+sourced from the same initial entropy.
+
+Importantly, the entropy is a pre-image of the resulting mnemonic and
+doesn't change as the language changes, where the only changes are to the
+resulting words which depend on the language chosen, for a given entropy
+string. Ideally, the wallet/software should deal with these nuances, I
+don't think the protocol needs any revision (except for how the BIP39 seed
+is derived, perhaps), even if someone made up their own wordlist, as long
+as the wallet/software has a copy of it to map those words to the
+underlying index values, it's *those underlying index values and the
+entropy they map too is what really matters**. *
+
+I fully support the idea for users to back up this pre-image (initial
+entropy) as it can also be used to check the validity of the mnemonic and
+check that it mapped correctly, see Ian Coleman's BIP39 tool which shows
+index values, a feature that I proposed last year and was since
+implemented. Below is an example of how two mnemonics generated with the
+same entropy will produce different BIP39 seeds.
+
+* Example initial entropy of 128 bits +4 bit checksum derived from hash of
+byte array: *
+
+10001101000 01010100100 11011010000 11100001101 01010001101 00010010001
+01100000010 10101110100 00100100011 11110000111 01100011010 1100010 (+1110
+checksum)
+
+*In English*: minimum fee sure ticket faculty banana gate purse caught
+valley globe shift
+
+The same initial entropy above (all 132 bits) produces this mnemonic:
+
+*In Spanish*: mercado faja soledad tarea evadir aries gafas peine bu?ho
+tumor gerente reja
+
+And the underlying index values below are the same for both the English and
+Spanish mnemonics above:
+
+Word Indexes: 1128, 676, 1744, 1805, 653, 145, 770, 1396, 291, 1927, 794,
+1582
+
+*ISSUE AT HAND*:  While the initial entropy is the same, and word indexes
+the same for a given entropy, (i.e. same pre-image), the resulting BIP39
+seed is not the same when comparing the above English mnemonic with its
+Spanish counterpart:
+
+   - *English BIP39 seed:*
+   ce7618075099c89e986f18dc495daa3be190450ed07bef77d4334a54dbc1cd7e205797ffed2615ac0999a5d691f65bf316e2cdbfd2c9d7d90b03e77ff1e6a6f5
+   - *Spanish BIP39 seed*:
+   9f164de0fb09af51b5831886e424d6d2479d49b5e5a1b28f5c09467ea36089b144cd94bb9b636b3c27ccff96a8958e5b7ce43cf1dea81423fc66fa7fef0aea2c
+
+
+*Option 1:* Without changing anything in terms of the entropy
+generation/mapping process in the BIP39 spec, the wallet/client-side
+software would ideally recognize the language and show the corresponding
+index value per wordlist, and reverse-calculate the entropy and then re-map
+it to the language selected.
+
+*Option 2*: Perhaps a revision is needed to how the BIP39 seed is generated
+in the first place, such as by hashing the entropy instead of the words.
+Any thoughts on how viable that could be where the initial entropy is fed
+into the PBKDF2 function and not the words?
+
+*Closing thoughts and tiny checksum nitpick: *
+
+      - The multiple BIP39 seeds per language lend some similarities to
+BIP44 multi-account, so perhaps this can be an advantage, depends on how it
+is applied in UI/UX's (compared to having one BIP39 seed regardless of
+language, for a given initial entropy).
+      - There is perhaps an opportunity to add greater detail to the BIP39
+spec in terms of standards/best-practices for computing checksum values, as
+some software may be hashing bits, versus hashing bytes, or hashing the
+entropy as a hex string, etc.. for a given entropy, which will result in
+different checksum values for the same "valid" mnemonic, that might not be
+"valid" in another wallet which may format the data differently before
+hashing to compute the checksum.
+
+
+Best regards,
+
+Steven Hatzakis
+
+_______________
+[bitcoin-dev] BIP- & SLIP-0039 -- better multi-language support*Weiji
+Guo* weiji.g
+at gmail.com
+<bitcoin-dev%40lists.linuxfoundation.org?Subject=Re:%20Re%3A%20%5Bbitcoin-dev%5D%20%20BIP-%20%26%20SLIP-0039%20--%20better%20multi-language%20support&In-Reply-To=%3CCA%2Bydi%3DLM%2Bq-9WKewb%3D65tWCqM1cPMoWEeWq5XAxdqg4rz%3DZJ6g%40mail.gmail.com%3E>
+*Tue Nov 6 16:16:41 UTC 2018*
+
+
+   - Previous message: [bitcoin-dev] draft proposal: change forwarding
+   (improved fungibility through wallet interoperability)
+   <https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/016469.html>
+   - Next message: [bitcoin-dev] Considering starting a toy full-node
+   implementation. Any advice?
+   <https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/016470.html>
+   - *Messages sorted by:* [ date ]
+   <https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/date.html#16468>
+    [ thread ]
+   <https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/thread.html#16468>
+    [ subject ]
+   <https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/subject.html#16468>
+    [ author ]
+   <https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/author.html#16468>
+
+------------------------------
+
+Hello everyone,
+
+I just realized that BIP-0039 is language dependent. I was assuming the
+other way till I looked closer. The way the seed is derived from a BIP-0039
+entropy, as is shown below, depends on which language to generate the
+mnemonic sentence:
+
+   Entropy <=> Mnemonic Sentence => PBKDF2 => BIP-0032 Seed
+
+Therefore when a user choose a non-English mnemonic code he or she is stuck
+with that language. Meanwhile only a few native languages are supported.
+
+SLIP-0039 does not solve this issue in a user friendly way by providing
+only an English wordlist. That's understandable as it aims to provide SSS
+capability. However those users who do not speak English or recognize
+English words will suffer.
+
+What I am trying to bring to attention of the community is that, no matter
+if we make a new version of BIP-0039, or a new BIP (with SSS support), or
+to enhance SLIP-0039, we really need to address this language issue.
+
+Here are what I propose:
+
+1. The mnemonic code should be only a representation of underlying entropy
+or (pre) master secret, seed, whatever. In this way, the same seed/secret
+could be displayed in English or in Chinese or other languages. Then there
+could be 3rd party conversion tools to support translations in case any
+wallet software or device does not support all specified languages. Now it
+looks like:
+
+   Mnemonic Sentence <=> Entropy => PBKDF2 => BIP-0032 Seed
+
+2. Given that only 8 languages are supported in BIP-0039, we should allow
+the seed/secret to be represented in decimal numbers, each ranging from 0
+to 2047. So those who cannot find a native language support yet having
+difficulty coping words in other languages could choose to just use numbers.
+
+So far I don't have a preference how this should be implemented. I'd like
+to hear from community first.
+
+Thanks,
+
+Weiji Guo
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181107/88677440/attachment.html>
+
+------------------------------
+
+
+   - Previous message: [bitcoin-dev] draft proposal: change forwarding
+   (improved fungibility through wallet interoperability)
+   <https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/016469.html>
+   - Next message: [bitcoin-dev] Considering starting a toy full-node
+   implementation. Any advice?
+   <https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/016470.html>
+   - *Messages sorted by:* [ date ]
+   <https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/date.html#16468>
+    [ thread ]
+   <https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/thread.html#16468>
+    [ subject ]
+   <https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/subject.html#16468>
+    [ author ]
+   <https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/author.html#16468>
+
+------------------------------
+More information about the bitcoin-dev mailing list
+<https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181119/1363e304/attachment.html>
+
+From pieter.wuille at gmail.com  Mon Nov 19 22:37:57 2018
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Mon, 19 Nov 2018 14:37:57 -0800
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+Message-ID: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+
+Hello everyone,
+
+For future segwit versions, I think it would be good add a few things
+to the sighash by default that were overlooked in BIP143:
+* Committing to the absolute transaction fee (in addition to just the
+amount being spent in each input) would categorically remove concerns
+about wallets lying about fees to HW devices or airgapped signers.
+* Committing to the scriptPubKey (in addition to the scriptCode) would
+prevent lying to devices about the type of output being spent, even
+when the scriptCode is correct. As a reminder, the scriptCode is the
+actually executed script (which is the redeemscript in non-segwit
+P2SH, and the witnesscript in P2WSH/P2WPKH).
+
+As this implies additional information that may not be desirable to
+commit to in all circumstances, it makes sense to make these optional.
+This obviously interacts with SIGHASH_NOINPUT, which really adds two
+different ways of rebinding signatures to inputs:
+* Changing the prevout (so that the txid doesn't need to be known when
+the signature is created)
+* Changing the script (so that the exact scriptPubKey/redeemScript/...
+doesn't need to be known when the signature is created)
+
+Of course, the second implies the first, but do all use cases require
+both being able to change the prevout and (arbitrarily) changing the
+scriptPubKey? While BIP118 correctly points out this is secure if the
+same keys are only used in scripts with which binding is to be
+permitted, I feel it would be preferable if signatures/scripts would
+explicitly state what can change. One way to accomplish this is by
+indicating exactly what in a script is subject to change.
+
+Here is a combined proposal:
+* Three new sighash flags are added: SIGHASH_NOINPUT, SIGHASH_NOFEE,
+and SIGHASH_SCRIPTMASK.
+* A new opcode OP_MASK is added, which acts as a NOP during execution.
+* The sighash is computed like in BIP143, but:
+  * If SIGHASH_SCRIPTMASK is present, for every OP_MASK in scriptCode
+the subsequent opcode/push is removed.
+  * The scriptPubKey being spent is added to the sighash, unless
+SIGHASH_SCRIPTMASK is set.
+  * The transaction fee is added to the sighash, unless SIGHASH_NOFEE is set.
+  * hashPrevouts, hashSequence, and outpoint are set to null when
+SIGHASH_NOINPUT is set (like BIP118, but not for scriptCode).
+
+So my question is whether anyone can see ways in which this introduces
+redundant flexibility, or misses obvious use cases?
+
+Cheers,
+
+-- 
+Pieter
+
+From natanael.l at gmail.com  Tue Nov 20 01:51:44 2018
+From: natanael.l at gmail.com (Natanael)
+Date: Tue, 20 Nov 2018 02:51:44 +0100
+Subject: [bitcoin-dev] BIP- & SLIP-0039 -- better multi-language support
+In-Reply-To: <CABsxsG1QZ7h9Cxs=rzuBEOsMY+oJ1n4q5zhRxVE1JsS1e-hgew@mail.gmail.com>
+References: <CABsxsG27bJN0vGRJOP3=zriPvkL+G8n3t2nd6Y8L6KwW4ePdeg@mail.gmail.com>
+	<CABsxsG1QZ7h9Cxs=rzuBEOsMY+oJ1n4q5zhRxVE1JsS1e-hgew@mail.gmail.com>
+Message-ID: <CAAt2M1_5apKwQoBc_WkNox36Y9xRdo5rZRVA51RQHyJVJX0nFg@mail.gmail.com>
+
+Den m?n 19 nov. 2018 21:21 skrev Steven Hatzakis via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org>:
+
+> Hi Weiji, and Everyone,
+>
+> I think this is an important topic so sharing my two cents in case in
+> helps: It makes sense for users to know that they can't merely just
+> translate a word from one language into another and expect the same
+> underlying entropy to be mapped, as the wordlists are not the same (i.e.
+> words differ at the same index values across languages).
+>
+> However, while the words for each language cannot translate directly to
+> their equivalent in another language, in terms of entropy (bits), the
+> underlying entropy is, in fact, the same, when comparing mnemonics
+> generated across languages (see English/Spanish comparison below) when
+> sourced from the same initial entropy.
+>
+> Importantly, the entropy is a pre-image of the resulting mnemonic and
+> doesn't change as the language changes, where the only changes are to the
+> resulting words which depend on the language chosen, for a given entropy
+> string. Ideally, the wallet/software should deal with these nuances, I
+> don't think the protocol needs any revision (except for how the BIP39 seed
+> is derived, perhaps), even if someone made up their own wordlist, as long
+> as the wallet/software has a copy of it to map those words to the
+> underlying index values, it's *those underlying index values and the
+> entropy they map too is what really matters**. *
+>
+> I fully support the idea for users to back up this pre-image (initial
+> entropy) as it can also be used to check the validity of the mnemonic and
+> check that it mapped correctly, see Ian Coleman's BIP39 tool which shows
+> index values, a feature that I proposed last year and was since
+> implemented. Below is an example of how two mnemonics generated with the
+> same entropy will produce different BIP39 seeds.
+>
+> * Example initial entropy of 128 bits +4 bit checksum derived from hash of
+> byte array: *
+>
+> 10001101000 01010100100 11011010000 11100001101 01010001101 00010010001
+> 01100000010 10101110100 00100100011 11110000111 01100011010 1100010 (+1110
+> checksum)
+>
+> *In English*: minimum fee sure ticket faculty banana gate purse caught
+> valley globe shift
+>
+> The same initial entropy above (all 132 bits) produces this mnemonic:
+>
+> *In Spanish*: mercado faja soledad tarea evadir aries gafas peine bu?ho
+> tumor gerente reja
+>
+> And the underlying index values below are the same for both the English
+> and Spanish mnemonics above:
+>
+> Word Indexes: 1128, 676, 1744, 1805, 653, 145, 770, 1396, 291, 1927, 794,
+> 1582
+>
+> *ISSUE AT HAND*:  While the initial entropy is the same, and word indexes
+> the same for a given entropy, (i.e. same pre-image), the resulting BIP39
+> seed is not the same when comparing the above English mnemonic with its
+> Spanish counterpart:
+>
+>    - *English BIP39 seed:*
+>    ce7618075099c89e986f18dc495daa3be190450ed07bef77d4334a54dbc1cd7e205797ffed2615ac0999a5d691f65bf316e2cdbfd2c9d7d90b03e77ff1e6a6f5
+>    - *Spanish BIP39 seed*:
+>    9f164de0fb09af51b5831886e424d6d2479d49b5e5a1b28f5c09467ea36089b144cd94bb9b636b3c27ccff96a8958e5b7ce43cf1dea81423fc66fa7fef0aea2c
+>
+>
+> *Option 1:* Without changing anything in terms of the entropy
+> generation/mapping process in the BIP39 spec, the wallet/client-side
+> software would ideally recognize the language and show the corresponding
+> index value per wordlist, and reverse-calculate the entropy and then re-map
+> it to the language selected.
+>
+> *Option 2*: Perhaps a revision is needed to how the BIP39 seed is
+> generated in the first place, such as by hashing the entropy instead of the
+> words. Any thoughts on how viable that could be where the initial entropy
+> is fed into the PBKDF2 function and not the words?
+>
+> *Closing thoughts and tiny checksum nitpick: *
+>
+>       - The multiple BIP39 seeds per language lend some similarities to
+> BIP44 multi-account, so perhaps this can be an advantage, depends on how it
+> is applied in UI/UX's (compared to having one BIP39 seed regardless of
+> language, for a given initial entropy).
+>       - There is perhaps an opportunity to add greater detail to the BIP39
+> spec in terms of standards/best-practices for computing checksum values, as
+> some software may be hashing bits, versus hashing bytes, or hashing the
+> entropy as a hex string, etc.. for a given entropy, which will result in
+> different checksum values for the same "valid" mnemonic, that might not be
+> "valid" in another wallet which may format the data differently before
+> hashing to compute the checksum.
+>
+
+This probably wouldn't work as a drop-in replacement, but having the
+identifier of the chosen wordlist be part of the mnemonic might work?
+Perhaps the raw seed would then be [hash of chosen dictionary]+[sequence of
+word indexes].
+
+The user experience then involves always selecting a dictionary by name. I
+also suggest maintaining an official list of named dictionaries.
+
+The purpose of including the dictionary in the seed is so that if you use
+the last word as a checksum, you also can verify that the dictionary
+selection is correct as well as the word sequence.
+
+This allows substitution of words to other languages by manually specifying
+a different input dictionary, but you would then have to remember both the
+seed language and the translated language so you can specify both
+correctly.
+
+The user experience here matches your option 1, while the implementation
+matches option 2.
+
+If you remove specification of the seed's original language, you would need
+auto detection during entry when the raw seed is just the index. I do not
+recommend trying that, especially if any language would end up with
+multiple competing dictionaries. Even more so if there's many related
+languages which might collide (like all the Latin languages, or even US vs
+UK English...).
+
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181120/f6a48b42/attachment.html>
+
+From aj at erisian.com.au  Tue Nov 20 20:29:04 2018
+From: aj at erisian.com.au (Anthony Towns)
+Date: Wed, 21 Nov 2018 06:29:04 +1000
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+Message-ID: <20181120202904.gmbg5ebegvsgqfys@erisian.com.au>
+
+On Mon, Nov 19, 2018 at 02:37:57PM -0800, Pieter Wuille via bitcoin-dev wrote:
+> Here is a combined proposal:
+> * Three new sighash flags are added: SIGHASH_NOINPUT, SIGHASH_NOFEE,
+> and SIGHASH_SCRIPTMASK.
+> * A new opcode OP_MASK is added, which acts as a NOP during execution.
+> * The sighash is computed like in BIP143, but:
+>   * If SIGHASH_SCRIPTMASK is present, for every OP_MASK in scriptCode
+> the subsequent opcode/push is removed.
+>   * The scriptPubKey being spent is added to the sighash, unless
+> SIGHASH_SCRIPTMASK is set.
+>   * The transaction fee is added to the sighash, unless SIGHASH_NOFEE is set.
+>   * hashPrevouts, hashSequence, and outpoint are set to null when
+> SIGHASH_NOINPUT is set (like BIP118, but not for scriptCode).
+
+Current flags are {ALL, NONE, SINGLE} and ANYONECANPAY, and the BIP143
+tx digest consists of the hash of:
+
+  1 nVersion
+  4 outpoint
+  5 input scriptCode
+  6 input's outpoint value
+  7 input's nSeq
+  9 nLocktime
+ 10 sighash
+
+  2 hashPrevOuts (commits to 4,5,6; unless ANYONECANPAY)
+  3 hashSequence (commits to 7; only if ALL and not ANYONECANPAY)
+  8 hashOutputs
+       - NONE: 0
+       - SINGLE: {value,scriptPubKey} for corresponding output
+       - otherwise: {value,scriptPubKey} for all outputs
+
+The fee is committed to by hashPrevOuts and hashOutputs, which means
+NOFEE is only potentially useful if ANYONECANPAY or NONE or SINGLE is set.
+
+For NOINPUT, (2),(3),(4) are cleared, and SCRIPTMASK (which munges (5))
+is only useful given NOINPUT, since (4) indirectly commits to (5). 
+
+Given this implementation, NOINPUT effectively implies ANYONECANPAY,
+I think. (I think that is also true of BIP 118's NOINPUT spec)
+
+Does it make sense to treat this as two classes of options, affecting
+the input and output side:
+
+  output: (pick one, using bits 0,1)
+    * NONE -- don't care where the money goes
+    * SINGLE -- want this output
+    * ALL -- want exactly this set of outputs
+
+  input: (pick one, using bits 4,5)
+    * PARTIALSCRIPT -- spending from some tx with roughly this script (and
+                       maybe others; SCRIPTMASK|NOINPUT|ANYONECANPAY)
+    * KNOWNSCRIPT -- spending from some tx with exactly this script (and
+                     maybe others; NOINPUT|ANYONECANPAY)
+    * KNOWNTX -- spending from this tx (and maybe others; ANYONECANPAY)
+    * ALL_INPUTS -- spending from exactly these txes
+
+  combo: (flag, bit 6)
+    * NOFEE -- don't commit to the fee
+
+I think NONE without NOFEE doesn't make much sense, and
+NOFEE|ALL|ALL_INPUTS would also be pretty weird. Might make sense to
+warn/error on signing when asking for those combinations, and maybe even
+to fail on validating them.
+
+(Does it make sense to keep SIGHASH_NONE? I guess SIGHASH_NONE|ALL_INPUTS
+could be useful if you just use sigs on one of the other inputs to commit
+to a useful output)
+
+FWIW, OP_MASK seems a bit complicated to me. How would you mask a script
+that looks like:
+
+   OP_MASK IF <p> ENDIF <q> ...
+
+or:
+
+   IF OP_MASK ENDIF <p> ...
+
+I guess if you make the rule be "for every OP_MASK in scriptCode the
+*immediately* subsequent opcode/push is removed (if present)" it would
+be fine though -- that would make OP_MASK in both the above not have
+any effect. (Maybe a more explicit name like "MASK_PUSH_FOR_SIGHASH"
+or something might be good?)
+
+I don't have a reason why, but committing to the scriptCode feels to me
+like it reduces the "hackiness" of NOINPUT a lot.
+
+Cheers,
+aj
+
+
+From decker.christian at gmail.com  Wed Nov 21 11:15:44 2018
+From: decker.christian at gmail.com (Christian Decker)
+Date: Wed, 21 Nov 2018 12:15:44 +0100
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+Message-ID: <87k1l6d6lb.fsf@gmail.com>
+
+Hi Pieter,
+
+great proposal, I think this may address some of the (perceived)
+downsides of BIP118, by committing to the script when possible
+(always?). One minor thing that I noticed a while ago and that I meant
+to fix on BIP118 is that `hashSequence` does not need to be blanked for
+eltoo to work (since where it is needed we also use `sighash_single`),
+so I'm tempted to remove that redundant blanking. It may not make a lot
+of difference but it'd limit the ability to change the number of inputs
+to a NOINPUT transaction (this now being the only field that commits to
+the set of inputs).
+
+As for your proposal, I really like the `sighash_scriptmask` proposal,
+and committing to the fees (with the `nofee` escape hatch) also works
+seems also a nice fix. My one concern is that introducing a new opcode
+to mask things in the sighash looks like a similar layering violation as
+`codeseparator` was, but that's just a minor issue imho.
+
+Cheers,
+Christian
+
+Pieter Wuille via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org>
+writes:
+> Hello everyone,
+>
+> For future segwit versions, I think it would be good add a few things
+> to the sighash by default that were overlooked in BIP143:
+> * Committing to the absolute transaction fee (in addition to just the
+> amount being spent in each input) would categorically remove concerns
+> about wallets lying about fees to HW devices or airgapped signers.
+> * Committing to the scriptPubKey (in addition to the scriptCode) would
+> prevent lying to devices about the type of output being spent, even
+> when the scriptCode is correct. As a reminder, the scriptCode is the
+> actually executed script (which is the redeemscript in non-segwit
+> P2SH, and the witnesscript in P2WSH/P2WPKH).
+>
+> As this implies additional information that may not be desirable to
+> commit to in all circumstances, it makes sense to make these optional.
+> This obviously interacts with SIGHASH_NOINPUT, which really adds two
+> different ways of rebinding signatures to inputs:
+> * Changing the prevout (so that the txid doesn't need to be known when
+> the signature is created)
+> * Changing the script (so that the exact scriptPubKey/redeemScript/...
+> doesn't need to be known when the signature is created)
+>
+> Of course, the second implies the first, but do all use cases require
+> both being able to change the prevout and (arbitrarily) changing the
+> scriptPubKey? While BIP118 correctly points out this is secure if the
+> same keys are only used in scripts with which binding is to be
+> permitted, I feel it would be preferable if signatures/scripts would
+> explicitly state what can change. One way to accomplish this is by
+> indicating exactly what in a script is subject to change.
+>
+> Here is a combined proposal:
+> * Three new sighash flags are added: SIGHASH_NOINPUT, SIGHASH_NOFEE,
+> and SIGHASH_SCRIPTMASK.
+> * A new opcode OP_MASK is added, which acts as a NOP during execution.
+> * The sighash is computed like in BIP143, but:
+>   * If SIGHASH_SCRIPTMASK is present, for every OP_MASK in scriptCode
+> the subsequent opcode/push is removed.
+>   * The scriptPubKey being spent is added to the sighash, unless
+> SIGHASH_SCRIPTMASK is set.
+>   * The transaction fee is added to the sighash, unless SIGHASH_NOFEE is set.
+>   * hashPrevouts, hashSequence, and outpoint are set to null when
+> SIGHASH_NOINPUT is set (like BIP118, but not for scriptCode).
+>
+> So my question is whether anyone can see ways in which this introduces
+> redundant flexibility, or misses obvious use cases?
+>
+> Cheers,
+>
+> -- 
+> Pieter
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+From decker.christian at gmail.com  Wed Nov 21 11:20:44 2018
+From: decker.christian at gmail.com (Christian Decker)
+Date: Wed, 21 Nov 2018 12:20:44 +0100
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <20181120202904.gmbg5ebegvsgqfys@erisian.com.au>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<20181120202904.gmbg5ebegvsgqfys@erisian.com.au>
+Message-ID: <87h8gad6cz.fsf@gmail.com>
+
+Anthony Towns via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org>
+writes:
+> Given this implementation, NOINPUT effectively implies ANYONECANPAY,
+> I think. (I think that is also true of BIP 118's NOINPUT spec)
+
+I mentioned this in my reply to Pieter, but this may not be true if we
+remove the blanking of the `hashSequence` field. Anyonecanpay would
+allow changing the number of inputs in an arbitrary fashion, while
+`noinput` without the blanking would (in a weird roundabout way) still
+commit to the number of inputs. Maybe we want to make that more explicit
+by also hashing the number of inputs? But I can't think of a good
+usecase for keeping that, with noinput.
+
+Cheers,
+Christian
+
+From roconnor at blockstream.io  Wed Nov 21 17:07:30 2018
+From: roconnor at blockstream.io (Russell O'Connor)
+Date: Wed, 21 Nov 2018 12:07:30 -0500
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+Message-ID: <CAMZUoK==Bdn73Lc=swgf2F5_mqE84TR1GRBFhrFkn7kab4jBaw@mail.gmail.com>
+
+On Mon, Nov 19, 2018 at 10:22 PM Pieter Wuille via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> So my question is whether anyone can see ways in which this introduces
+> redundant flexibility, or misses obvious use cases?
+>
+
+Hopefully my comment is on-topic for this thread:
+
+Given that we want to move away from OP_CODESEPARATOR, because each call to
+this operation effectively takes O(script-size) time, we need a replacement
+for the functionality it currently provides.  While perhaps the original
+motivation for OP_CODESEPARTOR is surrounded in mystery, it currently can
+be used (or perhaps abused) for the task of creating signature that covers,
+not only which input is being signed, but which specific branch within that
+input Script code is being signed for.
+
+For example, one can place an OP_CODESEPARATOR within each branch of an IF
+block, or by placing an OP_CODESEPARATOR before each OP_CHECKSIG
+operation.  By doing so, signatures created for one clause cannot be used
+as signatures for another clause.  Since different clauses in Bitcoin
+Script may be enforcing different conditions (such as different time-locks,
+hash-locks, etc), it is useful to be able to sign in such a way that your
+signature is only valid when the conditions for a particular branch are
+satisfied.  In complex Scripts, it may not be practical or possible to use
+different public keys for every different clause. (In practice, you will be
+able to get away with fewer OP_CODESEPARATORS than one in every IF block).
+
+One suggestion I heard (I think I heard it from Pieter) to achieve the
+above is to add an internal counter that increments on every control flow
+operator, OP_IF, OP_NOTIF, OP_ELSE, OP_ENDIF, and have the signature cover
+the value of this counter.  Equivalently we divide every Bitcoin Script
+program into blocks deliminated by these control flow operator and have the
+signature cover the index of the block that the OP_CHECKSIG occurs within.
+More specifically, we will want a SigHash flag to enables/disable the
+signature covering this counter.
+
+There are many different ways one might go about replacing the remaining
+useful behaviour of OP_CODESEPARATOR than the one I gave above. I would be
+happy with any solution.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181121/785d31a4/attachment-0001.html>
+
+From jl2012 at xbt.hk  Wed Nov 21 17:55:22 2018
+From: jl2012 at xbt.hk (Johnson Lau)
+Date: Thu, 22 Nov 2018 01:55:22 +0800
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <20181120202904.gmbg5ebegvsgqfys@erisian.com.au>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<20181120202904.gmbg5ebegvsgqfys@erisian.com.au>
+Message-ID: <2FCAFF04-2449-42C9-9613-EF0F8272259D@xbt.hk>
+
+If we sign the txids of all inputs, we should also explicitly commit to their values. Only this could fully eliminate any possible way to lie about input value to hardware wallets
+
+> Does it make sense to keep SIGHASH_NONE?
+SIGHASH_NONE should be kept. ANYONECANPAY|NONE allows donation of dust UTXOs to miners
+
+> I think NONE without NOFEE doesn't make much sense??.
+We might refuse to sign weird combinations like NOFEE|ALLINPUT|ALLOUTPUT. But to keep the consensus logic simple, we should just validate it as usual.
+
+> OP_MASK seems a bit complicated to me. ?...
+Yes, it looks complicated to me, and it improves security only in some avoidable edge cases in SIGHASH_NOINPUT:
+
+The common case: the exact masked script or address is reused. OP_MASK can?t prevent signature replay since the masked script is the same.
+
+The avoidable case: the same public key is reused in different script templates. OP_MASK may prevent signature replay is the masked script is not the same.
+
+The latter case is totally avoidable since one could and should use a different public key for different script.
+
+It could be made much simpler as NOINPUT with/without SCRIPT. This again is only helpful in the avoidable case above, but it doesn?t bring too much complexity.
+
+> I don't have a reason why, but committing to the scriptCode feels to me like it reduces the "hackiness" of NOINPUT a lot.
+OP_MASK is designed to preserve the hackiness, while provide some sort of replay protection (only in avoidable cases). However, I?m not sure who would actually need NOINPUT with KNOWNSCRIPT
+
+> On 21 Nov 2018, at 4:29 AM, Anthony Towns via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> 
+> On Mon, Nov 19, 2018 at 02:37:57PM -0800, Pieter Wuille via bitcoin-dev wrote:
+>> Here is a combined proposal:
+>> * Three new sighash flags are added: SIGHASH_NOINPUT, SIGHASH_NOFEE,
+>> and SIGHASH_SCRIPTMASK.
+>> * A new opcode OP_MASK is added, which acts as a NOP during execution.
+>> * The sighash is computed like in BIP143, but:
+>>  * If SIGHASH_SCRIPTMASK is present, for every OP_MASK in scriptCode
+>> the subsequent opcode/push is removed.
+>>  * The scriptPubKey being spent is added to the sighash, unless
+>> SIGHASH_SCRIPTMASK is set.
+>>  * The transaction fee is added to the sighash, unless SIGHASH_NOFEE is set.
+>>  * hashPrevouts, hashSequence, and outpoint are set to null when
+>> SIGHASH_NOINPUT is set (like BIP118, but not for scriptCode).
+> 
+> Current flags are {ALL, NONE, SINGLE} and ANYONECANPAY, and the BIP143
+> tx digest consists of the hash of:
+> 
+>  1 nVersion
+>  4 outpoint
+>  5 input scriptCode
+>  6 input's outpoint value
+>  7 input's nSeq
+>  9 nLocktime
+> 10 sighash
+> 
+>  2 hashPrevOuts (commits to 4,5,6; unless ANYONECANPAY)
+>  3 hashSequence (commits to 7; only if ALL and not ANYONECANPAY)
+>  8 hashOutputs
+>       - NONE: 0
+>       - SINGLE: {value,scriptPubKey} for corresponding output
+>       - otherwise: {value,scriptPubKey} for all outputs
+> 
+> The fee is committed to by hashPrevOuts and hashOutputs, which means
+> NOFEE is only potentially useful if ANYONECANPAY or NONE or SINGLE is set.
+> 
+> For NOINPUT, (2),(3),(4) are cleared, and SCRIPTMASK (which munges (5))
+> is only useful given NOINPUT, since (4) indirectly commits to (5). 
+> 
+> Given this implementation, NOINPUT effectively implies ANYONECANPAY,
+> I think. (I think that is also true of BIP 118's NOINPUT spec)
+> 
+> Does it make sense to treat this as two classes of options, affecting
+> the input and output side:
+> 
+>  output: (pick one, using bits 0,1)
+>    * NONE -- don't care where the money goes
+>    * SINGLE -- want this output
+>    * ALL -- want exactly this set of outputs
+> 
+>  input: (pick one, using bits 4,5)
+>    * PARTIALSCRIPT -- spending from some tx with roughly this script (and
+>                       maybe others; SCRIPTMASK|NOINPUT|ANYONECANPAY)
+>    * KNOWNSCRIPT -- spending from some tx with exactly this script (and
+>                     maybe others; NOINPUT|ANYONECANPAY)
+>    * KNOWNTX -- spending from this tx (and maybe others; ANYONECANPAY)
+>    * ALL_INPUTS -- spending from exactly these txes
+> 
+>  combo: (flag, bit 6)
+>    * NOFEE -- don't commit to the fee
+> 
+> I think NONE without NOFEE doesn't make much sense, and
+> NOFEE|ALL|ALL_INPUTS would also be pretty weird. Might make sense to
+> warn/error on signing when asking for those combinations, and maybe even
+> to fail on validating them.
+> 
+> (Does it make sense to keep SIGHASH_NONE? I guess SIGHASH_NONE|ALL_INPUTS
+> could be useful if you just use sigs on one of the other inputs to commit
+> to a useful output)
+> 
+> FWIW, OP_MASK seems a bit complicated to me. How would you mask a script
+> that looks like:
+> 
+>   OP_MASK IF <p> ENDIF <q> ...
+> 
+> or:
+> 
+>   IF OP_MASK ENDIF <p> ...
+> 
+> I guess if you make the rule be "for every OP_MASK in scriptCode the
+> *immediately* subsequent opcode/push is removed (if present)" it would
+> be fine though -- that would make OP_MASK in both the above not have
+> any effect. (Maybe a more explicit name like "MASK_PUSH_FOR_SIGHASH"
+> or something might be good?)
+> 
+> I don't have a reason why, but committing to the scriptCode feels to me
+> like it reduces the "hackiness" of NOINPUT a lot.
+> 
+> Cheers,
+> aj
+> 
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+
+
+From jl2012 at xbt.hk  Thu Nov 22 14:28:35 2018
+From: jl2012 at xbt.hk (Johnson Lau)
+Date: Thu, 22 Nov 2018 22:28:35 +0800
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <CAMZUoK==Bdn73Lc=swgf2F5_mqE84TR1GRBFhrFkn7kab4jBaw@mail.gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<CAMZUoK==Bdn73Lc=swgf2F5_mqE84TR1GRBFhrFkn7kab4jBaw@mail.gmail.com>
+Message-ID: <64A86A3A-4633-4BE2-AE09-30BD136BCC2D@xbt.hk>
+
+With MAST in taproot, OP_IF etc become mostly redundant, with worse privacy. To maximise fungibility, we should encourage people to use MAST, instead of improve the functionality of OP_IF and further complicate the protocol.
+
+
+> On 22 Nov 2018, at 1:07 AM, Russell O'Connor via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> 
+> On Mon, Nov 19, 2018 at 10:22 PM Pieter Wuille via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org <mailto:bitcoin-dev at lists.linuxfoundation.org>> wrote:
+> So my question is whether anyone can see ways in which this introduces
+> redundant flexibility, or misses obvious use cases?
+> 
+> Hopefully my comment is on-topic for this thread:
+> 
+> Given that we want to move away from OP_CODESEPARATOR, because each call to this operation effectively takes O(script-size) time, we need a replacement for the functionality it currently provides.  While perhaps the original motivation for OP_CODESEPARTOR is surrounded in mystery, it currently can be used (or perhaps abused) for the task of creating signature that covers, not only which input is being signed, but which specific branch within that input Script code is being signed for.
+> 
+> For example, one can place an OP_CODESEPARATOR within each branch of an IF block, or by placing an OP_CODESEPARATOR before each OP_CHECKSIG operation.  By doing so, signatures created for one clause cannot be used as signatures for another clause.  Since different clauses in Bitcoin Script may be enforcing different conditions (such as different time-locks, hash-locks, etc), it is useful to be able to sign in such a way that your signature is only valid when the conditions for a particular branch are satisfied.  In complex Scripts, it may not be practical or possible to use different public keys for every different clause. (In practice, you will be able to get away with fewer OP_CODESEPARATORS than one in every IF block).
+> 
+> One suggestion I heard (I think I heard it from Pieter) to achieve the above is to add an internal counter that increments on every control flow operator, OP_IF, OP_NOTIF, OP_ELSE, OP_ENDIF, and have the signature cover the value of this counter.  Equivalently we divide every Bitcoin Script program into blocks deliminated by these control flow operator and have the signature cover the index of the block that the OP_CHECKSIG occurs within.  More specifically, we will want a SigHash flag to enables/disable the signature covering this counter.
+> 
+> There are many different ways one might go about replacing the remaining useful behaviour of OP_CODESEPARATOR than the one I gave above. I would be happy with any solution.
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181122/5414fe4f/attachment-0001.html>
+
+From roconnor at blockstream.io  Thu Nov 22 16:23:54 2018
+From: roconnor at blockstream.io (Russell O'Connor)
+Date: Thu, 22 Nov 2018 11:23:54 -0500
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <64A86A3A-4633-4BE2-AE09-30BD136BCC2D@xbt.hk>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<CAMZUoK==Bdn73Lc=swgf2F5_mqE84TR1GRBFhrFkn7kab4jBaw@mail.gmail.com>
+	<64A86A3A-4633-4BE2-AE09-30BD136BCC2D@xbt.hk>
+Message-ID: <CAMZUoKkhrLKOaquP1_M9GwuKT1u7d+GoyW6tcK-t2uv+5VRfyA@mail.gmail.com>
+
+I see, so your suggestion is that a sequence of OP_IF ... OP_ENDIF can be
+replaced by a Merklized Script tree of that depth in practice.
+
+I'm concerned that at script creation time it takes exponential time to
+complete a Merkle root of depth 'n'.  Can anyone provide benchmarks or
+estimates of how long it takes to compute a Merkle root of a full tree of
+various depths on typical consumer hardware?  I would guess things stop
+becoming practical at a depth of 20-30.
+
+On Thu, Nov 22, 2018 at 9:28 AM Johnson Lau <jl2012 at xbt.hk> wrote:
+
+> With MAST in taproot, OP_IF etc become mostly redundant, with worse
+> privacy. To maximise fungibility, we should encourage people to use MAST,
+> instead of improve the functionality of OP_IF and further complicate the
+> protocol.
+>
+>
+> On 22 Nov 2018, at 1:07 AM, Russell O'Connor via bitcoin-dev <
+> bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+> On Mon, Nov 19, 2018 at 10:22 PM Pieter Wuille via bitcoin-dev <
+> bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+>> So my question is whether anyone can see ways in which this introduces
+>> redundant flexibility, or misses obvious use cases?
+>>
+>
+> Hopefully my comment is on-topic for this thread:
+>
+> Given that we want to move away from OP_CODESEPARATOR, because each call
+> to this operation effectively takes O(script-size) time, we need a
+> replacement for the functionality it currently provides.  While perhaps the
+> original motivation for OP_CODESEPARTOR is surrounded in mystery, it
+> currently can be used (or perhaps abused) for the task of creating
+> signature that covers, not only which input is being signed, but which
+> specific branch within that input Script code is being signed for.
+>
+> For example, one can place an OP_CODESEPARATOR within each branch of an IF
+> block, or by placing an OP_CODESEPARATOR before each OP_CHECKSIG
+> operation.  By doing so, signatures created for one clause cannot be used
+> as signatures for another clause.  Since different clauses in Bitcoin
+> Script may be enforcing different conditions (such as different time-locks,
+> hash-locks, etc), it is useful to be able to sign in such a way that your
+> signature is only valid when the conditions for a particular branch are
+> satisfied.  In complex Scripts, it may not be practical or possible to use
+> different public keys for every different clause. (In practice, you will be
+> able to get away with fewer OP_CODESEPARATORS than one in every IF block).
+>
+> One suggestion I heard (I think I heard it from Pieter) to achieve the
+> above is to add an internal counter that increments on every control flow
+> operator, OP_IF, OP_NOTIF, OP_ELSE, OP_ENDIF, and have the signature cover
+> the value of this counter.  Equivalently we divide every Bitcoin Script
+> program into blocks deliminated by these control flow operator and have the
+> signature cover the index of the block that the OP_CHECKSIG occurs within.
+> More specifically, we will want a SigHash flag to enables/disable the
+> signature covering this counter.
+>
+> There are many different ways one might go about replacing the remaining
+> useful behaviour of OP_CODESEPARATOR than the one I gave above. I would be
+> happy with any solution.
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181122/e50caccd/attachment-0001.html>
+
+From weiji.g at gmail.com  Thu Nov 22 17:25:07 2018
+From: weiji.g at gmail.com (Weiji Guo)
+Date: Fri, 23 Nov 2018 01:25:07 +0800
+Subject: [bitcoin-dev]  BIP- & SLIP-0039 -- better multi-language support
+In-Reply-To: <mailman.2299.1542895684.19477.bitcoin-dev@lists.linuxfoundation.org>
+References: <mailman.2299.1542895684.19477.bitcoin-dev@lists.linuxfoundation.org>
+Message-ID: <CA+ydi=Kr3ekGZ2t_2B53Fwm-Xoc0kgLNKVM72BUj1f=FxXwvqw@mail.gmail.com>
+
+Hi Everyone,
+
+Thank you very much in this thanks giving day for the detailed and well
+thought out responses. :)
+
+Steven Hatzakis via bitcoin-dev <bitcoin-dev at
+lists.linuxfoundation.org
+<https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev>>:
+
+>* *Option 2*: Perhaps a revision is needed to how the BIP39 seed is
+*>* generated in the first place, such as by hashing the entropy instead of the
+*>* words. Any thoughts on how viable that could be where the initial entropy
+*>* is fed into the PBKDF2 function and not the words?*
+
+If we go this direction, I'd suggest that we pull Shamir's Secret Sharing
+into the game. Trezor's
+SLIP-0039 proposal is great and has many security aspects already covered.
+However, it does
+not allow any language other than English and Trezor team clearly stated
+that no other language
+will be supported.
+
+While I really want to keep the language independent design. So in the
+revision, I'd like to see
+a language id (allocated to each one having a defined wordlist) in the SSS
+share, as well as
+share id, threshold, index, share value, checksum etc.
+
+Regarding checksum scheme, SLIP-0039 proposals a 3-word Reed-Solomon
+design. It has a very
+good error checking capability but not very good at providing hints to
+error recovery. Trezor team
+opposes to the idea of providing hints to users regarding how to fix an
+error. This could lead to
+difficulties for some vendors, and in small probability, confusions to
+users (when there is a 2-word
+error)
+
+I do agree with Trezor team that it should be users' responsibility to
+recover from a detected error.
+However, there is a better way than solely rely on checksum. That is, as in
+our revision, we can
+support mnemonic in multiple languages simultaneously, why don't we use two
+languages, or one
+language + numbers to check each other? In Steven's example (language id,
+share id, etc. skipped)
+we could record a SSS share (assuming it is one of the shares just for the
+sake of example) like:
+
+>* *In English*: minimum fee sure ticket faculty banana gate purse caught
+*>* valley globe shift
+*>* *In Spanish*: mercado faja soledad tarea evadir aries gafas peine bu?ho
+*>* tumor gerente reja*
+
+Or
+
+>* *In English*: minimum fee sure ticket faculty banana gate purse caught
+*>* valley globe shift*
+
+>* Word Indexes: 1128, 676, 1744, 1805, 653, 145, 770, 1396, 291, 1927,
+794, 1582*
+
+
+Then software will have to check checksum as well as to check if words
+match each other. For
+example, "minimum"'s index value in English wordlist should equal to "
+*mercado*"'s in Spanish,
+or should equal to 1128.
+
+If any error is detected, combining the checksum value and dual-encoding
+information, it is much
+easier to figure out which word was handprinted incorrectly.
+
+BTW, it is very error prone to handprint. Some study suggests about 0.9%
+per word rate. See
+http://panko.shidler.hawaii.edu/HumanErr/Basic.htm
+
+Hotopf [1980]
+
+W sample (written exam). Per word
+
+0.9%
+
+It is important to have an error recovery mechanism easy to understand and
+implement.
+
+Thanks,
+Weiji
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181123/883b184a/attachment-0001.html>
+
+From jl2012 at xbt.hk  Thu Nov 22 20:52:54 2018
+From: jl2012 at xbt.hk (Johnson Lau)
+Date: Fri, 23 Nov 2018 04:52:54 +0800
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <CAMZUoKkhrLKOaquP1_M9GwuKT1u7d+GoyW6tcK-t2uv+5VRfyA@mail.gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<CAMZUoK==Bdn73Lc=swgf2F5_mqE84TR1GRBFhrFkn7kab4jBaw@mail.gmail.com>
+	<64A86A3A-4633-4BE2-AE09-30BD136BCC2D@xbt.hk>
+	<CAMZUoKkhrLKOaquP1_M9GwuKT1u7d+GoyW6tcK-t2uv+5VRfyA@mail.gmail.com>
+Message-ID: <8CD6C248-9ADF-4324-B4E3-DE41A1ED49A9@xbt.hk>
+
+Assuming a script size of 128 bytes (including SHA256 padding), 2^20 scripts is 134MB. Double it to 268MB for the merkle branch hashes. With roughly 100MB/s, this should take 2.5s (or 42min for 30 levels). However, memory use is not considered.
+
+>each call to this operation effectively takes O(script-size) time
+I?m not sure if this is correct. Actually, CTransactionSignatureSerializer() scans every script for OP_CODESEPARATOR. Scripts with and without OP_CODESEPARATOR should take exactly the same O(script-size) time (see https://github.com/bitcoin/bitcoin/pull/14786)
+Also, this is no longer a concern under segwit (BIP143), which CTransactionSignatureSerializer() is not used. Actually, OP_CODESEPARATOR under segwit is way simpler than the proposed OP_MASK. If one finds OP_MASK acceptable, there should be no reason to reject OP_CODESEPARATOR.
+
+>One suggestion I heard (I think I heard it from Pieter) to achieve the above is to add an internal counter that increments on every control flow operator,??...
+If I have to choose among OP_CODESEPARATOR and ?flow operator counting?, I?d rather choose OP_CODESEPARATOR. At least we don?t need to add more lines to the consensus code, just for something that is mostly archivable with MAST.
+
+
+> On 23 Nov 2018, at 12:23 AM, Russell O'Connor <roconnor at blockstream.io> wrote:
+> 
+> I see, so your suggestion is that a sequence of OP_IF ... OP_ENDIF can be replaced by a Merklized Script tree of that depth in practice.
+> 
+> I'm concerned that at script creation time it takes exponential time to complete a Merkle root of depth 'n'.  Can anyone provide benchmarks or estimates of how long it takes to compute a Merkle root of a full tree of various depths on typical consumer hardware?  I would guess things stop becoming practical at a depth of 20-30.
+> 
+> On Thu, Nov 22, 2018 at 9:28 AM Johnson Lau <jl2012 at xbt.hk> wrote:
+> With MAST in taproot, OP_IF etc become mostly redundant, with worse privacy. To maximise fungibility, we should encourage people to use MAST, instead of improve the functionality of OP_IF and further complicate the protocol.
+> 
+> 
+>> On 22 Nov 2018, at 1:07 AM, Russell O'Connor via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>> 
+>> On Mon, Nov 19, 2018 at 10:22 PM Pieter Wuille via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>> So my question is whether anyone can see ways in which this introduces
+>> redundant flexibility, or misses obvious use cases?
+>> 
+>> Hopefully my comment is on-topic for this thread:
+>> 
+>> Given that we want to move away from OP_CODESEPARATOR, because each call to this operation effectively takes O(script-size) time, we need a replacement for the functionality it currently provides.  While perhaps the original motivation for OP_CODESEPARTOR is surrounded in mystery, it currently can be used (or perhaps abused) for the task of creating signature that covers, not only which input is being signed, but which specific branch within that input Script code is being signed for.
+>> 
+>> For example, one can place an OP_CODESEPARATOR within each branch of an IF block, or by placing an OP_CODESEPARATOR before each OP_CHECKSIG operation.  By doing so, signatures created for one clause cannot be used as signatures for another clause.  Since different clauses in Bitcoin Script may be enforcing different conditions (such as different time-locks, hash-locks, etc), it is useful to be able to sign in such a way that your signature is only valid when the conditions for a particular branch are satisfied.  In complex Scripts, it may not be practical or possible to use different public keys for every different clause. (In practice, you will be able to get away with fewer OP_CODESEPARATORS than one in every IF block).
+>> 
+>> One suggestion I heard (I think I heard it from Pieter) to achieve the above is to add an internal counter that increments on every control flow operator, OP_IF, OP_NOTIF, OP_ELSE, OP_ENDIF, and have the signature cover the value of this counter.  Equivalently we divide every Bitcoin Script program into blocks deliminated by these control flow operator and have the signature cover the index of the block that the OP_CHECKSIG occurs within.  More specifically, we will want a SigHash flag to enables/disable the signature covering this counter.
+>> 
+>> There are many different ways one might go about replacing the remaining useful behaviour of OP_CODESEPARATOR than the one I gave above. I would be happy with any solution.
+>> _______________________________________________
+>> bitcoin-dev mailing list
+>> bitcoin-dev at lists.linuxfoundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> 
+
+
+
+From roconnor at blockstream.io  Thu Nov 22 22:10:11 2018
+From: roconnor at blockstream.io (Russell O'Connor)
+Date: Thu, 22 Nov 2018 17:10:11 -0500
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <8CD6C248-9ADF-4324-B4E3-DE41A1ED49A9@xbt.hk>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<CAMZUoK==Bdn73Lc=swgf2F5_mqE84TR1GRBFhrFkn7kab4jBaw@mail.gmail.com>
+	<64A86A3A-4633-4BE2-AE09-30BD136BCC2D@xbt.hk>
+	<CAMZUoKkhrLKOaquP1_M9GwuKT1u7d+GoyW6tcK-t2uv+5VRfyA@mail.gmail.com>
+	<8CD6C248-9ADF-4324-B4E3-DE41A1ED49A9@xbt.hk>
+Message-ID: <CAMZUoKkdjHYd8BR6PCae-UG_QRoujW36kYf8s4Gk2FVBeSJnrw@mail.gmail.com>
+
+On Thu, Nov 22, 2018 at 3:53 PM Johnson Lau <jl2012 at xbt.hk> wrote:
+
+> Assuming a script size of 128 bytes (including SHA256 padding), 2^20
+> scripts is 134MB. Double it to 268MB for the merkle branch hashes. With
+> roughly 100MB/s, this should take 2.5s (or 42min for 30 levels). However,
+> memory use is not considered.
+>
+> >each call to this operation effectively takes O(script-size) time
+> I?m not sure if this is correct. Actually,
+> CTransactionSignatureSerializer() scans every script for OP_CODESEPARATOR.
+> Scripts with and without OP_CODESEPARATOR should take exactly the same
+> O(script-size) time (see https://github.com/bitcoin/bitcoin/pull/14786)
+> Also, this is no longer a concern under segwit (BIP143), which
+> CTransactionSignatureSerializer() is not used. Actually, OP_CODESEPARATOR
+> under segwit is way simpler than the proposed OP_MASK. If one finds OP_MASK
+> acceptable, there should be no reason to reject OP_CODESEPARATOR.
+>
+
+Even still, each call to OP_CODESEPARATOR / OP_CHECKSIG pair requires
+recomputing a new #5. scriptCode from BIP 143, and hence computes a new
+transaction digest.  I understood that this issue was the main motivation
+for wanting to deprecate OP_CODESEPARATOR and remove it from later versions
+of script.
+
+However, given that we are looking at a combinatorial explosion in SIGHASH
+flag combinations already, coupled with existing SigOp limitations, maybe
+the cost of recomputing scriptCode with OP_CODESEPARATOR isn't such a big
+deal.
+
+And even if we choose remove the behavior of OP_CODESEPARATOR in new
+versions of Script, it seems more than 30 layers of sequential OP_IFs can
+be MASTified, so there is no need to use OP_CODESEPARATOR within that limit.
+
+>One suggestion I heard (I think I heard it from Pieter) to achieve the
+above is to add an internal counter that increments on every control flow
+operator,??...
+
+> If I have to choose among OP_CODESEPARATOR and ?flow operator counting?,
+> I?d rather choose OP_CODESEPARATOR. At least we don?t need to add more
+> lines to the consensus code, just for something that is mostly archivable
+> with MAST.
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181122/e7761aed/attachment.html>
+
+From aj at erisian.com.au  Fri Nov 23 05:03:30 2018
+From: aj at erisian.com.au (Anthony Towns)
+Date: Fri, 23 Nov 2018 15:03:30 +1000
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <CAMZUoK==Bdn73Lc=swgf2F5_mqE84TR1GRBFhrFkn7kab4jBaw@mail.gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<CAMZUoK==Bdn73Lc=swgf2F5_mqE84TR1GRBFhrFkn7kab4jBaw@mail.gmail.com>
+Message-ID: <20181123050330.x4xrgouit7apwk45@erisian.com.au>
+
+On Wed, Nov 21, 2018 at 12:07:30PM -0500, Russell O'Connor via bitcoin-dev wrote:
+> Given that we want to move away from OP_CODESEPARATOR, because each call to
+> this operation effectively takes O(script-size) time, we need a replacement for
+> the functionality it currently provides.? While perhaps the original motivation
+> for OP_CODESEPARTOR is surrounded in mystery, it currently can be used (or
+> perhaps abused) for the task of creating signature that covers, not only which
+> input is being signed, but which specific branch within that input Script code
+> is being signed for.
+
+Would it be sufficient to sign the position within the script of the
+last OP_CODESEPARATOR? That is, if your script is:
+
+   DUP DUP CHECKSIG CODESEP CHECKSIG CODESEP CHECKSIG
+
+with the idea being that it can be spent by providing any pub key and
+three different signatures by that key, with the first sig committing
+to a "codesep position" of 0, the second a "codesep position" of 4,
+and the third a "codesep position" of 6? In each case, the signature
+also commits to the full (possibly masked) script as well.
+
+I think that covers all the behaviour you can currently achieve with
+CODESEP (which is pretty limited since every sig effectively commits
+to the full redeem script, and you can't commit to subsets of the
+signature/witness), and it keeps the things you can do with the various
+features a bit orthogonal:
+
+ NOINPUT -- lets the sig apply to different transactions
+ OP_MASK -- lets the different txes have variations in the script the
+            sig applies to
+ CODESEP -- lets you require different sigs for different parts of a
+            single script
+ MAST[0] -- provides alternative scripts, doesn't affect sigs
+ IF/etc  -- provides control flow within a script, doesn't affect sigs
+
+Cheers,
+aj
+
+[0] (I think I'm going to claim "MAST" stands for "merkelized alternative
+     script tree" these days, since they're not "abstract syntax trees")
+
+
+From aj at erisian.com.au  Fri Nov 23 06:04:04 2018
+From: aj at erisian.com.au (Anthony Towns)
+Date: Fri, 23 Nov 2018 16:04:04 +1000
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <87k1l6d6lb.fsf@gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<87k1l6d6lb.fsf@gmail.com>
+Message-ID: <20181123060404.fu4eyzcynbppmjcy@erisian.com.au>
+
+On Wed, Nov 21, 2018 at 12:15:44PM +0100, Christian Decker via bitcoin-dev wrote:
+> One minor thing that I noticed a while ago and that I meant
+> to fix on BIP118 is that `hashSequence` does not need to be blanked for
+> eltoo to work (since where it is needed we also use `sighash_single`),
+> so I'm tempted to remove that redundant blanking. It may not make a lot
+> of difference but it'd limit the ability to change the number of inputs
+> to a NOINPUT transaction (this now being the only field that commits to
+> the set of inputs).
+
+Commiting to just the sequence numbers seems really weird to me; it
+only really prevents you from adding inputs, since you could still
+replace any input that was meant to be there by almost any arbitrary
+other transaction...
+
+I could see this *maybe* making sense if you at least committed to the
+values of each input's outpoint; since that would be an actual constraint?
+
+I don't think you can commit to anything else about the other inputs:
+
+   -- txids of the other transactions wouldn't work if you had other
+      NOINPUT txes, and would introduce O(N^2) validation cost if someone
+      signed every input with NOINPUT but committed to the txids of
+      every other input
+
+   -- scriptPubKeys wouldn't really work for eltoo-like constructions
+      that want to vary the scripts but apply the same sig, but might
+      work sometimes?
+
+   -- witness scripts for the other inputs could be unknown at your
+      signing time, or arbitrarily large and thus a pain to have to send
+      to a hardware wallet
+
+Just treating NOINPUT as a subset of ANYONECANPAY seems simpler to
+me though...
+
+> As for your proposal, I really like the `sighash_scriptmask` proposal,
+> and committing to the fees (with the `nofee` escape hatch) also works
+> seems also a nice fix. My one concern is that introducing a new opcode
+> to mask things in the sighash looks like a similar layering violation as
+> `codeseparator` was, but that's just a minor issue imho.
+
+I think OP_MASK is okay as far as layering goes, if you just think of it
+as a (set of) multibyte "OP_MASKED_PUSH" opcode(s). So when you
+pseudocode a script like:
+
+    <n> OP_CSV OP_DROP <p> OP_CHECKSIG
+
+and then decide <n> needs to be masked, you rewrite it as:
+
+    [n] OP_CSV OP_DROP <p> OP_CHECKSIG
+
+indicating n is masked, and don't worry about the exact bytes that will
+encode the push, anymore than you currently worry about whether it's
+OP_0, OP_1..16, <1..75>+1..75-bytes, PUSHDATA[1,2,3]+n+n-bytes.
+
+As long as OP_MASK only applies to a PUSH and it's an error for OP_MASK
+not to be immediately followed by that PUSH, I think that all works
+out fine.
+
+Cheers,
+aj
+
+
+From decker.christian at gmail.com  Fri Nov 23 09:40:20 2018
+From: decker.christian at gmail.com (Christian Decker)
+Date: Fri, 23 Nov 2018 10:40:20 +0100
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <20181123060404.fu4eyzcynbppmjcy@erisian.com.au>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<87k1l6d6lb.fsf@gmail.com>
+	<20181123060404.fu4eyzcynbppmjcy@erisian.com.au>
+Message-ID: <878t1kcet7.fsf@gmail.com>
+
+Anthony Towns <aj at erisian.com.au> writes:
+> Commiting to just the sequence numbers seems really weird to me; it
+> only really prevents you from adding inputs, since you could still
+> replace any input that was meant to be there by almost any arbitrary
+> other transaction...
+
+It's a really roundabout way of committing to the inputs, I
+agree. I'm actually wondering if it makes sense to correct that
+additional blanked field in BIP118 at all since it seems there is no
+real use-case for NOINPUT that doesn't involve blanking the
+`hashSequence` as well.
+
+> I could see this *maybe* making sense if you at least committed to the
+> values of each input's outpoint; since that would be an actual constraint?
+
+BIP118 still commits to the value of the input being spent, i.e.,
+6. value is not being blanked in the current proposal. This is on
+purpose since we commit to the outputs, not committing to the input
+values could end up with unexpected fees.
+
+>> As for your proposal, I really like the `sighash_scriptmask` proposal,
+>> and committing to the fees (with the `nofee` escape hatch) also works
+>> seems also a nice fix. My one concern is that introducing a new opcode
+>> to mask things in the sighash looks like a similar layering violation as
+>> `codeseparator` was, but that's just a minor issue imho.
+>
+> I think OP_MASK is okay as far as layering goes, if you just think of it
+> as a (set of) multibyte "OP_MASKED_PUSH" opcode(s). So when you
+> pseudocode a script like:
+>
+>     <n> OP_CSV OP_DROP <p> OP_CHECKSIG
+>
+> and then decide <n> needs to be masked, you rewrite it as:
+>
+>     [n] OP_CSV OP_DROP <p> OP_CHECKSIG
+>
+> indicating n is masked, and don't worry about the exact bytes that will
+> encode the push, anymore than you currently worry about whether it's
+> OP_0, OP_1..16, <1..75>+1..75-bytes, PUSHDATA[1,2,3]+n+n-bytes.
+>
+> As long as OP_MASK only applies to a PUSH and it's an error for OP_MASK
+> not to be immediately followed by that PUSH, I think that all works
+> out fine.
+
+Agreed, that makes more sense :-)
+
+From jl2012 at xbt.hk  Fri Nov 23 10:47:10 2018
+From: jl2012 at xbt.hk (Johnson Lau)
+Date: Fri, 23 Nov 2018 18:47:10 +0800
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <CAMZUoKkdjHYd8BR6PCae-UG_QRoujW36kYf8s4Gk2FVBeSJnrw@mail.gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<CAMZUoK==Bdn73Lc=swgf2F5_mqE84TR1GRBFhrFkn7kab4jBaw@mail.gmail.com>
+	<64A86A3A-4633-4BE2-AE09-30BD136BCC2D@xbt.hk>
+	<CAMZUoKkhrLKOaquP1_M9GwuKT1u7d+GoyW6tcK-t2uv+5VRfyA@mail.gmail.com>
+	<8CD6C248-9ADF-4324-B4E3-DE41A1ED49A9@xbt.hk>
+	<CAMZUoKkdjHYd8BR6PCae-UG_QRoujW36kYf8s4Gk2FVBeSJnrw@mail.gmail.com>
+Message-ID: <D8767C89-06AF-4FA7-B640-E99FE8A443C5@xbt.hk>
+
+>Even still, each call to OP_CODESEPARATOR / OP_CHECKSIG pair requires recomputing a new #5. scriptCode from BIP 143, and hence computes a new transaction digest.
+
+In the existing sighash (i.e. legacy and BIP143), there are 6 canonical SIGHASH types: 1, 2, 3, 0x81, 0x82, 0x83. In consensus, however, all 256 types are valid and distinct. An adversarial miner could use non-standard sighash types to nullify any attempt to cache sighash values (i.e. you have to compute a new tx digest for every OP_CHECKSIG, even without using OP_CODESEPARATOR).
+
+The only way to prevent this is reject OP_CODESEPARATOR, FindAndDelete(), and non-standard SIGHASH with a softfork. However, this doesn?t work in the next-generation SIGHASH, as tens of standard sighash types will exist. And, more importantly, sighash cache is no longer necessary in segwit, with the legacy O(n^2) hash bug being fixed.
+
+In summary, sighash cache is not necessary nor efficient in the next-generation SIGHASH, and is not a sufficient reason to remove OP_CODESEPARATOR, especially when people find OP_CODESEPARATOR useful in some way.
+
+But just to be clear, I think OP_CODESEPARATOR should be deprecated in legacy scripts. There is a general negative sentiment against OP_CODESEPARATOR but I think we need to evaluate case by case.
+
+> On 23 Nov 2018, at 6:10 AM, Russell O'Connor <roconnor at blockstream.io> wrote:
+> 
+> 
+> 
+> On Thu, Nov 22, 2018 at 3:53 PM Johnson Lau <jl2012 at xbt.hk <mailto:jl2012 at xbt.hk>> wrote:
+> Assuming a script size of 128 bytes (including SHA256 padding), 2^20 scripts is 134MB. Double it to 268MB for the merkle branch hashes. With roughly 100MB/s, this should take 2.5s (or 42min for 30 levels). However, memory use is not considered.
+> 
+> >each call to this operation effectively takes O(script-size) time
+> I?m not sure if this is correct. Actually, CTransactionSignatureSerializer() scans every script for OP_CODESEPARATOR. Scripts with and without OP_CODESEPARATOR should take exactly the same O(script-size) time (see https://github.com/bitcoin/bitcoin/pull/14786 <https://github.com/bitcoin/bitcoin/pull/14786>)
+> Also, this is no longer a concern under segwit (BIP143), which CTransactionSignatureSerializer() is not used. Actually, OP_CODESEPARATOR under segwit is way simpler than the proposed OP_MASK. If one finds OP_MASK acceptable, there should be no reason to reject OP_CODESEPARATOR.
+> 
+> Even still, each call to OP_CODESEPARATOR / OP_CHECKSIG pair requires recomputing a new #5. scriptCode from BIP 143, and hence computes a new transaction digest.  I understood that this issue was the main motivation for wanting to deprecate OP_CODESEPARATOR and remove it from later versions of script.
+> 
+> However, given that we are looking at a combinatorial explosion in SIGHASH flag combinations already, coupled with existing SigOp limitations, maybe the cost of recomputing scriptCode with OP_CODESEPARATOR isn't such a big deal.
+> 
+> And even if we choose remove the behavior of OP_CODESEPARATOR in new versions of Script, it seems more than 30 layers of sequential OP_IFs can be MASTified, so there is no need to use OP_CODESEPARATOR within that limit.
+> 
+> >One suggestion I heard (I think I heard it from Pieter) to achieve the above is to add an internal counter that increments on every control flow operator,??...
+> If I have to choose among OP_CODESEPARATOR and ?flow operator counting?, I?d rather choose OP_CODESEPARATOR. At least we don?t need to add more lines to the consensus code, just for something that is mostly archivable with MAST.
+> 
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181123/0c20c6f7/attachment-0001.html>
+
+From roconnor at blockstream.io  Fri Nov 23 20:18:13 2018
+From: roconnor at blockstream.io (Russell O'Connor)
+Date: Fri, 23 Nov 2018 15:18:13 -0500
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <20181123050330.x4xrgouit7apwk45@erisian.com.au>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<CAMZUoK==Bdn73Lc=swgf2F5_mqE84TR1GRBFhrFkn7kab4jBaw@mail.gmail.com>
+	<20181123050330.x4xrgouit7apwk45@erisian.com.au>
+Message-ID: <CAMZUoK=SC3+d73SNfu7rAdwE4tcJK6jmg9-UHDJVN53ZU_HqMw@mail.gmail.com>
+
+On Fri, Nov 23, 2018 at 12:03 AM Anthony Towns <aj at erisian.com.au> wrote:
+
+> On Wed, Nov 21, 2018 at 12:07:30PM -0500, Russell O'Connor via bitcoin-dev
+> wrote:
+> > Given that we want to move away from OP_CODESEPARATOR, because each call
+> to
+> > this operation effectively takes O(script-size) time, we need a
+> replacement for
+> > the functionality it currently provides.  While perhaps the original
+> motivation
+> > for OP_CODESEPARTOR is surrounded in mystery, it currently can be used
+> (or
+> > perhaps abused) for the task of creating signature that covers, not only
+> which
+> > input is being signed, but which specific branch within that input
+> Script code
+> > is being signed for.
+>
+> Would it be sufficient to sign the position within the script of the
+> last OP_CODESEPARATOR? That is, if your script is:
+>
+> I think that covers all the behaviour you can currently achieve with
+> CODESEP (which is pretty limited since every sig effectively commits
+> to the full redeem script, and you can't commit to subsets of the
+> signature/witness), and it keeps the things you can do with the various
+> features a bit orthogonal:
+>
+
+Thanks for bringing this up.  I was thinking the same thing as well, that
+yes that should be sufficient to cover the semantics of OP_CODESEPARATOR.
+Though to be more precise you would sign the position of the last
+_executed_ OP_CODESEPARATOR.
+
+That said, while I agree the above is a superior realization of the
+OP_CODESEPARATOR, given that we are probably going to support
+OP_CODESEPARATOR inside legacy P2SH scripts indefinitely, it is probably
+better to keep the existing akward implementation of OP_CODESEPARATOR in
+future versions of Script.  (At least until we decide to stop mangling the
+Script consensus code with more and more flag combinations and decide it is
+better to cut and paste code for new versions of Script to help ensure we
+don't make consensus changes to legacy behaviour).
+
+
+> [0] (I think I'm going to claim "MAST" stands for "merkelized alternative
+>      script tree" these days, since they're not "abstract syntax trees")
+>
+
+:thumbs-up:
+
+Sorry for hijacking the thread about OP_MASK and friends.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181123/d6f9489a/attachment-0001.html>
+
+From jl2012 at xbt.hk  Sat Nov 24 08:13:46 2018
+From: jl2012 at xbt.hk (Johnson Lau)
+Date: Sat, 24 Nov 2018 16:13:46 +0800
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <878t1kcet7.fsf@gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<87k1l6d6lb.fsf@gmail.com>
+	<20181123060404.fu4eyzcynbppmjcy@erisian.com.au>
+	<878t1kcet7.fsf@gmail.com>
+Message-ID: <9A562EB2-7041-48E5-9D77-4337B24C3C84@xbt.hk>
+
+
+
+> On 23 Nov 2018, at 5:40 PM, Christian Decker via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> 
+> Anthony Towns <aj at erisian.com.au> writes:
+>> Commiting to just the sequence numbers seems really weird to me; it
+>> only really prevents you from adding inputs, since you could still
+>> replace any input that was meant to be there by almost any arbitrary
+>> other transaction...
+> 
+> It's a really roundabout way of committing to the inputs, I
+> agree. I'm actually wondering if it makes sense to correct that
+> additional blanked field in BIP118 at all since it seems there is no
+> real use-case for NOINPUT that doesn't involve blanking the
+> `hashSequence` as well.
+
+I think we just make it as simple as this: Always commit to sequence of the same input. Commit to hashSequence if and only if all inputs and all outputs are signed.
+
+The next-generation SIGHASH will introduce not only NOINPUT, but also signing of fees, previous scriptPubKey, and all input values, etc. So it won?t be a simple hack over BIP143. BIP118 might be better changed to be an informational BIP, focus on the rationale and examples of NOINPUT, and be cross-referenced with the consensus BIP.
+
+From omer.shlomovits at gmail.com  Tue Nov 27 17:52:51 2018
+From: omer.shlomovits at gmail.com (Omer Shlomovits)
+Date: Tue, 27 Nov 2018 19:52:51 +0200
+Subject: [bitcoin-dev] Multi party Schnorr Rust implementation
+Message-ID: <CALhDas2W5QEPmw8JEgak0zf7y3N0UFTiMVk-djR8x9_WYZiyfQ@mail.gmail.com>
+
+Hello all,
+
+I am working for the past few months with collaborators (in cc) on
+providing Rust reference implementations to existing multi party schemes
+for Schnorr signatures [1]. This includes aggregated signatures,
+accountable signatures (which for n out of n are multi-signatures) and
+threshold signatures (wip).
+The project can be found here:
+https://github.com/KZen-networks/multi-party-schnorr .
+We aim that if the protocol is run in a configuration of a single party it
+will be bip-schnorr [2] compliant.
+
+Hope you'll find it useful :)
+Questions, suggestions and pull requests are welcome!
+
+
+[1] https://github.com/KZen-networks/multi-party-schnorr/tree/master/papers
+[2] https://github.com/sipa/bips/blob/bip-schnorr/bip-schnorr.mediawiki
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181127/4f353499/attachment.html>
+
+From bob at mcelrath.org  Wed Nov 28 00:54:16 2018
+From: bob at mcelrath.org (Bob McElrath)
+Date: Wed, 28 Nov 2018 00:54:16 +0000
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+Message-ID: <20181128005416.GB22873@mcelrath.org>
+
+I have been working on an experimental wallet that implements Bitcoin
+Covenants/Vaults following a blog post I wrote about 2 years ago, using
+"Pay-to-Timelock Signed Transaction" (P2TST).  (Also mentioned recently by
+kanzure in a talk somewheres...)  The idea is that you deposit to an address for
+which you don't know the private key.  Instead you construct a second
+transaction sending that to a timelocked staging address for which you DO have
+the privkey (it also has an IF/ELSE condition with a second spending condition
+for use in case of theft attempt).  In order to do this you either have to
+delete the privkey of the deposit address (a difficult proposition to know it's
+actually been deleted), but instead one can construct a signature directly using
+a RNG, and use the SIGHASH to compute the corresponding pubkey via ECDSA
+recover, from which you compute the corresponding address.  In this way your
+wallet is a set of P2TST transactions and a corresponding privkey, with a (set
+of) emergency keys.
+
+This interacts with NOINPUT in the following way: if the input to the
+transaction commits to the pubkey in any way, you have a circular dependency on
+the pubkey that could only be satisfied by breaking a hash function.  This
+occurs with standard sighash's which commit to the txid, which in turn commit to
+the address, which commits to the pubkey, so this construction of
+covenants/vaults requires NOINPUT.
+
+AFAICT sipa's proposal is compatible with the above vaulted construction by
+using SIGHASH_NOINPUT | SIGHASH_SCRIPTMASK to remove the
+scriptPubKey/redeemScript from the sighash.  Putting the
+scriptPubKey/redeemScript in the sighash introduces the same circular
+dependency, but SIGHASH_SCRIPTMASK removes it.
+
+One would probably want to provide the fee from a separate wallet so as to be
+able to account for fluctuating fee pressures when the unvaulting occurs a long
+time after vaulting.  Thus you'd want to use SIGHASH_SINGLE so that a fee-wallet
+can add fees (or for composability of P2TSTs), and SIGHASH_NOFEE as well.
+
+P.S. Also very excited to combine the above idea with Taproot/Graftroot/g'Root.
+
+--
+Cheers, Bob McElrath
+
+"For every complex problem, there is a solution that is simple, neat, and wrong."
+    -- H. L. Mencken 
+
+
+From pieter.wuille at gmail.com  Wed Nov 28 03:41:02 2018
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Tue, 27 Nov 2018 19:41:02 -0800
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+Message-ID: <CAPg+sBiu0BjZEtz-t7m3M+TnAEDG_k1GKtxwkOKh6qrSezUO7g@mail.gmail.com>
+
+On Mon, 19 Nov 2018 at 14:37, Pieter Wuille <pieter.wuille at gmail.com> wrote:
+> Here is a combined proposal:
+> * Three new sighash flags are added: SIGHASH_NOINPUT, SIGHASH_NOFEE, and SIGHASH_SCRIPTMASK.
+> * A new opcode OP_MASK is added, which acts as a NOP during execution.
+> * The sighash is computed like in BIP143, but:
+>   * If SIGHASH_SCRIPTMASK is present, for every OP_MASK in scriptCode the subsequent opcode/push is removed.
+>   * The scriptPubKey being spent is added to the sighash, unless SIGHASH_SCRIPTMASK is set.
+>   * The transaction fee is added to the sighash, unless SIGHASH_NOFEE is set.
+>   * hashPrevouts, hashSequence, and outpoint are set to null when SIGHASH_NOINPUT is set (like BIP118, but not for scriptCode).
+
+Thanks for all the input so far. Going over the suggestions and other ideas:
+
+* OP_MASK should be required to be followed by a push, as suggested by
+Anthony Towns. The alternative would permit substituting arbitrary
+opcodes for masked pushes, which is at least very hard to reason
+about. This would effectively turn it into a multi-byte OP_MASKEDPUSH
+opcode.
+
+* It's probably better to sign the amounts of all inputs, as suggested
+by Johnson Lau. As that would cause default sighashes to sign all
+input and output amounts, is there still a need to sign the tx fee
+explicitly? Or in other words, are there situations where changing the
+set of inputs or outputs after signing is desired, but the net
+difference between them cannot change? If not, that would remove the
+need for NOFEE.
+
+* Do we need to keep the rule that sequence values of other inputs are
+only signed with default sighash? It feels cleaner to always sign the
+sequence values of all inputs that are included in the sighash anyway
+(so all of them, unless ANYONECANPAY or NOINPUT, which would make it
+sign only the current input's sequence value). If NOINPUT also blanks
+the sequence values (as currently specified by BIP118), and all input
+amounts are signed, that would make amounts/sequence values always be
+treated identically.
+
+* If MASK implies NOINPUT, and NOINPUT implies ANYONECANPAY, the 3 of
+them can be encoded in just 2 bits using the
+PARTIALSCRIPT/KNOWNSCRIPT/KNOWNTX/ALL_INPUTS encoding Anthony Towns
+suggested.
+
+* Regarding the discussion about preventing signatures from being
+rebound to a different script(path)/checksig:
+  * With MAST there is indeed less need for this, but at least
+single-tree MAST constructions cannot replace all script branches (a
+script with 40 IF/THEN/ELSE constructions may have 2^40 different
+execution paths, for which computing a Merkle tree is intractable).
+  * Just signing the opcode position of the CHECKSIG operator isn't
+enough for all cases either. For example, you could have a complex
+nested set of branches that puts a number of pubkeys on the stack, and
+then a CHECKMULTISIG after the last ENDIF to verify all of them. In
+such a situation, if the same key can occur in multiple combinations,
+you still may want to prevent a signature generated for one
+combination from being rebindable to the same key in another
+combination. I believe that signing the opcode position plus the
+true/false condition of all previous(?) IF statements is probably
+sufficient to achieve that, but it would also introduce unnecessary
+complexity for signers in most cases (see next point).
+  * Thinking about signing code, adding these sort of execution trace
+commitments to the sighash means they need to know which checksig
+operator etc. they are signing for. I believe that in practice for
+example HW devices will just whatever position the wallet indicated,
+rather than verifying it corresponds with a particular intended code
+path. Preventing rebinding isn't very useful if an attacker can make
+you bind to the wrong thing regardless, so I'm not convinced this is
+even worth having by default.
+  * An alternative (not sure who suggested it) is to simply make every
+CHECKSIG sign the opcode position of the last executed CODESEPARATOR
+(and remove the earlier cut-of-scriptCode effect of CODESEPARATOR).
+This gives a simple (but somewhat limited) way for scripts that need
+to prevent certain kinds of cross-execution-trace rebinding.
+
+A few misc ideas:
+* (Taken from https://github.com/jl2012/bips/blob/sighash2/bip-sighash2.mediawiki)
+For a default sign-everything sighash, the sighash byte can be
+dropped.
+* For the commitments to the scriptPubKey and scriptCode, an
+intermediary hash should be used (so the data included in the sighash
+includes a hash of those, rather than the script directly). This
+prevents a blow up in hashing time for large scripts with many
+different sighash types in its signatures.
+* When masking the scriptCode, the push opcode immediately following
+OP_MASKEDPUSH can be replaced by OP_VERIF (which will never collide
+with any real script, as OP_VERIF makes a script invalid even when
+occurring in an unexecuted branch).
+* Sighashes (and really all new hashes that are introduced) should be
+prefixed with a fixed 64-byte array as "tag", chosen to not collide
+with any existing use of SHA256 in Bitcoin, to prevent signatures from
+being re-interpretable as something else. Picking 64 bytes as tag size
+means it can be efficiently implemented as just a modified SHA256 IV.
+
+So a combined proposal:
+* All existing sighash flags, plus NOINPUT and MASK
+(ANYONECANPAY/NOINPUT/MASK are encoded in 2 bits).
+* A new opcode called OP_MASKEDPUSH, whose only runtime behaviour is
+failing if not immediately followed by a push, or when appearing as
+last opcode in the script.
+* Signatures are 64 plus an optional sighash byte. A missing sighash
+byte implies ALL, and ALL cannot be specified explicitly.
+* The sighash is computed from the following:
+  * A 64-byte constant tag
+  * Data about the spending transaction:
+    * The transaction version number
+    * The hash of txins' prevouts+amounts+sequences (or nothing if ANYONECANPAY)
+    * The hash of all txouts (or just the corresponding txout if
+SINGLE; nothing if NONE)
+    * The transaction locktime
+  * Data about the output being spent:
+    * The prevout (or nothing if NOINPUT)
+    * The amount
+    * The sequence number
+    * The hash of the scriptPubKey (or nothing if MASK)
+  * Data about the script being executed:
+    * The hash of the scriptCode (after masking out, if MASK is set)
+    * The opcode number of the last executed OP_CODESEPARATOR (or
+0xFFFFFFFF if none)
+  * The sighash mode
+
+Cheers,
+
+-- 
+Pieter
+
+From c1.bitcoin at niftybox.net  Wed Nov 28 06:33:30 2018
+From: c1.bitcoin at niftybox.net (Devrandom)
+Date: Tue, 27 Nov 2018 22:33:30 -0800
+Subject: [bitcoin-dev] Multi party Schnorr Rust implementation
+In-Reply-To: <CALhDas2W5QEPmw8JEgak0zf7y3N0UFTiMVk-djR8x9_WYZiyfQ@mail.gmail.com>
+References: <CALhDas2W5QEPmw8JEgak0zf7y3N0UFTiMVk-djR8x9_WYZiyfQ@mail.gmail.com>
+Message-ID: <CAB0O3SVjhXVV4PKYPh+2O4xZomcyT-T2Mis1A8riTtrnUUigig@mail.gmail.com>
+
+Hi Omer,
+
+Are there any candidates for non-interactive threshold signatures?
+Interactive signatures are not very suitable for air-gapped use cases.
+
+On Tue, Nov 27, 2018 at 11:18 AM Omer Shlomovits via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Hello all,
+>
+> I am working for the past few months with collaborators (in cc) on
+> providing Rust reference implementations to existing multi party schemes
+> for Schnorr signatures [1]. This includes aggregated signatures,
+> accountable signatures (which for n out of n are multi-signatures) and
+> threshold signatures (wip).
+> The project can be found here:
+> https://github.com/KZen-networks/multi-party-schnorr .
+> We aim that if the protocol is run in a configuration of a single party it
+> will be bip-schnorr [2] compliant.
+>
+> Hope you'll find it useful :)
+> Questions, suggestions and pull requests are welcome!
+>
+>
+> [1]
+> https://github.com/KZen-networks/multi-party-schnorr/tree/master/papers
+> [2] https://github.com/sipa/bips/blob/bip-schnorr/bip-schnorr.mediawiki
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181127/9bf84f7f/attachment.html>
+
+From omer.shlomovits at gmail.com  Wed Nov 28 08:13:08 2018
+From: omer.shlomovits at gmail.com (Omer Shlomovits)
+Date: Wed, 28 Nov 2018 10:13:08 +0200
+Subject: [bitcoin-dev] Multi party Schnorr Rust implementation
+In-Reply-To: <CAB0O3SVjhXVV4PKYPh+2O4xZomcyT-T2Mis1A8riTtrnUUigig@mail.gmail.com>
+References: <CALhDas2W5QEPmw8JEgak0zf7y3N0UFTiMVk-djR8x9_WYZiyfQ@mail.gmail.com>
+	<CAB0O3SVjhXVV4PKYPh+2O4xZomcyT-T2Mis1A8riTtrnUUigig@mail.gmail.com>
+Message-ID: <CALhDas1F6guAvPtTcSR+NJ+cybH-wcJu14ZmiQaSNX98OcWYBw@mail.gmail.com>
+
+Hi,
+
+AFAIK, There is no way to do threshold signatures non-interactively for the
+general case of t out of n. Even if you are willing to maintain additional
+data structure on top of the standard and change verification algorithm
+(see for example appendix B in [1] where they use bitmaps).
+
+The best way that I came up with so far (which I plan to implement in the
+library) is to take SS01 paper [2], this also the paper cited in
+bip-schnorr [3], and to replace Pedersen VSS with Feldman VSS (Feldman VSS
+implementation can be found in [4] ). Basically taking the DKG from GG18
+without paillier and the dlog pok (threshold ecdsa paper [5]) and use it
+for the threshold schnorr DKG and for the ephemeral key distributed
+generation. This will cause the lost of Robustness but will be more
+efficient.
+
+Generally speaking - the purpose of using threshold security is to replace
+hw security. The assumption is that you would rather trust that no more
+than t out of n different machines will get corrupted at same time than to
+trust one secure hardware. Maybe that relax a bit the demand for using air
+gapped devices?
+
+
+[1] https://docs.zilliqa.com/whitepaper.pdf
+[2]
+https://github.com/KZen-networks/multi-party-schnorr/blob/master/papers/provably_secure_distributed_schnorr_signatures_and_a_threshold_scheme.pdf
+[3]
+https://github.com/sipa/bips/blob/bip-schnorr/bip-schnorr.mediawiki#multisignatures-and-threshold-signatures
+[4]
+https://github.com/KZen-networks/curv/tree/master/src/cryptographic_primitives/secret_sharing
+[5] http://stevengoldfeder.com/papers/GG18.pdf
+
+On Wed, Nov 28, 2018 at 8:33 AM Devrandom <c1.bitcoin at niftybox.net> wrote:
+
+> Hi Omer,
+>
+> Are there any candidates for non-interactive threshold signatures?
+> Interactive signatures are not very suitable for air-gapped use cases.
+>
+> On Tue, Nov 27, 2018 at 11:18 AM Omer Shlomovits via bitcoin-dev <
+> bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+>> Hello all,
+>>
+>> I am working for the past few months with collaborators (in cc) on
+>> providing Rust reference implementations to existing multi party schemes
+>> for Schnorr signatures [1]. This includes aggregated signatures,
+>> accountable signatures (which for n out of n are multi-signatures) and
+>> threshold signatures (wip).
+>> The project can be found here:
+>> https://github.com/KZen-networks/multi-party-schnorr .
+>> We aim that if the protocol is run in a configuration of a single party
+>> it will be bip-schnorr [2] compliant.
+>>
+>> Hope you'll find it useful :)
+>> Questions, suggestions and pull requests are welcome!
+>>
+>>
+>> [1]
+>> https://github.com/KZen-networks/multi-party-schnorr/tree/master/papers
+>> [2] https://github.com/sipa/bips/blob/bip-schnorr/bip-schnorr.mediawiki
+>> _______________________________________________
+>> bitcoin-dev mailing list
+>> bitcoin-dev at lists.linuxfoundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181128/0f4074bd/attachment-0001.html>
+
+From jl2012 at xbt.hk  Wed Nov 28 08:31:48 2018
+From: jl2012 at xbt.hk (Johnson Lau)
+Date: Wed, 28 Nov 2018 16:31:48 +0800
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <CAPg+sBiu0BjZEtz-t7m3M+TnAEDG_k1GKtxwkOKh6qrSezUO7g@mail.gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<CAPg+sBiu0BjZEtz-t7m3M+TnAEDG_k1GKtxwkOKh6qrSezUO7g@mail.gmail.com>
+Message-ID: <8BD44CAB-D590-4B2D-8CB7-9CD6792E5EF9@xbt.hk>
+
+
+
+> On 28 Nov 2018, at 11:41 AM, Pieter Wuille via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> 
+> So a combined proposal:
+> * All existing sighash flags, plus NOINPUT and MASK
+> (ANYONECANPAY/NOINPUT/MASK are encoded in 2 bits).
+> * A new opcode called OP_MASKEDPUSH, whose only runtime behaviour is
+> failing if not immediately followed by a push, or when appearing as
+> last opcode in the script.
+
+I suggest to use the place of OP_RESERVED (0x50) as OP_MASKEDPUSH. The reason is 0x50 is not counted towards the 201 opcode limit, so people could mask as many pushes as needed.
+
+In a new script version, of course, we could make any opcode not being counted. But that would just create another special case in the EvalScript() code.
+
+(Or, maybe we should limit the use of OP_MASKEDPUSH? I think this is open for discussion.)
+
+> * Signatures are 64 plus an optional sighash byte. A missing sighash
+> byte implies ALL, and ALL cannot be specified explicitly.
+> * The sighash is computed from the following:
+>  * A 64-byte constant tag
+>  * Data about the spending transaction:
+>    * The transaction version number
+>    * The hash of txins' prevouts+amounts+sequences (or nothing if ANYONECANPAY)
+
+Do you want to make it 1 hash or 3 hashes? With 3 hashes, it could share hashPrevouts and hashSequence with BIP143. Making everything 1 hash will only result in redundent hashing for each input
+
+>    * The hash of all txouts (or just the corresponding txout if
+> SINGLE; nothing if NONE)
+
+Starting from this sighash version, I think we should forbid the use of SINGLE without a matching output. Also, the undefined output type should also be invalid.
+
+>    * The transaction locktime
+>  * Data about the output being spent:
+>    * The prevout (or nothing if NOINPUT)
+>    * The amount
+>    * The sequence number
+>    * The hash of the scriptPubKey (or nothing if MASK)
+
+I think we should just use the scriptPubKey, since sPK is fixed size (23-byte for p2sh and 35-byte for native segwit).
+
+In order to distinguish p2sh and native segwit for MASKED NOINPUT, you also need to commit to an additional 1-bit value
+
+>  * Data about the script being executed:
+>    * The hash of the scriptCode (after masking out, if MASK is set)
+
+For direct key-spending (i.e. not taprooted script), I suggest to set the H(scriptCode) to zero, for the following reasons:
+1) Since we have already committed to sPK, which is already a *direct* hash of scriptCode, it is redundant to do it again.
+2) This could save one SHA256 compression for direct key-spending, which is probably 90% of all cases
+3) This allows hardware wallet to tell whether they are using direct-spending path or taproot script path
+
+Since we may want 3) anyway, we don?t need to commit to another 1-bit value if we simply set H(scriptCode) to zero
+
+We should also ban MASKED NOINPUT for direct-spending, which doesn?t make sense. And it is not safe since both H(scriptCode) and sPK are empty.
+
+>    * The opcode number of the last executed OP_CODESEPARATOR (or
+> 0xFFFFFFFF if none)
+>  * The sighash mode
+
+This proposal will only use 4 out of the 8 sighash bits. Do we want to make those 4 unused bits invalid, or ignored? Leaving at least 1 bit valid but ignored (?bit-x"), and 1 bit invalid (?bit-y?), will allow opt-in/out hardfork replay-protection, for example:
+
+* default signatures are those with both bit-x and bit-y unset.
+* If we want to make default signatures replayable across chains, the new fork should reject signatures with bit-x, and accept sigs with or without bit-y. In this case, defaults sigs are valid for both chains. Sigs with bit-x is valid only for original chain, and sigs with bit-y is valid only for new chain.
+* If we want to make default signatures non-replayabble, the new fork should reject all default sigs, but accept sigs with either bit-x or bit-y set. In this case, default sig is valid only for original chain. Sigs with bit-x is valid for both chains, and sigs with bit-y is valid only for new chain.
+
+Replayability is sometimes desirable, for example, an LN opened before a fork should be able to be settled on both chains
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181128/40369e53/attachment-0001.html>
+
+From jl2012 at xbt.hk  Wed Nov 28 08:40:34 2018
+From: jl2012 at xbt.hk (Johnson Lau)
+Date: Wed, 28 Nov 2018 16:40:34 +0800
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <20181128005416.GB22873@mcelrath.org>
+References: <20181128005416.GB22873@mcelrath.org>
+Message-ID: <8690D3D0-3815-4779-A571-C75AA75F707B@xbt.hk>
+
+This is incompatible with bip-schnorr, which intentionally disallow such use by always committing to the public key: https://github.com/sipa/bips/blob/bip-schnorr/bip-schnorr.mediawiki
+
+With the recent fake Satoshi signature drama, and other potential ways to misuse and abuse, I think this is a better way to go, which unfortunately might disallow some legitimate applications.
+
+Covenants could be made using OP_CHECKSIGFROMSTACK (https://fc17.ifca.ai/bitcoin/papers/bitcoin17-final28.pdf) or OP_PUSHTXDATA (https://github.com/jl2012/bips/blob/vault/bip-0ZZZ.mediawiki). I think this is the next step following the taproot soft fork
+
+> On 28 Nov 2018, at 8:54 AM, Bob McElrath via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> 
+> I have been working on an experimental wallet that implements Bitcoin
+> Covenants/Vaults following a blog post I wrote about 2 years ago, using
+> "Pay-to-Timelock Signed Transaction" (P2TST).  (Also mentioned recently by
+> kanzure in a talk somewheres...)  The idea is that you deposit to an address for
+> which you don't know the private key.  Instead you construct a second
+> transaction sending that to a timelocked staging address for which you DO have
+> the privkey (it also has an IF/ELSE condition with a second spending condition
+> for use in case of theft attempt).  In order to do this you either have to
+> delete the privkey of the deposit address (a difficult proposition to know it's
+> actually been deleted), but instead one can construct a signature directly using
+> a RNG, and use the SIGHASH to compute the corresponding pubkey via ECDSA
+> recover, from which you compute the corresponding address.  In this way your
+> wallet is a set of P2TST transactions and a corresponding privkey, with a (set
+> of) emergency keys.
+> 
+> This interacts with NOINPUT in the following way: if the input to the
+> transaction commits to the pubkey in any way, you have a circular dependency on
+> the pubkey that could only be satisfied by breaking a hash function.  This
+> occurs with standard sighash's which commit to the txid, which in turn commit to
+> the address, which commits to the pubkey, so this construction of
+> covenants/vaults requires NOINPUT.
+> 
+> AFAICT sipa's proposal is compatible with the above vaulted construction by
+> using SIGHASH_NOINPUT | SIGHASH_SCRIPTMASK to remove the
+> scriptPubKey/redeemScript from the sighash.  Putting the
+> scriptPubKey/redeemScript in the sighash introduces the same circular
+> dependency, but SIGHASH_SCRIPTMASK removes it.
+> 
+> One would probably want to provide the fee from a separate wallet so as to be
+> able to account for fluctuating fee pressures when the unvaulting occurs a long
+> time after vaulting.  Thus you'd want to use SIGHASH_SINGLE so that a fee-wallet
+> can add fees (or for composability of P2TSTs), and SIGHASH_NOFEE as well.
+> 
+> P.S. Also very excited to combine the above idea with Taproot/Graftroot/g'Root.
+> 
+> --
+> Cheers, Bob McElrath
+> 
+> "For every complex problem, there is a solution that is simple, neat, and wrong."
+>    -- H. L. Mencken 
+> 
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+
+
+From bob at mcelrath.org  Wed Nov 28 14:04:13 2018
+From: bob at mcelrath.org (Bob McElrath)
+Date: Wed, 28 Nov 2018 14:04:13 +0000
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <8690D3D0-3815-4779-A571-C75AA75F707B@xbt.hk>
+References: <20181128005416.GB22873@mcelrath.org>
+	<8690D3D0-3815-4779-A571-C75AA75F707B@xbt.hk>
+Message-ID: <20181128140412.GC22873@mcelrath.org>
+
+We are also prototyping the OP_CHECKSIGFROMSTACK mechanism using Liquid/Elements.
+
+Given uncertainty about which features will actually be deployed on mainnet,
+we're exploring all possibilities so as to provide feedback about the "best" way
+to implement a covenant/vault, also including the OP_CHECKOUTPUTVERIFY
+originally proposed by Eyal et al. That's 3 ways to implement a covenant/vault,
+if there's others I'd be happy to hear about it.  ;-)  Thanks for the
+OP_PUSHTXDATA ref, I'm reading now...  Personally I think the
+OP_CHECKSIGFROMSTACK is probably the most elegant mechanism.
+
+Thanks for the feedback!
+
+Johnson Lau [jl2012 at xbt.hk] wrote:
+> This is incompatible with bip-schnorr, which intentionally disallow such use by always committing to the public key: https://github.com/sipa/bips/blob/bip-schnorr/bip-schnorr.mediawiki
+> 
+> With the recent fake Satoshi signature drama, and other potential ways to misuse and abuse, I think this is a better way to go, which unfortunately might disallow some legitimate applications.
+> 
+> Covenants could be made using OP_CHECKSIGFROMSTACK (https://fc17.ifca.ai/bitcoin/papers/bitcoin17-final28.pdf) or OP_PUSHTXDATA (https://github.com/jl2012/bips/blob/vault/bip-0ZZZ.mediawiki). I think this is the next step following the taproot soft fork
+> 
+> > On 28 Nov 2018, at 8:54 AM, Bob McElrath via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> > 
+> > I have been working on an experimental wallet that implements Bitcoin
+> > Covenants/Vaults following a blog post I wrote about 2 years ago, using
+> > "Pay-to-Timelock Signed Transaction" (P2TST).  (Also mentioned recently by
+> > kanzure in a talk somewheres...)  The idea is that you deposit to an address for
+> > which you don't know the private key.  Instead you construct a second
+> > transaction sending that to a timelocked staging address for which you DO have
+> > the privkey (it also has an IF/ELSE condition with a second spending condition
+> > for use in case of theft attempt).  In order to do this you either have to
+> > delete the privkey of the deposit address (a difficult proposition to know it's
+> > actually been deleted), but instead one can construct a signature directly using
+> > a RNG, and use the SIGHASH to compute the corresponding pubkey via ECDSA
+> > recover, from which you compute the corresponding address.  In this way your
+> > wallet is a set of P2TST transactions and a corresponding privkey, with a (set
+> > of) emergency keys.
+> > 
+> > This interacts with NOINPUT in the following way: if the input to the
+> > transaction commits to the pubkey in any way, you have a circular dependency on
+> > the pubkey that could only be satisfied by breaking a hash function.  This
+> > occurs with standard sighash's which commit to the txid, which in turn commit to
+> > the address, which commits to the pubkey, so this construction of
+> > covenants/vaults requires NOINPUT.
+> > 
+> > AFAICT sipa's proposal is compatible with the above vaulted construction by
+> > using SIGHASH_NOINPUT | SIGHASH_SCRIPTMASK to remove the
+> > scriptPubKey/redeemScript from the sighash.  Putting the
+> > scriptPubKey/redeemScript in the sighash introduces the same circular
+> > dependency, but SIGHASH_SCRIPTMASK removes it.
+> > 
+> > One would probably want to provide the fee from a separate wallet so as to be
+> > able to account for fluctuating fee pressures when the unvaulting occurs a long
+> > time after vaulting.  Thus you'd want to use SIGHASH_SINGLE so that a fee-wallet
+> > can add fees (or for composability of P2TSTs), and SIGHASH_NOFEE as well.
+> > 
+> > P.S. Also very excited to combine the above idea with Taproot/Graftroot/g'Root.
+> > 
+> > --
+> > Cheers, Bob McElrath
+> > 
+> > "For every complex problem, there is a solution that is simple, neat, and wrong."
+> >    -- H. L. Mencken 
+> > 
+> > _______________________________________________
+> > bitcoin-dev mailing list
+> > bitcoin-dev at lists.linuxfoundation.org
+> > https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> 
+> 
+> 
+> 
+> !DSPAM:5bfe5494217527839717631!
+--
+Cheers, Bob McElrath
+
+"For every complex problem, there is a solution that is simple, neat, and wrong."
+    -- H. L. Mencken 
+
+
+From aj at erisian.com.au  Wed Nov 28 10:49:46 2018
+From: aj at erisian.com.au (Anthony Towns)
+Date: Wed, 28 Nov 2018 20:49:46 +1000
+Subject: [bitcoin-dev] Multi party Schnorr Rust implementation
+In-Reply-To: <CAB0O3SVjhXVV4PKYPh+2O4xZomcyT-T2Mis1A8riTtrnUUigig@mail.gmail.com>
+References: <CALhDas2W5QEPmw8JEgak0zf7y3N0UFTiMVk-djR8x9_WYZiyfQ@mail.gmail.com>
+	<CAB0O3SVjhXVV4PKYPh+2O4xZomcyT-T2Mis1A8riTtrnUUigig@mail.gmail.com>
+Message-ID: <20181128104946.bftgbclno6gzzji4@erisian.com.au>
+
+On Tue, Nov 27, 2018 at 10:33:30PM -0800, Devrandom via bitcoin-dev wrote:
+> Are there any candidates for non-interactive threshold signatures?? Interactive
+> signatures are not very suitable for air-gapped use cases.
+
+I think you can work around this to some extent by "batching" signing
+requests.
+
+(Background:
+
+For interactive multisignatures (threshold or not), the protocol is:
+
+   produce secret nonce r, calculate public nonce R=r*G
+   everyone shares H(R)
+   everyone shares R, checks received values match received hashes
+   everyone calculates s=r+H(R',P',m)*p, shares s
+
+For deterministic nonces, you generate r=H(p,m) based on the message
+being signed and your private key, so can only start this process when
+you start signing, and the sharing rounds mean interactivity.
+
+)
+
+But you don't strictly need deterministic nonces, you just have to never
+use the same nonce with a different message. If you arrange to do that
+by keeping some state instead, you can calculate nonces in advance:
+
+phase 1:
+    produce secret nonces r1..r1024, calculate R1..R1024
+    share H(R1)..H(R1024)
+
+phase 2:
+    store other parties hashes, eg as H1..H1024
+    share R1..R1024
+
+phase 3:
+    check received nonces match, ie H(R1)=H1, etc
+
+phase 4:
+    request to sign msg m, with nonce n
+    if nonce n has already been used, abort
+    mark nonce n as having being used
+    lookup other signer's nonces n and sum them to get R'
+    calculate s = rn + H(R',P',m)*p
+    share s
+
+That way you could do phases 1-3 once, and then do 1024 signatures during
+the month on whatever your current timetable is.
+
+You could also combine these phases, so when you get a signing request you:
+
+   * receive msg to sign m, n=4; everyone else's R4, H(R5)
+
+   * check  H(R4) = previously received "H(R4)"
+   * calculate R4' by summing up your and everyone's R4s
+   * bump state to n=5
+   * do the signature...
+
+   * send sig=(s,R4), R5, H(R6)
+
+which would let you have an untrusted app that does the coordination and
+shares the nonces and nonce-hashes, and getting all the needed air-gapped
+communication in a single round. (This is effectively doing phase 3 and
+4 for the current signature, phase 2 for the next signature, and phase
+1 for the signature after that all in one round of communication)
+
+That seems almost as good as true non-interactivity to me, if your signing
+hardware is capable of securely storing (and updating) a few kB of state
+(which is probably not quite as easy as it sounds).
+
+Cheers,
+aj
+
+
+From jonasdnick at gmail.com  Wed Nov 28 16:43:12 2018
+From: jonasdnick at gmail.com (Jonas Nick)
+Date: Wed, 28 Nov 2018 16:43:12 +0000
+Subject: [bitcoin-dev] Multi party Schnorr Rust implementation
+In-Reply-To: <20181128104946.bftgbclno6gzzji4@erisian.com.au>
+References: <CALhDas2W5QEPmw8JEgak0zf7y3N0UFTiMVk-djR8x9_WYZiyfQ@mail.gmail.com>
+	<CAB0O3SVjhXVV4PKYPh+2O4xZomcyT-T2Mis1A8riTtrnUUigig@mail.gmail.com>
+	<20181128104946.bftgbclno6gzzji4@erisian.com.au>
+Message-ID: <dd9988c0-2635-88d7-21e4-ebd42e202990@gmail.com>
+
+> For deterministic nonces, you generate r=H(p,m) based on the message
+> being signed and your private key, so can only start this process when
+> you start signing, and the sharing rounds mean interactivity.
+
+It's not your point but it should be noted that this is not secure unless all
+other signers give you zero knowledge proof that they've generated their nonce
+in the same way. Otherwise, if your asked to sign the same message you'll use
+the same nonce for two different challenges. In your example you'd compute
+s=r+H(R',P',m)*p and s'=r+H(R'',P',m)*p from which an observer can compute the
+secret key p.
+
+On 11/28/18 10:49 AM, Anthony Towns via bitcoin-dev wrote:
+> On Tue, Nov 27, 2018 at 10:33:30PM -0800, Devrandom via bitcoin-dev wrote:
+>> Are there any candidates for non-interactive threshold signatures?? Interactive
+>> signatures are not very suitable for air-gapped use cases.
+> 
+> I think you can work around this to some extent by "batching" signing
+> requests.
+> 
+> (Background:
+> 
+> For interactive multisignatures (threshold or not), the protocol is:
+> 
+>    produce secret nonce r, calculate public nonce R=r*G
+>    everyone shares H(R)
+>    everyone shares R, checks received values match received hashes
+>    everyone calculates s=r+H(R',P',m)*p, shares s
+> 
+> For deterministic nonces, you generate r=H(p,m) based on the message
+> being signed and your private key, so can only start this process when
+> you start signing, and the sharing rounds mean interactivity.
+> 
+> )
+> 
+> But you don't strictly need deterministic nonces, you just have to never
+> use the same nonce with a different message. If you arrange to do that
+> by keeping some state instead, you can calculate nonces in advance:
+> 
+> phase 1:
+>     produce secret nonces r1..r1024, calculate R1..R1024
+>     share H(R1)..H(R1024)
+> 
+> phase 2:
+>     store other parties hashes, eg as H1..H1024
+>     share R1..R1024
+> 
+> phase 3:
+>     check received nonces match, ie H(R1)=H1, etc
+> 
+> phase 4:
+>     request to sign msg m, with nonce n
+>     if nonce n has already been used, abort
+>     mark nonce n as having being used
+>     lookup other signer's nonces n and sum them to get R'
+>     calculate s = rn + H(R',P',m)*p
+>     share s
+> 
+> That way you could do phases 1-3 once, and then do 1024 signatures during
+> the month on whatever your current timetable is.
+> 
+> You could also combine these phases, so when you get a signing request you:
+> 
+>    * receive msg to sign m, n=4; everyone else's R4, H(R5)
+> 
+>    * check  H(R4) = previously received "H(R4)"
+>    * calculate R4' by summing up your and everyone's R4s
+>    * bump state to n=5
+>    * do the signature...
+> 
+>    * send sig=(s,R4), R5, H(R6)
+> 
+> which would let you have an untrusted app that does the coordination and
+> shares the nonces and nonce-hashes, and getting all the needed air-gapped
+> communication in a single round. (This is effectively doing phase 3 and
+> 4 for the current signature, phase 2 for the next signature, and phase
+> 1 for the signature after that all in one round of communication)
+> 
+> That seems almost as good as true non-interactivity to me, if your signing
+> hardware is capable of securely storing (and updating) a few kB of state
+> (which is probably not quite as easy as it sounds).
+> 
+> Cheers,
+> aj
+> 
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> 
+
+From decker.christian at gmail.com  Thu Nov 29 17:00:09 2018
+From: decker.christian at gmail.com (Christian Decker)
+Date: Thu, 29 Nov 2018 18:00:09 +0100
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <CAPg+sBiu0BjZEtz-t7m3M+TnAEDG_k1GKtxwkOKh6qrSezUO7g@mail.gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<CAPg+sBiu0BjZEtz-t7m3M+TnAEDG_k1GKtxwkOKh6qrSezUO7g@mail.gmail.com>
+Message-ID: <87d0qnrf8m.fsf@gmail.com>
+
+Pieter Wuille via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org>
+writes:
+
+> On Mon, 19 Nov 2018 at 14:37, Pieter Wuille <pieter.wuille at gmail.com> wrote:
+> * It's probably better to sign the amounts of all inputs, as suggested
+> by Johnson Lau. As that would cause default sighashes to sign all
+> input and output amounts, is there still a need to sign the tx fee
+> explicitly? Or in other words, are there situations where changing the
+> set of inputs or outputs after signing is desired, but the net
+> difference between them cannot change? If not, that would remove the
+> need for NOFEE.
+
+So the final proposal would be to append a new `hashValues` field to the
+hashed representation, with `hashValues` just being the double SHA256 of
+all values? In that case SINGLE needs to blank that hash, otherwise we'd
+be committing to all inputs again.
+
+Once we have that detail, we can start thinking about what it means to
+commit to the fee vs. committing to the values. Since the fee is given
+by the output values and the input values we only need to consider the
+cases in which they can be modified.
+
+ - NOINPUT (as in BIP118) commits to the value (and I can't think of a
+   usecase where we'd want to change that), and that transparently
+   extends to all other inputs.
+ - For ANYONECANPAY can't really commit to a fee anyway so ANYONECANPAY
+   would likely imply NOFEE.
+ - With NONE all bets are off anyway, so no need to consider that :-)
+ - SINGLE is a bit special, and for value commitments it reduces to the
+   current commitment to its own value, for fee commitment it's hard to
+   see a use of that commitment at all afaik (I think the combination
+   SINGLE|NOFEE would always be used).
+
+> * Do we need to keep the rule that sequence values of other inputs are
+> only signed with default sighash? It feels cleaner to always sign the
+> sequence values of all inputs that are included in the sighash anyway
+> (so all of them, unless ANYONECANPAY or NOINPUT, which would make it
+> sign only the current input's sequence value). If NOINPUT also blanks
+> the sequence values (as currently specified by BIP118), and all input
+> amounts are signed, that would make amounts/sequence values always be
+> treated identically.
+
+Single cannot commit to other the sequence of other inputs, otherwise
+we're breaking SINGLE completely. As mentioned before NOINPUT doesn't
+need to blank `hashSequence`, but I'm happy to make it match if that
+makes implementations handle fewer cases.
+
+> * If MASK implies NOINPUT, and NOINPUT implies ANYONECANPAY, the 3 of
+> them can be encoded in just 2 bits using the
+> PARTIALSCRIPT/KNOWNSCRIPT/KNOWNTX/ALL_INPUTS encoding Anthony Towns
+> suggested.
+
+So we'd end up enumerating the combinations rather than having
+independent bits for each of them? This might save us storage bits, but
+it'd also result in uglier code imho, not a strong feeling but might
+come back to haunt us if we ever come up with something new :-)
+
+> So a combined proposal:
+> * All existing sighash flags, plus NOINPUT and MASK
+> (ANYONECANPAY/NOINPUT/MASK are encoded in 2 bits).
+> * A new opcode called OP_MASKEDPUSH, whose only runtime behaviour is
+> failing if not immediately followed by a push, or when appearing as
+> last opcode in the script.
+> * Signatures are 64 plus an optional sighash byte. A missing sighash
+> byte implies ALL, and ALL cannot be specified explicitly.
+> * The sighash is computed from the following:
+>   * A 64-byte constant tag
+>   * Data about the spending transaction:
+>     * The transaction version number
+>     * The hash of txins' prevouts+amounts+sequences (or nothing if ANYONECANPAY)
+
+This needs to be partially blanked for SINGLE as well, otherwise we
+break SINGLE.
+
+>     * The hash of all txouts (or just the corresponding txout if
+> SINGLE; nothing if NONE)
+>     * The transaction locktime
+>   * Data about the output being spent:
+>     * The prevout (or nothing if NOINPUT)
+>     * The amount
+>     * The sequence number
+
+I assume the sequence number here refers to the input being signed, not
+the sequence number of the transaction output being spent :-) Might be
+easier if we consider 3 parts: the spending transaction, the input being
+signed, and the output (or TX) being spent.
+
+Cheers,
+Christian
+
+From decker.christian at gmail.com  Thu Nov 29 18:29:10 2018
+From: decker.christian at gmail.com (Christian Decker)
+Date: Thu, 29 Nov 2018 19:29:10 +0100
+Subject: [bitcoin-dev] Safer sighashes and more granular SIGHASH_NOINPUT
+In-Reply-To: <87d0qnrf8m.fsf@gmail.com>
+References: <CAPg+sBhuPG-2GXc+Bp0yv5ywry2fk56LPLT4AY0Kcs+YEoz4FA@mail.gmail.com>
+	<CAPg+sBiu0BjZEtz-t7m3M+TnAEDG_k1GKtxwkOKh6qrSezUO7g@mail.gmail.com>
+	<87d0qnrf8m.fsf@gmail.com>
+Message-ID: <877egvrb49.fsf@gmail.com>
+
+I'd like to retract my comments regarding SINGLE.
+
+I was contacted in private and it was pointed out to me that I was
+confusing `sighash_single` with `sighash_single|sighash_anyonecanpay`. I
+appreciate the correction and would like to avoid creating confusion
+with my previous comments, hence the retraction :-)
+
+Cheers,
+Christian
+
+From lf-lists at mattcorallo.com  Thu Nov 29 19:37:54 2018
+From: lf-lists at mattcorallo.com (Matt Corallo)
+Date: Thu, 29 Nov 2018 19:37:54 +0000
+Subject: [bitcoin-dev] CPFP Carve-Out for Fee-Prediction Issues in
+ Contracting Applications (eg Lightning)
+Message-ID: <c3f68b73-84c6-7428-4bf6-b47802141392@mattcorallo.com>
+
+(cross-posted to both lists to make lightning-dev folks aware, please 
+take lightning-dev off CC when responding).
+
+As I'm sure everyone is aware, Lightning (and other similar systems) 
+work by exchanging pre-signed transactions for future broadcast. Of 
+course in many cases this requires either (a) predicting what the 
+feerate required for timely confirmation will be at some (or, really, 
+any) point in the future, or (b) utilizing CPFP and dependent 
+transaction relay to allow parties to broadcast low-feerate transactions 
+with children created at broadcast-time to increase the effective 
+feerate. Ideally transactions could be constructed to allow for 
+after-the-fact addition of inputs to increase fee without CPFP but it is 
+not always possible to do so.
+
+Option (a) is rather obviously intractible, and implementation 
+complexity has led to channel failures in lightning in practice (as both 
+sides must agree on a reasonable-in-the-future feerate). Option (b) is a 
+much more natural choice (assuming some form of as-yet-unimplemented 
+package relay on the P2P network) but is made difficult due to 
+complexity around RBF/CPFP anti-DoS rules.
+
+For example, if we take a simplified lightning design with pre-signed 
+commitment transaction A with one 0-value anyone-can-spend output 
+available for use as a CPFP output, a counterparty can prevent 
+confirmation of/significantly increase the fee cost of confirming A by 
+chaining a large-but-only-moderate-feerate transaction off of this 
+anyone-can-spend output. This transaction, B, will have a large absolute 
+fee while making the package (A, B) have a low-ish feerate, placing it 
+solidly at the bottom of the mempool but without significant risk of it 
+getting evicted during memory limiting. This large absolute fee forces a 
+counterparty which wishes to have the commitment transaction confirm to 
+increase on this absolute fee in order to meet RBF rules.
+
+For this reason (and many other similar attacks utilizing the package 
+size limits), in discussing the security model around CPFP, we've 
+generally considered it too-difficulty-to-prevent third parties which 
+are able to spend an output of a transaction from delaying its 
+confirmation, at least until/unless the prevailing feerates decline and 
+some of the mempool backlog gets confirmed.
+
+You'll note, however, that this attack doesn't have to be permanent to 
+work - Lightning's (and other contracting/payment channel systems') 
+security model assumes the ability to get such commitment transactions 
+confirmed in a timely manner, as otherwise HTLCs may time out and 
+counterparties can claim the timeout-refund before we can claim the HTLC 
+using the hash-preimage.
+
+To partially-address the CPFP security model considerations, a next step 
+might involve tweaking Lightning's commitment transaction to have two 
+small-value outputs which are immediately spendable, one by each channel 
+participant, allowing them to chain children off without allowng 
+unrelated third-parties to chain children. Obviously this does not 
+address the specific attack so we need a small tweak to the anti-DoS 
+CPFP rules in Bitcoin Core/BIP 125:
+
+The last transaction which is added to a package of dependent 
+transactions in the mempool must:
+  * Have no more than one unconfirmed parent,
+  * Be of size no greater than 1K in virtual size.
+(for implementation sanity, this would effectively reduce all mempool 
+package size limits by 1 1K-virtual-size transaction, and the last would 
+be "allowed to violate the limits" as long as it meets the above criteria).
+
+For contracting applications like lightning, this means that as long as 
+the transaction we wish to confirm (in this case the commitment transaction)
+  * Has only two immediately-spendable (ie non-CSV) outputs,
+  * where each immediately-spendable output is only spendable by one 
+counterparty,
+  * and is no larger than MAX_PACKAGE_VIRTUAL_SIZE - 1001 Vsize,
+each counterparty will always be able to independantly CPFP the 
+transaction in question. ie because if the "malicious" (ie 
+transaction-delaying) party bradcasts A with a child, it can never meet 
+the "last transaction" carve-out as its transaction cannot both meet the 
+package limit and have only one unconfirmed ancestor. Thus, the 
+non-delaying counterparty can always independently add its own CPFP 
+transaction, increasing the (A, Tx2) package feerate and confirming A 
+without having to concern themselves with the (A, Tx1) package.
+
+As an alternative proposal, at various points there have been 
+discussions around solving the "RBF-pinning" problem by allowing 
+transactors to mark their transactions as "likely-to-be-RBF'ed", which 
+could enable a relay policy where children of such transactions would be 
+rejected unless the resulting package would be "near the top of the 
+mempool". This would theoretically imply such attacks are not possible 
+to pull off consistently, as any "transaction-delaying" channel 
+participant will have to place the package containing A at an effective 
+feerate which makes confirmation to occur soon with some likelihood. It 
+is, however, possible to pull off this attack with low probability in 
+case of feerate spikes right after broadcast.
+
+Note that this clearly relies on some form of package relay, which comes 
+with its own challenges, but I'll start a separate thread on that.
+
+See-also: lightning-dev thread about the changes to lightning spec 
+required to incorporate this: 
+https://lists.linuxfoundation.org/pipermail/lightning-dev/2018-November/001643.html
+
+Matt
+
+From roconnor at blockstream.io  Fri Nov 30 17:38:04 2018
+From: roconnor at blockstream.io (Russell O'Connor)
+Date: Fri, 30 Nov 2018 12:38:04 -0500
+Subject: [bitcoin-dev] CPFP Carve-Out for Fee-Prediction Issues in
+ Contracting Applications (eg Lightning)
+In-Reply-To: <c3f68b73-84c6-7428-4bf6-b47802141392@mattcorallo.com>
+References: <c3f68b73-84c6-7428-4bf6-b47802141392@mattcorallo.com>
+Message-ID: <CAMZUoKnF65_4V6Lngg2eO2R+maqahEOzpgt=Z3EN5xTmMY=LKA@mail.gmail.com>
+
+On Fri, Nov 30, 2018 at 9:50 AM Matt Corallo via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> To partially-address the CPFP security model considerations, a next step
+> might involve tweaking Lightning's commitment transaction to have two
+> small-value outputs which are immediately spendable, one by each channel
+> participant, allowing them to chain children off without allowng
+> unrelated third-parties to chain children. Obviously this does not
+> address the specific attack so we need a small tweak to the anti-DoS
+> CPFP rules in Bitcoin Core/BIP 125:
+>
+
+It seems to me that this two-output scheme does address the specific attack
+without tweaking the RBF rules of BIP 125, since you are not doing an RBF
+at all.
+
+Suppose we have a 1k-vbyte unconfirmed transaction, TX0, with outputs Z, A,
+and B, where A and B are small outputs controlled by the participants Alice
+and Bob respectively, with a 1ksat fee, yielding a fee rate of 1sat/vbyte.
+Someone, maybe Alice, attempts to pin the transaction, maliciously or not,
+by attaching a 10k-vbyte transaction, TX1, to either output Z or output A,
+with a fee of 21ksats.  This brings the fee rate for the TX0-TX1 package to
+2sat/vbyte, being 11k-vbyte total size with 22ksats in total fees.
+
+Now Bob wants to CPFP to increase the effective fee rate of TX0 to
+3sats/vbyte using output B.  He attaches a 1k-vbyte transaction, TX2, to
+output B with a fee of 5ksats.  This ought to create a new TX0-TX2 package
+with a 3sat/vbyte fee rate, being 2k-vbyte total size with 6ksats in total
+fees.  TX1 has now been excluded from the package containing TX0. But TX1
+hasn't been replaced, so the RBF rules from BIP125 don't apply.  TX1 is
+still a valid unconfirmed transaction operating at a fee rate of
+2.1sats/vbyte.
+
+That said, I'm not an expert on how packages and package fee rates are
+calculated in Bitcoin Core, so I am speculating a bit.  And, because I'm
+talking with Matt, it's more likely that I'm mistaken.  AFAIK, any rules
+about CPFP's behaviour in Bitcoin Core is undocumented.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20181130/95ecf9e6/attachment-0001.html>
+
+From lf-lists at mattcorallo.com  Fri Nov 30 19:33:56 2018
+From: lf-lists at mattcorallo.com (Matt Corallo)
+Date: Fri, 30 Nov 2018 19:33:56 +0000
+Subject: [bitcoin-dev] CPFP Carve-Out for Fee-Prediction Issues in
+ Contracting Applications (eg Lightning)
+In-Reply-To: <CAMZUoKnF65_4V6Lngg2eO2R+maqahEOzpgt=Z3EN5xTmMY=LKA@mail.gmail.com>
+References: <c3f68b73-84c6-7428-4bf6-b47802141392@mattcorallo.com>
+	<CAMZUoKnF65_4V6Lngg2eO2R+maqahEOzpgt=Z3EN5xTmMY=LKA@mail.gmail.com>
+Message-ID: <f0234c95-031b-3bc2-e055-37585ed247ec@mattcorallo.com>
+
+Hmm, you may be correct that this doesn't (striclty speaking) imply a 
+change to the BIP 125 itself, though the high-level protocol here is 
+likely of interest to the list, as well as likely to generate feedback. 
+Note that in your example, output Z must be CSV-delayed (ie you cannot 
+construct a packeg using that output as it must be spent in a different 
+block than TX0 is confirmed in) in order for the proposal to be secure 
+as otherwise Alice could use output A to pin the transaction, and then 
+"use up" the proposed "last-transaction" rule by spending output Z, 
+leaving Bob unable to spend output B without meeting the (expensive) RBF 
+criteria.
+
+It was further pointed out to me that while the original mail states 
+that this relies on package relay, this isn't really entirely true. The 
+status quo today may leave a commitment transaction unable to be 
+broadcast if feerates spike much higher than the feerate negotiated at 
+the time of construction. Under this proposal this is not changed, it is 
+only the implementation proposal which implies the commitment 
+transaction feerate negotiation will simply be replaced with a 
+1sat/vbyte constant which relies on some form of package relay.
+
+Matt
+
+On 11/30/18 5:38 PM, Russell O'Connor wrote:
+> On Fri, Nov 30, 2018 at 9:50 AM Matt Corallo via bitcoin-dev 
+> <bitcoin-dev at lists.linuxfoundation.org 
+> <mailto:bitcoin-dev at lists.linuxfoundation.org>> wrote:
+> 
+>     To partially-address the CPFP security model considerations, a next
+>     step
+>     might involve tweaking Lightning's commitment transaction to have two
+>     small-value outputs which are immediately spendable, one by each
+>     channel
+>     participant, allowing them to chain children off without allowng
+>     unrelated third-parties to chain children. Obviously this does not
+>     address the specific attack so we need a small tweak to the anti-DoS
+>     CPFP rules in Bitcoin Core/BIP 125:
+> 
+> 
+> It seems to me that this two-output scheme does address the specific 
+> attack without tweaking the RBF rules of BIP 125, since you are not 
+> doing an RBF at all.
+> 
+> Suppose we have a 1k-vbyte unconfirmed transaction, TX0, with outputs Z, 
+> A, and B, where A and B are small outputs controlled by the participants 
+> Alice and Bob respectively, with a 1ksat fee, yielding a fee rate of 
+> 1sat/vbyte.
+> Someone, maybe Alice, attempts to pin the transaction, maliciously or 
+> not, by attaching a 10k-vbyte transaction, TX1, to either output Z or 
+> output A, with a fee of 21ksats.? This brings the fee rate for the 
+> TX0-TX1 package to 2sat/vbyte, being 11k-vbyte total size with 22ksats 
+> in total fees.
+> 
+> Now Bob wants to CPFP to increase the effective fee rate of TX0 to 
+> 3sats/vbyte using output B.? He attaches a 1k-vbyte transaction, TX2, to 
+> output B with a fee of 5ksats.? This ought to create a new TX0-TX2 
+> package with a 3sat/vbyte fee rate, being 2k-vbyte total size with 
+> 6ksats in total fees.? TX1 has now been excluded from the package 
+> containing TX0. But TX1 hasn't been replaced, so the RBF rules from 
+> BIP125 don't apply.? TX1 is still a valid unconfirmed transaction 
+> operating at a fee rate of 2.1sats/vbyte.
+> 
+> That said, I'm not an expert on how packages and package fee rates are 
+> calculated in Bitcoin Core, so I am speculating a bit.? And, because I'm 
+> talking with Matt, it's more likely that I'm mistaken.? AFAIK, any rules 
+> about CPFP's behaviour in Bitcoin Core is undocumented.
+> 
+

@@ -1,0 +1,4514 @@
+From laanwj at gmail.com  Mon Sep  1 08:25:23 2014
+From: laanwj at gmail.com (Wladimir)
+Date: Mon, 1 Sep 2014 10:25:23 +0200
+Subject: [Bitcoin-development] Testing and reviewing requested for work on
+	Bitcoin Core wallet
+Message-ID: <CA+s+GJD_sKjJ52dA6W0aj1tPNV8bTCqX9H0iuQ56bpi6w3s7wg@mail.gmail.com>
+
+Hello,
+
+Cozz Lovan has been doing great work on Bitcoin Core's wallet code lately.
+
+If anyone cares about Bitcoin Core's wallet, for example its
+performance, do help testing and reviewing these improvements so that
+they can make it into 0.10:
+
+Subtract fee from amount
+https://github.com/bitcoin/bitcoin/pull/4331
+
+[Wallet] Improve ReorderTransactions(..)
+https://github.com/bitcoin/bitcoin/pull/4697
+
+[Wallet] Replace OrderedTxItems(..) with in-memory map
+https://github.com/bitcoin/bitcoin/pull/4702
+
+[Qt] Call checkBalanceChanged() periodically instead for every updated tx
+https://github.com/bitcoin/bitcoin/pull/4712
+
+Move g_signals.SetBestChain(..) below SyncWithWallets
+https://github.com/bitcoin/bitcoin/pull/4798
+
+[Wallet] Call SetBestChain before and after rescan
+https://github.com/bitcoin/bitcoin/pull/4800
+
+[Wallet] Do not flush the wallet in AddToWalletIfInvolvingMe(..)
+https://github.com/bitcoin/bitcoin/pull/4805
+
+Wladimir
+
+
+
+From gmaxwell at gmail.com  Mon Sep  1 20:48:14 2014
+From: gmaxwell at gmail.com (Gregory Maxwell)
+Date: Mon, 1 Sep 2014 13:48:14 -0700
+Subject: [Bitcoin-development] Small update to BIP 62
+In-Reply-To: <CAPg+sBiTURdRAZbyk3guF5YzAAQebo8yY_TuXHUKYDEdLjDUdQ@mail.gmail.com>
+References: <CAPg+sBiTURdRAZbyk3guF5YzAAQebo8yY_TuXHUKYDEdLjDUdQ@mail.gmail.com>
+Message-ID: <CAAS2fgSPe=dTayVXz8uFHQN+Sna7+zDcYKJL6UpuJOTq7H6fKg@mail.gmail.com>
+
+On Fri, Jul 18, 2014 at 8:14 AM, Pieter Wuille <pieter.wuille at gmail.com> wrote:
+> Hi all,
+>
+> I've sent a pull request to make a small change to BIP 62 (my
+> anti-malleability proposal) which is still a draft; see:
+> * https://github.com/bitcoin/bips/pull/90 (the request)
+> * https://github.com/sipa/bips/blob/bip62up/bip-0062.mediawiki (the result)
+>
+> It makes two of the 7 new rules mandatory in new blocks, even for
+> old-style transactions. Both are already non-standard since 0.8.0, and
+> have no use cases in my opinion.
+>
+> The reason for this change is dropping the requirement for signature
+> verification engines to be bug-for-bug compatible with OpenSSL (which
+> supports many non-standard encodings for signatures). Requiring strict
+> DER compliance for signatures means any implementation just needs to
+> support DER.
+
+Not related to this change but the definition of rule 4 may not be
+sufficiently specific? without a definition someone could reasonably
+reach a different conclusion about OP_1NEGATE being a "push
+operation", or might even decide any operation which added to the
+stack was a "push operation".
+
+Any particular reason to enforce 2 and 4 but not also 5?  Violation of
+5 is already non-standard and like 2,4 should be safely enforceable.
+
+Perhaps the rules should be reordered so that the applicable to all
+transactions ones are contiguous and first?
+
+> The first six and part of the seventh can be fixed by extra consensus rules.
+
+This should clarify that the scriptPubkey can still specify rules that
+are inherently malleable? e.g. require the input stack contain two
+pushes which OP_ADD to 11.  Or a more elaborate one? a 1 of 2 check
+multisig where the pubkey not selected for signing is selected by a
+push in the signature. The current text seems to ignore isomorphisms
+of this type. ... they're not important for what the BIP is trying to
+achieve, but the document shouldn't cause people to not think that
+sort of thing exists.
+
+
+
+From pieter.wuille at gmail.com  Wed Sep  3 16:34:33 2014
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Wed, 3 Sep 2014 18:34:33 +0200
+Subject: [Bitcoin-development] Small update to BIP 62
+In-Reply-To: <CAAS2fgSPe=dTayVXz8uFHQN+Sna7+zDcYKJL6UpuJOTq7H6fKg@mail.gmail.com>
+References: <CAPg+sBiTURdRAZbyk3guF5YzAAQebo8yY_TuXHUKYDEdLjDUdQ@mail.gmail.com>
+	<CAAS2fgSPe=dTayVXz8uFHQN+Sna7+zDcYKJL6UpuJOTq7H6fKg@mail.gmail.com>
+Message-ID: <CAPg+sBh5TXhKM_oxQpHUw-kLiQmyxCTO4nAO2jbnLUEQb=bdBA@mail.gmail.com>
+
+On Mon, Sep 1, 2014 at 10:48 PM, Gregory Maxwell <gmaxwell at gmail.com> wrote:
+> Not related to this change but the definition of rule 4 may not be
+> sufficiently specific-- without a definition someone could reasonably
+> reach a different conclusion about OP_1NEGATE being a "push
+> operation", or might even decide any operation which added to the
+> stack was a "push operation".
+
+Good catch - I'll write an update soon.
+
+> Any particular reason to enforce 2 and 4 but not also 5?  Violation of
+> 5 is already non-standard and like 2,4 should be safely enforceable.
+
+Perhaps we can go further, and include 6 as well? I see zero use cases
+for zero-padded numbers, as their interpretation is already identical
+to the non-padded case. I wouldn't include 1 (as it would break a
+large amount of wallets today), 3 (which may have a use case in more
+complex scripts with conditionals) or 7 (the superfluous element
+consumed by CHECKMULTISIG could potentially be used for something in
+the future).
+
+> Perhaps the rules should be reordered so that the applicable to all
+> transactions ones are contiguous and first?
+
+Ok.
+
+>> The first six and part of the seventh can be fixed by extra consensus rules.
+>
+> This should clarify that the scriptPubkey can still specify rules that
+> are inherently malleable-- e.g. require the input stack contain two
+> pushes which OP_ADD to 11.  Or a more elaborate one-- a 1 of 2 check
+> multisig where the pubkey not selected for signing is selected by a
+> push in the signature. The current text seems to ignore isomorphisms
+> of this type. ... they're not important for what the BIP is trying to
+> achieve, but the document shouldn't cause people to not think that
+> sort of thing exists.
+
+I'll try to reword.
+
+-- 
+Pieter
+
+
+
+From pieter.wuille at gmail.com  Sun Sep  7 23:31:45 2014
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Mon, 8 Sep 2014 01:31:45 +0200
+Subject: [Bitcoin-development] Small update to BIP 62
+In-Reply-To: <CAPg+sBh5TXhKM_oxQpHUw-kLiQmyxCTO4nAO2jbnLUEQb=bdBA@mail.gmail.com>
+References: <CAPg+sBiTURdRAZbyk3guF5YzAAQebo8yY_TuXHUKYDEdLjDUdQ@mail.gmail.com>
+	<CAAS2fgSPe=dTayVXz8uFHQN+Sna7+zDcYKJL6UpuJOTq7H6fKg@mail.gmail.com>
+	<CAPg+sBh5TXhKM_oxQpHUw-kLiQmyxCTO4nAO2jbnLUEQb=bdBA@mail.gmail.com>
+Message-ID: <CAPg+sBiGWAtToC+vmbtiHk13gq3oGEc4-eoAcGtzbSY=Tr+6XA@mail.gmail.com>
+
+On Wed, Sep 3, 2014 at 6:34 PM, Pieter Wuille <pieter.wuille at gmail.com> wrote:
+> On Mon, Sep 1, 2014 at 10:48 PM, Gregory Maxwell <gmaxwell at gmail.com> wrote:
+>> Not related to this change but the definition of rule 4 may not be
+>> sufficiently specific-- without a definition someone could reasonably
+>> reach a different conclusion about OP_1NEGATE being a "push
+>> operation", or might even decide any operation which added to the
+>> stack was a "push operation".
+>
+> Good catch - I'll write an update soon.
+
+>> Perhaps the rules should be reordered so that the applicable to all
+>> transactions ones are contiguous and first?
+> Ok.
+
+>>> The first six and part of the seventh can be fixed by extra consensus rules.
+>>
+>> This should clarify that the scriptPubkey can still specify rules that
+>> are inherently malleable [...]
+> I'll try to reword.
+
+I've sent out a new pull request
+(https://github.com/bitcoin/bips/pull/102/files) that:
+* Changes the order of the rules.
+* Adds more reference documentation about minimal pushes and number encodings.
+* Clarified that extra consensus rules cannot prevent someone from
+creating outputs whose spending transactions will be malleable.
+
+I haven't changed which rules are mandatory in v3, so this is a pure
+clarification & reorganization of the text.
+
+Any comments?
+
+-- 
+Pieter
+
+
+
+From andreas at schildbach.de  Fri Sep 12 09:29:42 2014
+From: andreas at schildbach.de (Andreas Schildbach)
+Date: Fri, 12 Sep 2014 11:29:42 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+Message-ID: <luuee6$as3$1@ger.gmane.org>
+
+This is the discussion post corresponding to this PR:
+https://github.com/bitcoin/bips/pull/106
+
+"Amend BIP72 by an "h" parameter, which contains a hash of the
+PaymentRequest message that is fetched via the "r" parameter.
+
+The hash is meant to link the trust anchor (e.g. the QR code) to the
+payment request message in a secure way. This will solve the problem
+several apps are comparing address+amount fields as a workaround
+instead, preventing some advanced BIP70 usecases. When these apps read a
+matching hash, they need not compare any of the other fields.
+
+Thanks to Julian Haight for helping with the standard."
+
+
+
+
+From laanwj at gmail.com  Fri Sep 12 09:55:01 2014
+From: laanwj at gmail.com (Wladimir)
+Date: Fri, 12 Sep 2014 11:55:01 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <luuee6$as3$1@ger.gmane.org>
+References: <luuee6$as3$1@ger.gmane.org>
+Message-ID: <CA+s+GJAjPdLB3jn-U6NbN0LvBKz+C5fDdbdEhFPKXUiTjyZDEA@mail.gmail.com>
+
+On Fri, Sep 12, 2014 at 11:29 AM, Andreas Schildbach
+<andreas at schildbach.de> wrote:
+> This is the discussion post corresponding to this PR:
+> https://github.com/bitcoin/bips/pull/106
+>
+> "Amend BIP72 by an "h" parameter, which contains a hash of the
+> PaymentRequest message that is fetched via the "r" parameter.
+>
+> The hash is meant to link the trust anchor (e.g. the QR code) to the
+> payment request message in a secure way. This will solve the problem
+> several apps are comparing address+amount fields as a workaround
+> instead, preventing some advanced BIP70 usecases. When these apps read a
+> matching hash, they need not compare any of the other fields.
+
+Sounds like a good idea to me.
+
+I had no idea that some clients were comparing addresses and amounts
+in the URI with the payment request for security, that seems like a
+hacky and inflexible way. This is much better.
+
+Wladimir
+
+
+
+From mark at coinqy.com  Fri Sep 12 10:11:48 2014
+From: mark at coinqy.com (Mark van Cuijk)
+Date: Fri, 12 Sep 2014 12:11:48 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>
+Message-ID: <A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>
+
+On 12 Sep 2014, at 11:55 , bitcoin-development-request at lists.sourceforge.net wrote:
+
+> The hash is meant to link the trust anchor (e.g. the QR code) to the
+> payment request message in a secure way. This will solve the problem
+> several apps are comparing address+amount fields as a workaround
+> instead, preventing some advanced BIP70 usecases. When these apps read a
+> matching hash, they need not compare any of the other fields.
+
+Sounds like a good plan.
+
+Do you have a list (possibly incomplete) of apps that perform this kind of checking? We?re currently working with some parties in a supply chain to allow a consumer payment on a retail website to automatically pay supply chain parties, the way BIP70 allows with multiple outputs on a transaction. This behaviour would prohibit this use case.
+
+/Mark
+
+
+From andreas at schildbach.de  Fri Sep 12 11:07:27 2014
+From: andreas at schildbach.de (Andreas Schildbach)
+Date: Fri, 12 Sep 2014 13:07:27 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>
+	<A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>
+Message-ID: <luuk5f$i8o$1@ger.gmane.org>
+
+On 09/12/2014 12:11 PM, Mark van Cuijk wrote:
+> On 12 Sep 2014, at 11:55 , bitcoin-development-request at lists.sourceforge.net wrote:
+> 
+>> The hash is meant to link the trust anchor (e.g. the QR code) to the
+>> payment request message in a secure way. This will solve the problem
+>> several apps are comparing address+amount fields as a workaround
+>> instead, preventing some advanced BIP70 usecases. When these apps read a
+>> matching hash, they need not compare any of the other fields.
+> 
+> Sounds like a good plan.
+> 
+> Do you have a list (possibly incomplete) of apps that perform this kind of checking? We?re currently working with some parties in a supply chain to allow a consumer payment on a retail website to automatically pay supply chain parties, the way BIP70 allows with multiple outputs on a transaction. This behaviour would prohibit this use case.
+
+Hard to say, but here is my last assertion:
+
+- Bitcoin Wallet
+- Hive Bitcoin Wallet (checked by source)
+- countless (> 300) forks/clones of Bitcoin Wallet
+
+Since you're planning an advanced BIP70 usecase, you'll also have to
+deal with the many wallets that don't support BIP70 at all.
+
+
+
+
+
+From mike at plan99.net  Fri Sep 12 13:49:19 2014
+From: mike at plan99.net (Mike Hearn)
+Date: Fri, 12 Sep 2014 15:49:19 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <luuk5f$i8o$1@ger.gmane.org>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>
+	<A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>
+	<luuk5f$i8o$1@ger.gmane.org>
+Message-ID: <CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>
+
+A few thoughts on this:
+
+(1) Base64 of SHA256 seems overkill. 256 bits of hash is a lot. The risk
+here is that a MITM intercepts the payment request, which will be typically
+requested just seconds after the QR code is vended. 80 bits of entropy
+would still be a lot and take a long time to brute force, whilst keeping QR
+codes more compact, which impacts scannability.
+
+(2) This should *not* be necessary in the common HTTPS context. The QR code
+itself is going to be fetched from some service, over HTTPS. I see no
+reasonable attacker that can MITM the request for the BIP70 message but not
+the request to get the QR code. Adding a hash makes QR codes more bloated
+and harder to scan, all on the assumption that HTTPS is broken in some odd
+way that we haven't actually ever seen in practice.
+
+(3) This can be useful in the Bluetooth context, but then again, we could
+also do things a different way by signing with the key in the first part of
+the URI, thus avoiding the need for a hash.
+
+I know I've been around the loop on this one with Andreas many times. But
+this BIP doesn't fix any actually existing problem in the previous spec. It
+exists because Andreas thinks SSL is useless. If SSL is useless we all have
+much bigger problems.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140912/4985906c/attachment.html>
+
+From jgarzik at bitpay.com  Fri Sep 12 14:15:21 2014
+From: jgarzik at bitpay.com (Jeff Garzik)
+Date: Fri, 12 Sep 2014 10:15:21 -0400
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>
+	<A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>
+	<luuk5f$i8o$1@ger.gmane.org>
+	<CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>
+Message-ID: <CAJHLa0Px985E7NyhHVPRpLxXD6XDGhd_WwsbHNBaQZVMQwxTwA@mail.gmail.com>
+
+Indeed -- Every byte added to the QR code makes it more difficult to
+be used in restaurants, pubs and other low-light conditions.  BitPay
+tested some of these scenarios.
+
+Scannability is absolutely impacted.
+
+On Fri, Sep 12, 2014 at 9:49 AM, Mike Hearn <mike at plan99.net> wrote:
+> A few thoughts on this:
+>
+> (1) Base64 of SHA256 seems overkill. 256 bits of hash is a lot. The risk
+> here is that a MITM intercepts the payment request, which will be typically
+> requested just seconds after the QR code is vended. 80 bits of entropy would
+> still be a lot and take a long time to brute force, whilst keeping QR codes
+> more compact, which impacts scannability.
+>
+> (2) This should not be necessary in the common HTTPS context. The QR code
+> itself is going to be fetched from some service, over HTTPS. I see no
+> reasonable attacker that can MITM the request for the BIP70 message but not
+> the request to get the QR code. Adding a hash makes QR codes more bloated
+> and harder to scan, all on the assumption that HTTPS is broken in some odd
+> way that we haven't actually ever seen in practice.
+>
+> (3) This can be useful in the Bluetooth context, but then again, we could
+> also do things a different way by signing with the key in the first part of
+> the URI, thus avoiding the need for a hash.
+>
+> I know I've been around the loop on this one with Andreas many times. But
+> this BIP doesn't fix any actually existing problem in the previous spec. It
+> exists because Andreas thinks SSL is useless. If SSL is useless we all have
+> much bigger problems.
+>
+> ------------------------------------------------------------------------------
+> Want excitement?
+> Manually upgrade your production database.
+> When you want reliability, choose Perforce
+> Perforce version control. Predictably reliable.
+> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+
+
+
+-- 
+Jeff Garzik
+Bitcoin core developer and open source evangelist
+BitPay, Inc.      https://bitpay.com/
+
+
+
+From andreas at schildbach.de  Fri Sep 12 14:36:41 2014
+From: andreas at schildbach.de (Andreas Schildbach)
+Date: Fri, 12 Sep 2014 16:36:41 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>	<A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>	<luuk5f$i8o$1@ger.gmane.org>
+	<CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>
+Message-ID: <luv0dp$qms$1@ger.gmane.org>
+
+On 09/12/2014 03:49 PM, Mike Hearn wrote:
+
+> (1) Base64 of SHA256 seems overkill. 256 bits of hash is a lot. The risk
+> here is that a MITM intercepts the payment request, which will be
+> typically requested just seconds after the QR code is vended. 80 bits of
+> entropy would still be a lot and take a long time to brute force, whilst
+> keeping QR codes more compact, which impacts scannability.
+
+To put that into perspective, here is how a bitcoin: URI would look like:
+bitcoin:?h=J-J-4mra0VorfffEZm5J7mBmHGKX86Dpt-TnnmC_fhE&r=http://wallet.schildbach.de/bip70/r1409992884.bitcoinpaymentrequest
+(obviously for real-world usage you would optimize the "r" parameter)
+
+I looked at the list in this doc to evaluate what's easily available:
+https://code.google.com/p/guava-libraries/wiki/HashingExplained
+
+I thought SHA1 has a bad reputation these days, and we don't save much
+by using it. I don't know anything about Murmur. MD5 is clearly broken.
+What hash function would you recommend?
+
+> (2) This should *not* be necessary in the common HTTPS context.
+
+It is. People can't check names. People don't want to check names.
+People can't get certificates for lots of reasons. X.509 is centralized.
+X.509 has had serious security issues in the past. And shit continues to
+happen.
+
+To sum up, X.509 can't replace the trust anchor that is established by
+scanning a QR code or tapping two devices together.
+
+> (3) This can be useful in the Bluetooth context, but then again, we
+> could also do things a different way by signing with the key in the
+> first part of the URI, thus avoiding the need for a hash.
+
+Sure. But signing is harder than just calculating a hash.
+
+
+
+
+
+From christophe.biocca at gmail.com  Fri Sep 12 15:25:48 2014
+From: christophe.biocca at gmail.com (Christophe Biocca)
+Date: Fri, 12 Sep 2014 11:25:48 -0400
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <luv0dp$qms$1@ger.gmane.org>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>
+	<A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>
+	<luuk5f$i8o$1@ger.gmane.org>
+	<CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>
+	<luv0dp$qms$1@ger.gmane.org>
+Message-ID: <CANOOu=8RJgUW+=regOcqa9udiLr=nK=4fiZoW0fj2UU2GCjH3w@mail.gmail.com>
+
+> What hash function would you recommend?
+
+Due to the properties of hash functions, you can just take the first x
+bits of a SHA256 sum and they're pretty much as good as an equally
+secure hash function of that length. In fact SHA512/224 and SHA512/256
+are defined in that way (Plus different initial values because you
+might as well do that when defining a standard).
+
+On Fri, Sep 12, 2014 at 10:36 AM, Andreas Schildbach
+<andreas at schildbach.de> wrote:
+> On 09/12/2014 03:49 PM, Mike Hearn wrote:
+>
+>> (1) Base64 of SHA256 seems overkill. 256 bits of hash is a lot. The risk
+>> here is that a MITM intercepts the payment request, which will be
+>> typically requested just seconds after the QR code is vended. 80 bits of
+>> entropy would still be a lot and take a long time to brute force, whilst
+>> keeping QR codes more compact, which impacts scannability.
+>
+> To put that into perspective, here is how a bitcoin: URI would look like:
+> bitcoin:?h=J-J-4mra0VorfffEZm5J7mBmHGKX86Dpt-TnnmC_fhE&r=http://wallet.schildbach.de/bip70/r1409992884.bitcoinpaymentrequest
+> (obviously for real-world usage you would optimize the "r" parameter)
+>
+> I looked at the list in this doc to evaluate what's easily available:
+> https://code.google.com/p/guava-libraries/wiki/HashingExplained
+>
+> I thought SHA1 has a bad reputation these days, and we don't save much
+> by using it. I don't know anything about Murmur. MD5 is clearly broken.
+> What hash function would you recommend?
+>
+>> (2) This should *not* be necessary in the common HTTPS context.
+>
+> It is. People can't check names. People don't want to check names.
+> People can't get certificates for lots of reasons. X.509 is centralized.
+> X.509 has had serious security issues in the past. And shit continues to
+> happen.
+>
+> To sum up, X.509 can't replace the trust anchor that is established by
+> scanning a QR code or tapping two devices together.
+>
+>> (3) This can be useful in the Bluetooth context, but then again, we
+>> could also do things a different way by signing with the key in the
+>> first part of the URI, thus avoiding the need for a hash.
+>
+> Sure. But signing is harder than just calculating a hash.
+>
+>
+>
+> ------------------------------------------------------------------------------
+> Want excitement?
+> Manually upgrade your production database.
+> When you want reliability, choose Perforce
+> Perforce version control. Predictably reliable.
+> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+From christophe.biocca at gmail.com  Fri Sep 12 15:33:36 2014
+From: christophe.biocca at gmail.com (Christophe Biocca)
+Date: Fri, 12 Sep 2014 11:33:36 -0400
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <CANOOu=8RJgUW+=regOcqa9udiLr=nK=4fiZoW0fj2UU2GCjH3w@mail.gmail.com>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>
+	<A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>
+	<luuk5f$i8o$1@ger.gmane.org>
+	<CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>
+	<luv0dp$qms$1@ger.gmane.org>
+	<CANOOu=8RJgUW+=regOcqa9udiLr=nK=4fiZoW0fj2UU2GCjH3w@mail.gmail.com>
+Message-ID: <CANOOu=-yhKK-db+VtoJbWH8H_rwrNHqXM1J12SketBXeLL6L1Q@mail.gmail.com>
+
+Specifically relevant here:
+http://security.stackexchange.com/questions/34796/truncating-the-output-of-sha256-to-128-bits.
+
+If you're going to truncate though, why not just leave the amount of
+bits up the the person generating the QR code? The client simply takes
+the hash prefix (any length up to full 256-bits) and makes sure it's a
+strict prefix of the actual hash of the payment request.
+
+That way we leave up to implementers to experiment with different
+lengths and figure out what the optimum is (which could depend on the
+security/convenience tradeoff of that particular transaction, as in
+more bits for large payments).
+
+On Fri, Sep 12, 2014 at 11:25 AM, Christophe Biocca
+<christophe.biocca at gmail.com> wrote:
+>> What hash function would you recommend?
+>
+> Due to the properties of hash functions, you can just take the first x
+> bits of a SHA256 sum and they're pretty much as good as an equally
+> secure hash function of that length. In fact SHA512/224 and SHA512/256
+> are defined in that way (Plus different initial values because you
+> might as well do that when defining a standard).
+>
+> On Fri, Sep 12, 2014 at 10:36 AM, Andreas Schildbach
+> <andreas at schildbach.de> wrote:
+>> On 09/12/2014 03:49 PM, Mike Hearn wrote:
+>>
+>>> (1) Base64 of SHA256 seems overkill. 256 bits of hash is a lot. The risk
+>>> here is that a MITM intercepts the payment request, which will be
+>>> typically requested just seconds after the QR code is vended. 80 bits of
+>>> entropy would still be a lot and take a long time to brute force, whilst
+>>> keeping QR codes more compact, which impacts scannability.
+>>
+>> To put that into perspective, here is how a bitcoin: URI would look like:
+>> bitcoin:?h=J-J-4mra0VorfffEZm5J7mBmHGKX86Dpt-TnnmC_fhE&r=http://wallet.schildbach.de/bip70/r1409992884.bitcoinpaymentrequest
+>> (obviously for real-world usage you would optimize the "r" parameter)
+>>
+>> I looked at the list in this doc to evaluate what's easily available:
+>> https://code.google.com/p/guava-libraries/wiki/HashingExplained
+>>
+>> I thought SHA1 has a bad reputation these days, and we don't save much
+>> by using it. I don't know anything about Murmur. MD5 is clearly broken.
+>> What hash function would you recommend?
+>>
+>>> (2) This should *not* be necessary in the common HTTPS context.
+>>
+>> It is. People can't check names. People don't want to check names.
+>> People can't get certificates for lots of reasons. X.509 is centralized.
+>> X.509 has had serious security issues in the past. And shit continues to
+>> happen.
+>>
+>> To sum up, X.509 can't replace the trust anchor that is established by
+>> scanning a QR code or tapping two devices together.
+>>
+>>> (3) This can be useful in the Bluetooth context, but then again, we
+>>> could also do things a different way by signing with the key in the
+>>> first part of the URI, thus avoiding the need for a hash.
+>>
+>> Sure. But signing is harder than just calculating a hash.
+>>
+>>
+>>
+>> ------------------------------------------------------------------------------
+>> Want excitement?
+>> Manually upgrade your production database.
+>> When you want reliability, choose Perforce
+>> Perforce version control. Predictably reliable.
+>> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+>> _______________________________________________
+>> Bitcoin-development mailing list
+>> Bitcoin-development at lists.sourceforge.net
+>> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+From mike at plan99.net  Fri Sep 12 15:36:18 2014
+From: mike at plan99.net (Mike Hearn)
+Date: Fri, 12 Sep 2014 17:36:18 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <luv0dp$qms$1@ger.gmane.org>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>
+	<A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>
+	<luuk5f$i8o$1@ger.gmane.org>
+	<CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>
+	<luv0dp$qms$1@ger.gmane.org>
+Message-ID: <CANEZrP1r3sObKjxz3KAtOBGOeCOOsJP0RszfgN3mUAVCT4gbSA@mail.gmail.com>
+
+Your example doesn't have an address in it at all, so isn't compatible with
+non-BIP70 wallets. Maybe for QRcodes specifically there are no longer any
+such wallets out there. For clickable links it can still be an issue.
+
+
+> I thought SHA1 has a bad reputation these days, and we don't save much
+> by using it. I don't know anything about Murmur. MD5 is clearly broken.
+> What hash function would you recommend?
+>
+
+Can just truncate SHA256, I think.
+
+
+> It is. People can't check names. People don't want to check names.
+>
+
+Their wallet checks the name, though. It sees:
+
+bitcoin:1AbCd?r=https://bitpay.com/r/12345
+
+and the wallet verifies that the presented certificate is for CN=bitpay.com
+
+
+> People can't get certificates for lots of reasons. X.509 is centralized.
+> X.509 has had serious security issues in the past. And shit continues to
+> happen.
+>
+
+Well, I wrote an article that argues with this PoV:
+
+https://medium.com/@octskyward/why-you-think-the-pki-sucks-b64cf5912aa7
+
+No disagreement that it's a more complex mechanism. But seeing as we end up
+depending on it anyway the moment you load any kind of web page to find out
+the URI, adding another mechanism only increases complexity, it doesn't
+remove any.
+
+Sure. But signing is harder than just calculating a hash.
+
+
+Well, again, it saves qrcode bytes. You don't have to include a dedicated
+hash. The existing address hash can double up as both a backwards
+compatibility measure, and also an auth mechanism.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140912/a762740b/attachment.html>
+
+From mike at plan99.net  Fri Sep 12 15:37:05 2014
+From: mike at plan99.net (Mike Hearn)
+Date: Fri, 12 Sep 2014 17:37:05 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <CANOOu=-yhKK-db+VtoJbWH8H_rwrNHqXM1J12SketBXeLL6L1Q@mail.gmail.com>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>
+	<A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>
+	<luuk5f$i8o$1@ger.gmane.org>
+	<CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>
+	<luv0dp$qms$1@ger.gmane.org>
+	<CANOOu=8RJgUW+=regOcqa9udiLr=nK=4fiZoW0fj2UU2GCjH3w@mail.gmail.com>
+	<CANOOu=-yhKK-db+VtoJbWH8H_rwrNHqXM1J12SketBXeLL6L1Q@mail.gmail.com>
+Message-ID: <CANEZrP2adsaM8dtA94JV+5qThDNrT8m+X45-q_DecT42i5L=jg@mail.gmail.com>
+
+>
+> That way we leave up to implementers to experiment with different
+> lengths and figure out what the optimum is
+
+
+Ah, that's a good suggestion if we do go this way.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140912/e4af829f/attachment.html>
+
+From mike at plan99.net  Fri Sep 12 16:31:36 2014
+From: mike at plan99.net (Mike Hearn)
+Date: Fri, 12 Sep 2014 18:31:36 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <CANEZrP2adsaM8dtA94JV+5qThDNrT8m+X45-q_DecT42i5L=jg@mail.gmail.com>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>
+	<A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>
+	<luuk5f$i8o$1@ger.gmane.org>
+	<CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>
+	<luv0dp$qms$1@ger.gmane.org>
+	<CANOOu=8RJgUW+=regOcqa9udiLr=nK=4fiZoW0fj2UU2GCjH3w@mail.gmail.com>
+	<CANOOu=-yhKK-db+VtoJbWH8H_rwrNHqXM1J12SketBXeLL6L1Q@mail.gmail.com>
+	<CANEZrP2adsaM8dtA94JV+5qThDNrT8m+X45-q_DecT42i5L=jg@mail.gmail.com>
+Message-ID: <CANEZrP2D9RbMVHS12PnEjXiz7TjjGFDvybOs6+kCb-aZKwXy-A@mail.gmail.com>
+
+Putting aside the question of necessity for a moment, a more efficient
+approach to this would be;
+
+   1. Add another marker param like &s to the end of the URL
+   2. Add another field to PaymentRequest that contains an ECC signature
+   calculated using the public key that hashes to the address in the URI
+   3. Upgraded wallets look for the additional param and if it's there,
+   expect to find the PaymentDetails signed with the address key. PKI signing
+   of course is still useful to provide an actual identity for receipts,
+   display on hardware wallets, dispute mediation etc.
+
+This adds only a few characters to a normal backwards-compatible QR code,
+and is not hard to implement.
+
+
+On Fri, Sep 12, 2014 at 5:37 PM, Mike Hearn <mike at plan99.net> wrote:
+
+> That way we leave up to implementers to experiment with different
+>> lengths and figure out what the optimum is
+>
+>
+> Ah, that's a good suggestion if we do go this way.
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140912/7122a333/attachment.html>
+
+From pieter.wuille at gmail.com  Fri Sep 12 16:35:25 2014
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Fri, 12 Sep 2014 18:35:25 +0200
+Subject: [Bitcoin-development] Small update to BIP 62
+In-Reply-To: <CAPg+sBiGWAtToC+vmbtiHk13gq3oGEc4-eoAcGtzbSY=Tr+6XA@mail.gmail.com>
+References: <CAPg+sBiTURdRAZbyk3guF5YzAAQebo8yY_TuXHUKYDEdLjDUdQ@mail.gmail.com>
+	<CAAS2fgSPe=dTayVXz8uFHQN+Sna7+zDcYKJL6UpuJOTq7H6fKg@mail.gmail.com>
+	<CAPg+sBh5TXhKM_oxQpHUw-kLiQmyxCTO4nAO2jbnLUEQb=bdBA@mail.gmail.com>
+	<CAPg+sBiGWAtToC+vmbtiHk13gq3oGEc4-eoAcGtzbSY=Tr+6XA@mail.gmail.com>
+Message-ID: <CAPg+sBgy2uzASCk1fQd2JxBtjSXgRA=qtF8OakZUyrdQJyNoGQ@mail.gmail.com>
+
+On Mon, Sep 8, 2014 at 1:31 AM, Pieter Wuille <pieter.wuille at gmail.com> wrote:
+> I've sent out a new pull request
+> (https://github.com/bitcoin/bips/pull/102/files) that:
+> * Changes the order of the rules.
+> * Adds more reference documentation about minimal pushes and number encodings.
+> * Clarified that extra consensus rules cannot prevent someone from
+> creating outputs whose spending transactions will be malleable.
+>
+> I haven't changed which rules are mandatory in v3, so this is a pure
+> clarification & reorganization of the text.
+
+Changes: https://github.com/bitcoin/bips/pull/102/files
+
+Gregory, Jeff: does this address your concerns?
+Others: comments?
+
+-- 
+Pieter
+
+
+
+From voisine at gmail.com  Fri Sep 12 18:43:32 2014
+From: voisine at gmail.com (Aaron Voisine)
+Date: Fri, 12 Sep 2014 11:43:32 -0700
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <CANEZrP2D9RbMVHS12PnEjXiz7TjjGFDvybOs6+kCb-aZKwXy-A@mail.gmail.com>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>
+	<A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>
+	<luuk5f$i8o$1@ger.gmane.org>
+	<CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>
+	<luv0dp$qms$1@ger.gmane.org>
+	<CANOOu=8RJgUW+=regOcqa9udiLr=nK=4fiZoW0fj2UU2GCjH3w@mail.gmail.com>
+	<CANOOu=-yhKK-db+VtoJbWH8H_rwrNHqXM1J12SketBXeLL6L1Q@mail.gmail.com>
+	<CANEZrP2adsaM8dtA94JV+5qThDNrT8m+X45-q_DecT42i5L=jg@mail.gmail.com>
+	<CANEZrP2D9RbMVHS12PnEjXiz7TjjGFDvybOs6+kCb-aZKwXy-A@mail.gmail.com>
+Message-ID: <CACq0ZD6ocZ62rvRQaxQZ3moH3kC-uK_US3+p67Y+8bMJB_-b5A@mail.gmail.com>
+
+Are there any circumstances where the payment request object might be
+served over a different domain than the CNAME of the object's signer?
+
+BIP72 states "Bitcoin wallets must support fetching PaymentRequests
+via http and https protocols;". If the request object is signed by the
+owner of the domain, then the worst an attacker who doesn't have the
+signing key can do is replace the request with another validly signed
+request intended for someone else, but that could be the attacker's
+own product order, tricking someone else into paying for it.
+
+Should BIP72 require that signed payment requests be from the same
+domain, and also require https?
+
+Aaron
+
+Aaron Voisine
+breadwallet.com
+
+
+On Fri, Sep 12, 2014 at 9:31 AM, Mike Hearn <mike at plan99.net> wrote:
+> Putting aside the question of necessity for a moment, a more efficient
+> approach to this would be;
+>
+> Add another marker param like &s to the end of the URL
+> Add another field to PaymentRequest that contains an ECC signature
+> calculated using the public key that hashes to the address in the URI
+> Upgraded wallets look for the additional param and if it's there, expect to
+> find the PaymentDetails signed with the address key. PKI signing of course
+> is still useful to provide an actual identity for receipts, display on
+> hardware wallets, dispute mediation etc.
+>
+> This adds only a few characters to a normal backwards-compatible QR code,
+> and is not hard to implement.
+>
+>
+> On Fri, Sep 12, 2014 at 5:37 PM, Mike Hearn <mike at plan99.net> wrote:
+>>>
+>>> That way we leave up to implementers to experiment with different
+>>> lengths and figure out what the optimum is
+>>
+>>
+>> Ah, that's a good suggestion if we do go this way.
+>
+>
+>
+> ------------------------------------------------------------------------------
+> Want excitement?
+> Manually upgrade your production database.
+> When you want reliability, choose Perforce
+> Perforce version control. Predictably reliable.
+> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+
+
+
+From mark at coinqy.com  Fri Sep 12 20:59:19 2014
+From: mark at coinqy.com (Mark van Cuijk)
+Date: Fri, 12 Sep 2014 22:59:19 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <mailman.342174.1410547421.2163.bitcoin-development@lists.sourceforge.net>
+References: <mailman.342174.1410547421.2163.bitcoin-development@lists.sourceforge.net>
+Message-ID: <06D9FBBD-30DB-4591-A932-B5A19F1D6543@coinqy.com>
+
+On 12 Sep 2014, at 20:43 , bitcoin-development-request at lists.sourceforge.net wrote:
+
+> Specifically relevant here:
+> http://security.stackexchange.com/questions/34796/truncating-the-output-of-sha256-to-128-bits.
+> 
+> If you're going to truncate though, why not just leave the amount of
+> bits up the the person generating the QR code? The client simply takes
+> the hash prefix (any length up to full 256-bits) and makes sure it's a
+> strict prefix of the actual hash of the payment request.
+
+If you do so, please make sure the length of the hash is included in the PaymentDetails/PaymentRequest. If someone parses the URI and doesn?t have an authenticated way of knowing the expected length of the hash, a MITM attacker can just truncate the hash to lower security.
+
+/Mark
+
+
+From laanwj at gmail.com  Sat Sep 13 08:53:34 2014
+From: laanwj at gmail.com (Wladimir)
+Date: Sat, 13 Sep 2014 10:53:34 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <06D9FBBD-30DB-4591-A932-B5A19F1D6543@coinqy.com>
+References: <mailman.342174.1410547421.2163.bitcoin-development@lists.sourceforge.net>
+	<06D9FBBD-30DB-4591-A932-B5A19F1D6543@coinqy.com>
+Message-ID: <CA+s+GJBWTji2JfTF+8+zb+9LWV2mK7inqVakdMhoXQYi4_a-Jw@mail.gmail.com>
+
+On Fri, Sep 12, 2014 at 10:59 PM, Mark van Cuijk <mark at coinqy.com> wrote:
+> If you do so, please make sure the length of the hash is included in the PaymentDetails/PaymentRequest. If someone parses the URI and doesn?t have an authenticated way of knowing the expected length of the hash, a MITM attacker can just truncate the hash to lower security.
+
+But if they can truncate they can just as well pass a completely
+different hash that matches their payment request. If an attacker can
+change the bitcoin: URI, this scheme is broken.
+
+The point of the proposal is to make sure that the payment request
+matches the URI. So *if* you communicate the URI by secure means, this
+authenticates the associated payment request as well, even if fetched
+by insecure means (such as http:...) itself.
+
+Wladimir
+
+
+
+From pete at petertodd.org  Sat Sep 13 13:55:28 2014
+From: pete at petertodd.org (Peter Todd)
+Date: Sat, 13 Sep 2014 14:55:28 +0100
+Subject: [Bitcoin-development] Does anyone have anything at all signed by
+	Satoshi's PGP key?
+Message-ID: <20140913135528.GC6333@muck>
+
+So far I have zero evidence that the common claim that "Satoshi PGP
+signed everything" was true; I have no evidence he ever
+cryptographically signed any communications at all.
+
+-- 
+'peter'[:-1]@petertodd.org
+00000000000000000ce4f740fb700bb8a9ed859ac96ac9871567a20fca07f76a
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 650 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140913/db0bc9da/attachment.sig>
+
+From jgarzik at bitpay.com  Sat Sep 13 14:03:20 2014
+From: jgarzik at bitpay.com (Jeff Garzik)
+Date: Sat, 13 Sep 2014 10:03:20 -0400
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+ by Satoshi's PGP key?
+In-Reply-To: <20140913135528.GC6333@muck>
+References: <20140913135528.GC6333@muck>
+Message-ID: <CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>
+
+That claim is horse manure :)  He never signed private emails sent to
+me, nor the forum posts.
+
+He -might- have signed the occasional thing related to releases, I'm not sure.
+
+
+On Sat, Sep 13, 2014 at 9:55 AM, Peter Todd <pete at petertodd.org> wrote:
+> So far I have zero evidence that the common claim that "Satoshi PGP
+> signed everything" was true; I have no evidence he ever
+> cryptographically signed any communications at all.
+>
+> --
+> 'peter'[:-1]@petertodd.org
+> 00000000000000000ce4f740fb700bb8a9ed859ac96ac9871567a20fca07f76a
+>
+> ------------------------------------------------------------------------------
+> Want excitement?
+> Manually upgrade your production database.
+> When you want reliability, choose Perforce
+> Perforce version control. Predictably reliable.
+> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+
+
+
+-- 
+Jeff Garzik
+Bitcoin core developer and open source evangelist
+BitPay, Inc.      https://bitpay.com/
+
+
+
+From pieter.wuille at gmail.com  Sat Sep 13 22:45:14 2014
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Sun, 14 Sep 2014 00:45:14 +0200
+Subject: [Bitcoin-development] Small update to BIP 62
+In-Reply-To: <CAPg+sBgy2uzASCk1fQd2JxBtjSXgRA=qtF8OakZUyrdQJyNoGQ@mail.gmail.com>
+References: <CAPg+sBiTURdRAZbyk3guF5YzAAQebo8yY_TuXHUKYDEdLjDUdQ@mail.gmail.com>
+	<CAAS2fgSPe=dTayVXz8uFHQN+Sna7+zDcYKJL6UpuJOTq7H6fKg@mail.gmail.com>
+	<CAPg+sBh5TXhKM_oxQpHUw-kLiQmyxCTO4nAO2jbnLUEQb=bdBA@mail.gmail.com>
+	<CAPg+sBiGWAtToC+vmbtiHk13gq3oGEc4-eoAcGtzbSY=Tr+6XA@mail.gmail.com>
+	<CAPg+sBgy2uzASCk1fQd2JxBtjSXgRA=qtF8OakZUyrdQJyNoGQ@mail.gmail.com>
+Message-ID: <CAPg+sBioLKBJFuAJUwrCsYAGKGqO9yQK10VL=+PP3hOyS3-1mQ@mail.gmail.com>
+
+On Fri, Sep 12, 2014 at 6:35 PM, Pieter Wuille <pieter.wuille at gmail.com> wrote:
+> Changes: https://github.com/bitcoin/bips/pull/102/files
+>
+> Gregory, Jeff: does this address your concerns?
+> Others: comments?
+
+I've made another change in the PR, as language about strictly only
+compressed or uncompressed public keys was missing; please have a
+look.
+
+-- 
+Pieter
+
+
+
+From pete at petertodd.org  Sun Sep 14 06:28:27 2014
+From: pete at petertodd.org (Peter Todd)
+Date: Sun, 14 Sep 2014 07:28:27 +0100
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+ by Satoshi's PGP key?
+In-Reply-To: <CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>
+References: <20140913135528.GC6333@muck>
+	<CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>
+Message-ID: <20140914062826.GB21586@muck>
+
+On Sat, Sep 13, 2014 at 10:03:20AM -0400, Jeff Garzik wrote:
+> That claim is horse manure :)  He never signed private emails sent to
+> me, nor the forum posts.
+
+That's consistent with what everyone else is saying:
+https://twitter.com/petertoddbtc/status/509614729879642113
+
+> He -might- have signed the occasional thing related to releases, I'm not sure.
+
+Doesn't seem like there's any evidence of that either. For instance the
+archive.org Jan 31st 2009 capture of bitcoin.org with v1.3 has a link to
+his PGP key, but the release itself is unsigned:
+https://web.archive.org/web/20090131115053/http://bitcoin.org/
+
+Similarly the Nov 29 2009 capture of the sourceforge download directory
+has releases v0.1.0, v0.1.2, v0.1.3, and v0.1.5, none of which have
+signatures:
+
+https://web.archive.org/web/20091129231630/http://sourceforge.net/projects/bitcoin/files/Bitcoin/
+
+The earliest signature I can find is from v0.3.20 from Gavin Andresen:
+
+https://web.archive.org/web/20110502125522/http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.3.20/
+
+Earliest sig in the git commit history is the v0.3.21 tag, again from
+Gavin.
+
+
+My best guess is Satoshi only created the PGP key in case
+someone needed to send him a security-related bug report. Which leads to
+a related question:
+
+Do we have any evidence Satoshi ever even had access to that key? Did he
+ever use PGP at all for anything?
+
+-- 
+'peter'[:-1]@petertodd.org
+00000000000000000ce4f740fb700bb8a9ed859ac96ac9871567a20fca07f76a
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 650 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140914/833ca2e5/attachment.sig>
+
+From andreas at schildbach.de  Mon Sep 15 07:12:03 2014
+From: andreas at schildbach.de (Andreas Schildbach)
+Date: Mon, 15 Sep 2014 09:12:03 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <CANEZrP2D9RbMVHS12PnEjXiz7TjjGFDvybOs6+kCb-aZKwXy-A@mail.gmail.com>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>	<A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>	<luuk5f$i8o$1@ger.gmane.org>	<CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>	<luv0dp$qms$1@ger.gmane.org>	<CANOOu=8RJgUW+=regOcqa9udiLr=nK=4fiZoW0fj2UU2GCjH3w@mail.gmail.com>	<CANOOu=-yhKK-db+VtoJbWH8H_rwrNHqXM1J12SketBXeLL6L1Q@mail.gmail.com>	<CANEZrP2adsaM8dtA94JV+5qThDNrT8m+X45-q_DecT42i5L=jg@mail.gmail.com>
+	<CANEZrP2D9RbMVHS12PnEjXiz7TjjGFDvybOs6+kCb-aZKwXy-A@mail.gmail.com>
+Message-ID: <lv63g3$q13$1@ger.gmane.org>
+
+I agree that this would be another way of achieving the same goal. I'd
+be fine with that if there is a majority.
+
+However, I also see downsides of this approach:
+
+1. It's more complicated. It touches more BIPs, and although signing is
+terribly difficult its still more difficult than just hashing. E.g.
+signing the payment request twice (ECC + X.509) poses the question in
+which order you sign, and which signature fields to null for signing.
+
+2. Isn't it discouraged to disclose the public key you're going to
+receive coins on? (not sure about that)
+
+3. Unlike an hash we can just re-assign to different objects (see my
+proposal) I think we cannot easily do the same with a signature. It's
+probably not very important to have this option, but still it should be
+considered.
+
+4. I'm afraid of the idea of re-purposing the BIP21 address. Someone
+might send money to it although it isn't meant to receive money any more
+(service is already using an advanced BIP70 usecase). A clear separation
+into two parameters would prevent such mistakes, and as soon as the
+address can go away the URL needn't be longer than it used to be.
+
+5. A hash can be checked without knowing a secret. Are we excluding
+stateless devices (e.g. proxies, smartwatches)?
+
+
+Generally about the URL length discussion:
+
+Currently we have address, amount and r, and it works well. In future we
+would have h and r.
+
+So all we need to do is make sure h not longer than address+amount. I
+think this is already the case with untruncated SHA256 hashes. But I'd
+be fine with truncating to maybe 192 bits to save a few characters.
+
+
+On 09/12/2014 06:31 PM, Mike Hearn wrote:
+> Putting aside the question of necessity for a moment, a more efficient
+> approach to this would be;
+> 
+>  1. Add another marker param like &s to the end of the URL
+>  2. Add another field to PaymentRequest that contains an ECC signature
+>     calculated using the public key that hashes to the address in the URI
+>  3. Upgraded wallets look for the additional param and if it's there,
+>     expect to find the PaymentDetails signed with the address key. PKI
+>     signing of course is still useful to provide an actual identity for
+>     receipts, display on hardware wallets, dispute mediation etc.
+> 
+> This adds only a few characters to a normal backwards-compatible QR
+> code, and is not hard to implement.
+> 
+> 
+> On Fri, Sep 12, 2014 at 5:37 PM, Mike Hearn <mike at plan99.net
+> <mailto:mike at plan99.net>> wrote:
+> 
+>         That way we leave up to implementers to experiment with different
+>         lengths and figure out what the optimum is
+> 
+> 
+>     Ah, that's a good suggestion if we do go this way. 
+> 
+> 
+> 
+> 
+> ------------------------------------------------------------------------------
+> Want excitement?
+> Manually upgrade your production database.
+> When you want reliability, choose Perforce
+> Perforce version control. Predictably reliable.
+> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+> 
+> 
+> 
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+> 
+
+
+
+
+
+From gghomeprodukcija at gmail.com  Mon Sep 15 07:32:13 2014
+From: gghomeprodukcija at gmail.com (ggprodukcija kig)
+Date: Mon, 15 Sep 2014 09:32:13 +0200
+Subject: [Bitcoin-development] how
+Message-ID: <CAFVbj0=eYM6ub=h4WJnw6ar9+AiPwm+gJE1bhavs1yh9UgTUMQ@mail.gmail.com>
+
+Hi
+
+i have some money on btc. How invest, and where invest for more eranig
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140915/1ee973a9/attachment.html>
+
+From thomas at thomaszander.se  Mon Sep 15 07:23:02 2014
+From: thomas at thomaszander.se (Thomas Zander)
+Date: Mon, 15 Sep 2014 09:23:02 +0200
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+	by Satoshi's PGP key?
+In-Reply-To: <20140914062826.GB21586@muck>
+References: <20140913135528.GC6333@muck>
+	<CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>
+	<20140914062826.GB21586@muck>
+Message-ID: <201409150923.02817.thomas@thomaszander.se>
+
+On Sunday 14. September 2014 08.28.27 Peter Todd wrote:
+> Do we have any evidence Satoshi ever even had access to that key? Did he
+> ever use PGP at all for anything?
+
+Any and all PGP related howtos will tell you that you should not trust or sign 
+a formerly-untrusted PGP (or GPG for that matter) key without seeing that 
+person in real life, verifying their identity etc.
+
+I think that kind of disqualifies pgp for identity purposes wrt Satoshi :-)
+
+-- 
+Thomas Zander
+
+
+
+From andreas at schildbach.de  Mon Sep 15 07:43:32 2014
+From: andreas at schildbach.de (Andreas Schildbach)
+Date: Mon, 15 Sep 2014 09:43:32 +0200
+Subject: [Bitcoin-development] BIP72 amendment proposal
+In-Reply-To: <CACq0ZD6ocZ62rvRQaxQZ3moH3kC-uK_US3+p67Y+8bMJB_-b5A@mail.gmail.com>
+References: <mailman.341412.1410515709.2178.bitcoin-development@lists.sourceforge.net>	<A4CC413B-D5A5-423C-9D56-463FCDBDDE08@coinqy.com>	<luuk5f$i8o$1@ger.gmane.org>	<CANEZrP1iTfZxY915hzoAEApz1+wd_S9j5RCwVJCNFqQ_+DNTSQ@mail.gmail.com>	<luv0dp$qms$1@ger.gmane.org>	<CANOOu=8RJgUW+=regOcqa9udiLr=nK=4fiZoW0fj2UU2GCjH3w@mail.gmail.com>	<CANOOu=-yhKK-db+VtoJbWH8H_rwrNHqXM1J12SketBXeLL6L1Q@mail.gmail.com>	<CANEZrP2adsaM8dtA94JV+5qThDNrT8m+X45-q_DecT42i5L=jg@mail.gmail.com>	<CANEZrP2D9RbMVHS12PnEjXiz7TjjGFDvybOs6+kCb-aZKwXy-A@mail.gmail.com>
+	<CACq0ZD6ocZ62rvRQaxQZ3moH3kC-uK_US3+p67Y+8bMJB_-b5A@mail.gmail.com>
+Message-ID: <lv65b4$gf9$1@ger.gmane.org>
+
+On 09/12/2014 08:43 PM, Aaron Voisine wrote:
+
+> Should BIP72 require that signed payment requests be from the same
+> domain,
+
+Although it currently does not seem to be used that way, I'd like to see
+merchants sign their payment requests but store them on their payment
+processors server. Currently if you buy from Humble Bundle, all you see
+is Coinbase which is unfortunate.
+
+> and also require https?
+
+I think that's unrealistic. HTTP is already in use, and also the
+proposed spec is open to other transports, e.g. Bluetooth which is also
+already in common use.
+
+
+
+
+From melvincarvalho at gmail.com  Mon Sep 15 09:49:53 2014
+From: melvincarvalho at gmail.com (Melvin Carvalho)
+Date: Mon, 15 Sep 2014 11:49:53 +0200
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+ by Satoshi's PGP key?
+In-Reply-To: <201409150923.02817.thomas@thomaszander.se>
+References: <20140913135528.GC6333@muck>
+	<CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>
+	<20140914062826.GB21586@muck>
+	<201409150923.02817.thomas@thomaszander.se>
+Message-ID: <CAKaEYhKH1cO1-vTAf_g_bhfPV4rxf7MECyFkn1cgs5428G9x+w@mail.gmail.com>
+
+On 15 September 2014 09:23, Thomas Zander <thomas at thomaszander.se> wrote:
+
+> On Sunday 14. September 2014 08.28.27 Peter Todd wrote:
+> > Do we have any evidence Satoshi ever even had access to that key? Did he
+> > ever use PGP at all for anything?
+>
+> Any and all PGP related howtos will tell you that you should not trust or
+> sign
+> a formerly-untrusted PGP (or GPG for that matter) key without seeing that
+> person in real life, verifying their identity etc.
+>
+> I think that kind of disqualifies pgp for identity purposes wrt Satoshi :-)
+>
+
+But I presume that if the key is on bitcoin.org,  you can probably infer
+that the owner of the key and the original owner of bitcoin.org are one and
+the same ...
+
+
+>
+> --
+> Thomas Zander
+>
+>
+> ------------------------------------------------------------------------------
+> Want excitement?
+> Manually upgrade your production database.
+> When you want reliability, choose Perforce
+> Perforce version control. Predictably reliable.
+>
+> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140915/bf82a94b/attachment.html>
+
+From jgarzik at bitpay.com  Mon Sep 15 13:08:48 2014
+From: jgarzik at bitpay.com (Jeff Garzik)
+Date: Mon, 15 Sep 2014 09:08:48 -0400
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+ by Satoshi's PGP key?
+In-Reply-To: <201409150923.02817.thomas@thomaszander.se>
+References: <20140913135528.GC6333@muck>
+	<CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>
+	<20140914062826.GB21586@muck>
+	<201409150923.02817.thomas@thomaszander.se>
+Message-ID: <CAJHLa0Owjs=6vhy_RSD+VSAZgBq2pSYv5HhCdA4-XCGgX=Z6dA@mail.gmail.com>
+
+On Mon, Sep 15, 2014 at 3:23 AM, Thomas Zander <thomas at thomaszander.se> wrote:
+> Any and all PGP related howtos will tell you that you should not trust or sign
+> a formerly-untrusted PGP (or GPG for that matter) key without seeing that
+> person in real life, verifying their identity etc.
+
+Such guidelines are a perfect example of why PGP WoT is useless and
+stupid geek wanking.
+
+A person's behavioural signature is what is relevant.  We know how
+Satoshi coded and wrote.  It was the online Satoshi with which we
+interacted.  The online Satoshi's PGP signature would be fine...
+assuming he established a pattern of use.
+
+As another example, I know the code contributions and PGP key signed
+by the online entity known as "sipa."  At a bitcoin conf I met a
+person with photo id labelled "Pieter Wuille" who claimed to be sipa,
+but that could have been an actor.  Absent a laborious and boring
+signed challenge process, for all we know, "sipa" is a supercomputing
+cluster of 500 gnomes.
+
+The point is, the "online entity known as Satoshi" is the relevant
+fingerprint.  That is easily established without any in-person
+meetings.
+
+-- 
+Jeff Garzik
+Bitcoin core developer and open source evangelist
+BitPay, Inc.      https://bitpay.com/
+
+
+
+From brianchoffman at gmail.com  Mon Sep 15 13:32:03 2014
+From: brianchoffman at gmail.com (Brian Hoffman)
+Date: Mon, 15 Sep 2014 09:32:03 -0400
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+	by Satoshi's PGP key?
+In-Reply-To: <CAJHLa0Owjs=6vhy_RSD+VSAZgBq2pSYv5HhCdA4-XCGgX=Z6dA@mail.gmail.com>
+References: <20140913135528.GC6333@muck>
+	<CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>
+	<20140914062826.GB21586@muck>
+	<201409150923.02817.thomas@thomaszander.se>
+	<CAJHLa0Owjs=6vhy_RSD+VSAZgBq2pSYv5HhCdA4-XCGgX=Z6dA@mail.gmail.com>
+Message-ID: <3E354504-0203-4408-85A1-58A071E8546A@gmail.com>
+
+I would agree that the in person aspect of the WoT is frustrating, but to dismiss this as "geek wanking" is the pot calling the kettle. 
+
+The value of in person vetting of identity is undeniable. Just because your risk acceptance is difference doesn't make it wanking. Please go see if you can get any kind of governmental clearance of credential without in-person vetting. Ask them if they accept your behavioral signature. 
+
+I know there is a lot of PGP hating these days but this comment doesn't necessarily apply to every situation. 
+
+
+
+> On Sep 15, 2014, at 9:08 AM, Jeff Garzik <jgarzik at bitpay.com> wrote:
+> 
+>> On Mon, Sep 15, 2014 at 3:23 AM, Thomas Zander <thomas at thomaszander.se> wrote:
+>> Any and all PGP related howtos will tell you that you should not trust or sign
+>> a formerly-untrusted PGP (or GPG for that matter) key without seeing that
+>> person in real life, verifying their identity etc.
+> 
+> Such guidelines are a perfect example of why PGP WoT is useless and
+> stupid geek wanking.
+> 
+> A person's behavioural signature is what is relevant.  We know how
+> Satoshi coded and wrote.  It was the online Satoshi with which we
+> interacted.  The online Satoshi's PGP signature would be fine...
+> assuming he established a pattern of use.
+> 
+> As another example, I know the code contributions and PGP key signed
+> by the online entity known as "sipa."  At a bitcoin conf I met a
+> person with photo id labelled "Pieter Wuille" who claimed to be sipa,
+> but that could have been an actor.  Absent a laborious and boring
+> signed challenge process, for all we know, "sipa" is a supercomputing
+> cluster of 500 gnomes.
+> 
+> The point is, the "online entity known as Satoshi" is the relevant
+> fingerprint.  That is easily established without any in-person
+> meetings.
+> 
+> -- 
+> Jeff Garzik
+> Bitcoin core developer and open source evangelist
+> BitPay, Inc.      https://bitpay.com/
+> 
+> ------------------------------------------------------------------------------
+> Want excitement?
+> Manually upgrade your production database.
+> When you want reliability, choose Perforce
+> Perforce version control. Predictably reliable.
+> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+From jgarzik at bitpay.com  Mon Sep 15 14:33:09 2014
+From: jgarzik at bitpay.com (Jeff Garzik)
+Date: Mon, 15 Sep 2014 10:33:09 -0400
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+ by Satoshi's PGP key?
+In-Reply-To: <3E354504-0203-4408-85A1-58A071E8546A@gmail.com>
+References: <20140913135528.GC6333@muck>
+	<CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>
+	<20140914062826.GB21586@muck>
+	<201409150923.02817.thomas@thomaszander.se>
+	<CAJHLa0Owjs=6vhy_RSD+VSAZgBq2pSYv5HhCdA4-XCGgX=Z6dA@mail.gmail.com>
+	<3E354504-0203-4408-85A1-58A071E8546A@gmail.com>
+Message-ID: <CAJHLa0PX+e98ad4W+oLc=TL6t6EELv=q4JEG=0YKKa7Uz4+MQA@mail.gmail.com>
+
+It applies to OP, bitcoin community development and Satoshi.
+
+"value of in person vetting of identity is undeniable"...  no it is
+quite deniable. Satoshi is the quintessential example. We value brain
+output, code.  The real world identity is irrelevant to whether or not
+bitcoin continues to function.
+
+The currency of bitcoin development is code, and electronic messages
+describing cryptographic theses.  _That_ is the relevant fingerprint.
+
+Governmental id is second class, can be forged or simply present a
+different individual from that who is online.  PGP WoT wanking does
+not solve that problem at all.
+
+
+
+
+
+
+On Mon, Sep 15, 2014 at 9:32 AM, Brian Hoffman <brianchoffman at gmail.com> wrote:
+> I would agree that the in person aspect of the WoT is frustrating, but to dismiss this as "geek wanking" is the pot calling the kettle.
+>
+> The value of in person vetting of identity is undeniable. Just because your risk acceptance is difference doesn't make it wanking. Please go see if you can get any kind of governmental clearance of credential without in-person vetting. Ask them if they accept your behavioral signature.
+>
+> I know there is a lot of PGP hating these days but this comment doesn't necessarily apply to every situation.
+>
+>
+>
+>> On Sep 15, 2014, at 9:08 AM, Jeff Garzik <jgarzik at bitpay.com> wrote:
+>>
+>>> On Mon, Sep 15, 2014 at 3:23 AM, Thomas Zander <thomas at thomaszander.se> wrote:
+>>> Any and all PGP related howtos will tell you that you should not trust or sign
+>>> a formerly-untrusted PGP (or GPG for that matter) key without seeing that
+>>> person in real life, verifying their identity etc.
+>>
+>> Such guidelines are a perfect example of why PGP WoT is useless and
+>> stupid geek wanking.
+>>
+>> A person's behavioural signature is what is relevant.  We know how
+>> Satoshi coded and wrote.  It was the online Satoshi with which we
+>> interacted.  The online Satoshi's PGP signature would be fine...
+>> assuming he established a pattern of use.
+>>
+>> As another example, I know the code contributions and PGP key signed
+>> by the online entity known as "sipa."  At a bitcoin conf I met a
+>> person with photo id labelled "Pieter Wuille" who claimed to be sipa,
+>> but that could have been an actor.  Absent a laborious and boring
+>> signed challenge process, for all we know, "sipa" is a supercomputing
+>> cluster of 500 gnomes.
+>>
+>> The point is, the "online entity known as Satoshi" is the relevant
+>> fingerprint.  That is easily established without any in-person
+>> meetings.
+>>
+>> --
+>> Jeff Garzik
+>> Bitcoin core developer and open source evangelist
+>> BitPay, Inc.      https://bitpay.com/
+>>
+>> ------------------------------------------------------------------------------
+>> Want excitement?
+>> Manually upgrade your production database.
+>> When you want reliability, choose Perforce
+>> Perforce version control. Predictably reliable.
+>> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+>> _______________________________________________
+>> Bitcoin-development mailing list
+>> Bitcoin-development at lists.sourceforge.net
+>> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+-- 
+Jeff Garzik
+Bitcoin core developer and open source evangelist
+BitPay, Inc.      https://bitpay.com/
+
+
+
+From venzen at mail.bihthai.net  Mon Sep 15 14:44:05 2014
+From: venzen at mail.bihthai.net (Venzen)
+Date: Mon, 15 Sep 2014 21:44:05 +0700
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+ by Satoshi's PGP key?
+In-Reply-To: <CAJHLa0Owjs=6vhy_RSD+VSAZgBq2pSYv5HhCdA4-XCGgX=Z6dA@mail.gmail.com>
+References: <20140913135528.GC6333@muck>	<CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>	<20140914062826.GB21586@muck>	<201409150923.02817.thomas@thomaszander.se>
+	<CAJHLa0Owjs=6vhy_RSD+VSAZgBq2pSYv5HhCdA4-XCGgX=Z6dA@mail.gmail.com>
+Message-ID: <5416FB35.1060700@mail.bihthai.net>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Funny that you should describe WoT that way. According to some
+psycho-analysts the act of making love to a partner is actually a
+realization of our subconscious desire to make love to ourselves.
+
+So, in this sense, WoT geeks are indeed masturbating, but it's with
+the good purpose of ensuring that it's being done via the intended
+recipient and not some imposter or unsuspecting bystander.
+
+That's a valid concern, especially as Bitcoin development ranks grow
+and branch beyond a small core team.
+
+
+
+On 09/15/2014 08:08 PM, Jeff Garzik wrote:
+> On Mon, Sep 15, 2014 at 3:23 AM, Thomas Zander
+> <thomas at thomaszander.se> wrote:
+>> Any and all PGP related howtos will tell you that you should not
+>> trust or sign a formerly-untrusted PGP (or GPG for that matter)
+>> key without seeing that person in real life, verifying their
+>> identity etc.
+> 
+> Such guidelines are a perfect example of why PGP WoT is useless
+> and stupid geek wanking.
+> 
+> A person's behavioural signature is what is relevant.  We know how 
+> Satoshi coded and wrote.  It was the online Satoshi with which we 
+> interacted.  The online Satoshi's PGP signature would be fine... 
+> assuming he established a pattern of use.
+> 
+> As another example, I know the code contributions and PGP key
+> signed by the online entity known as "sipa."  At a bitcoin conf I
+> met a person with photo id labelled "Pieter Wuille" who claimed to
+> be sipa, but that could have been an actor.  Absent a laborious and
+> boring signed challenge process, for all we know, "sipa" is a
+> supercomputing cluster of 500 gnomes.
+> 
+> The point is, the "online entity known as Satoshi" is the relevant 
+> fingerprint.  That is easily established without any in-person 
+> meetings.
+> 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBAgAGBQJUFvsyAAoJENQRrA3m8xlAwkAH/iRekS+Q0jIzaMPFJjD9Qh2e
+TTpnQ5MyceeWaEQ9BIS9Lp92k/KlhYUmdaHRmmgOuUQZ6VlOmLSyveMe2qpX3igb
+jZX3ydZe2hs1D3Z48MFyNBz06eufApSi5LC8BvN4bYotOD+/qrrxag+jaU3NjDu3
+yCaSF563ZQ9xXkfh5JoZ3SGBcRmR5bS6QAoR29OQXBubriPwJuVxUBB37cfaL2Nf
+rc67q2KgpU/vOyucxMFZgoP0vDjxUzXTc2ONrEHGJUfdypMADFwXjxeA8ikOt4ik
+GIB69wMGQiMeE5e3H337yJxYaZJK4R1KnrSLF0j+Vkl3Yy25duBYAbFUGayeTw0=
+=xR8K
+-----END PGP SIGNATURE-----
+
+
+
+From brianchoffman at gmail.com  Mon Sep 15 14:49:14 2014
+From: brianchoffman at gmail.com (Brian Hoffman)
+Date: Mon, 15 Sep 2014 10:49:14 -0400
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+ by Satoshi's PGP key?
+In-Reply-To: <CAJHLa0PX+e98ad4W+oLc=TL6t6EELv=q4JEG=0YKKa7Uz4+MQA@mail.gmail.com>
+References: <20140913135528.GC6333@muck>
+	<CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>
+	<20140914062826.GB21586@muck>
+	<201409150923.02817.thomas@thomaszander.se>
+	<CAJHLa0Owjs=6vhy_RSD+VSAZgBq2pSYv5HhCdA4-XCGgX=Z6dA@mail.gmail.com>
+	<3E354504-0203-4408-85A1-58A071E8546A@gmail.com>
+	<CAJHLa0PX+e98ad4W+oLc=TL6t6EELv=q4JEG=0YKKa7Uz4+MQA@mail.gmail.com>
+Message-ID: <CAADm4BARhLUrQSk1xy_Rk_rmXw=RkrX7y_+a57HmJbUKwpQLHA@mail.gmail.com>
+
+In the context of Bitcoin I will concede that perhaps it holds true for now.
+
+I also never said the actual credential you receive from a government
+agency is trustable. I completely agree that they are forgeable and not
+necessarily reliable. That was not my point. I was referring to the vetting
+process before issuance.
+
+Just as you have behavioral characteristics online that contribute to
+trusting an "identity" you also exhibit in person attributes, such as
+physically being in a specific location at a certain time or blue eyes or
+biometrics, that are valuable. You simply cannot capture those in an
+online-only world. I don't see how you can deny the value there.
+
+You are most certainly and undeniably the expert in the Bitcoin context
+here so I will not even attempt to argue with you on that, but I just think
+it's not realistic to ignore the value of an in-person network in other
+contexts. You called it "geek wanking" with no qualifier "in the Bitcoin
+context" so excuse me if I misunderstood your intent.
+
+
+On Mon, Sep 15, 2014 at 10:33 AM, Jeff Garzik <jgarzik at bitpay.com> wrote:
+
+> It applies to OP, bitcoin community development and Satoshi.
+>
+> "value of in person vetting of identity is undeniable"...  no it is
+> quite deniable. Satoshi is the quintessential example. We value brain
+> output, code.  The real world identity is irrelevant to whether or not
+> bitcoin continues to function.
+>
+> The currency of bitcoin development is code, and electronic messages
+> describing cryptographic theses.  _That_ is the relevant fingerprint.
+>
+> Governmental id is second class, can be forged or simply present a
+> different individual from that who is online.  PGP WoT wanking does
+> not solve that problem at all.
+>
+>
+>
+>
+>
+>
+> On Mon, Sep 15, 2014 at 9:32 AM, Brian Hoffman <brianchoffman at gmail.com>
+> wrote:
+> > I would agree that the in person aspect of the WoT is frustrating, but
+> to dismiss this as "geek wanking" is the pot calling the kettle.
+> >
+> > The value of in person vetting of identity is undeniable. Just because
+> your risk acceptance is difference doesn't make it wanking. Please go see
+> if you can get any kind of governmental clearance of credential without
+> in-person vetting. Ask them if they accept your behavioral signature.
+> >
+> > I know there is a lot of PGP hating these days but this comment doesn't
+> necessarily apply to every situation.
+> >
+> >
+> >
+> >> On Sep 15, 2014, at 9:08 AM, Jeff Garzik <jgarzik at bitpay.com> wrote:
+> >>
+> >>> On Mon, Sep 15, 2014 at 3:23 AM, Thomas Zander <thomas at thomaszander.se>
+> wrote:
+> >>> Any and all PGP related howtos will tell you that you should not trust
+> or sign
+> >>> a formerly-untrusted PGP (or GPG for that matter) key without seeing
+> that
+> >>> person in real life, verifying their identity etc.
+> >>
+> >> Such guidelines are a perfect example of why PGP WoT is useless and
+> >> stupid geek wanking.
+> >>
+> >> A person's behavioural signature is what is relevant.  We know how
+> >> Satoshi coded and wrote.  It was the online Satoshi with which we
+> >> interacted.  The online Satoshi's PGP signature would be fine...
+> >> assuming he established a pattern of use.
+> >>
+> >> As another example, I know the code contributions and PGP key signed
+> >> by the online entity known as "sipa."  At a bitcoin conf I met a
+> >> person with photo id labelled "Pieter Wuille" who claimed to be sipa,
+> >> but that could have been an actor.  Absent a laborious and boring
+> >> signed challenge process, for all we know, "sipa" is a supercomputing
+> >> cluster of 500 gnomes.
+> >>
+> >> The point is, the "online entity known as Satoshi" is the relevant
+> >> fingerprint.  That is easily established without any in-person
+> >> meetings.
+> >>
+> >> --
+> >> Jeff Garzik
+> >> Bitcoin core developer and open source evangelist
+> >> BitPay, Inc.      https://bitpay.com/
+> >>
+> >>
+> ------------------------------------------------------------------------------
+> >> Want excitement?
+> >> Manually upgrade your production database.
+> >> When you want reliability, choose Perforce
+> >> Perforce version control. Predictably reliable.
+> >>
+> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+> >> _______________________________________________
+> >> Bitcoin-development mailing list
+> >> Bitcoin-development at lists.sourceforge.net
+> >> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+>
+> --
+> Jeff Garzik
+> Bitcoin core developer and open source evangelist
+> BitPay, Inc.      https://bitpay.com/
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140915/66d1dfaf/attachment.html>
+
+From pieter.wuille at gmail.com  Mon Sep 15 14:55:47 2014
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Mon, 15 Sep 2014 16:55:47 +0200
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+ by Satoshi's PGP key?
+In-Reply-To: <CAADm4BARhLUrQSk1xy_Rk_rmXw=RkrX7y_+a57HmJbUKwpQLHA@mail.gmail.com>
+References: <20140913135528.GC6333@muck>
+	<CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>
+	<20140914062826.GB21586@muck>
+	<201409150923.02817.thomas@thomaszander.se>
+	<CAJHLa0Owjs=6vhy_RSD+VSAZgBq2pSYv5HhCdA4-XCGgX=Z6dA@mail.gmail.com>
+	<3E354504-0203-4408-85A1-58A071E8546A@gmail.com>
+	<CAJHLa0PX+e98ad4W+oLc=TL6t6EELv=q4JEG=0YKKa7Uz4+MQA@mail.gmail.com>
+	<CAADm4BARhLUrQSk1xy_Rk_rmXw=RkrX7y_+a57HmJbUKwpQLHA@mail.gmail.com>
+Message-ID: <CAPg+sBg3fVHB-zHa=gY_04BPW50v6ZVyFozQ6KcPc+a_3NPsig@mail.gmail.com>
+
+WoT is a perfectly reasonable way to establish trust about the link between
+an online identity and a real world identity.
+
+In the case of a developer with an existing reputation for his online
+identity, that link is just irrelevant.
+On Sep 15, 2014 4:52 PM, "Brian Hoffman" <brianchoffman at gmail.com> wrote:
+
+> In the context of Bitcoin I will concede that perhaps it holds true for
+> now.
+>
+> I also never said the actual credential you receive from a government
+> agency is trustable. I completely agree that they are forgeable and not
+> necessarily reliable. That was not my point. I was referring to the vetting
+> process before issuance.
+>
+> Just as you have behavioral characteristics online that contribute to
+> trusting an "identity" you also exhibit in person attributes, such as
+> physically being in a specific location at a certain time or blue eyes or
+> biometrics, that are valuable. You simply cannot capture those in an
+> online-only world. I don't see how you can deny the value there.
+>
+> You are most certainly and undeniably the expert in the Bitcoin context
+> here so I will not even attempt to argue with you on that, but I just think
+> it's not realistic to ignore the value of an in-person network in other
+> contexts. You called it "geek wanking" with no qualifier "in the Bitcoin
+> context" so excuse me if I misunderstood your intent.
+>
+>
+> On Mon, Sep 15, 2014 at 10:33 AM, Jeff Garzik <jgarzik at bitpay.com> wrote:
+>
+>> It applies to OP, bitcoin community development and Satoshi.
+>>
+>> "value of in person vetting of identity is undeniable"...  no it is
+>> quite deniable. Satoshi is the quintessential example. We value brain
+>> output, code.  The real world identity is irrelevant to whether or not
+>> bitcoin continues to function.
+>>
+>> The currency of bitcoin development is code, and electronic messages
+>> describing cryptographic theses.  _That_ is the relevant fingerprint.
+>>
+>> Governmental id is second class, can be forged or simply present a
+>> different individual from that who is online.  PGP WoT wanking does
+>> not solve that problem at all.
+>>
+>>
+>>
+>>
+>>
+>>
+>> On Mon, Sep 15, 2014 at 9:32 AM, Brian Hoffman <brianchoffman at gmail.com>
+>> wrote:
+>> > I would agree that the in person aspect of the WoT is frustrating, but
+>> to dismiss this as "geek wanking" is the pot calling the kettle.
+>> >
+>> > The value of in person vetting of identity is undeniable. Just because
+>> your risk acceptance is difference doesn't make it wanking. Please go see
+>> if you can get any kind of governmental clearance of credential without
+>> in-person vetting. Ask them if they accept your behavioral signature.
+>> >
+>> > I know there is a lot of PGP hating these days but this comment doesn't
+>> necessarily apply to every situation.
+>> >
+>> >
+>> >
+>> >> On Sep 15, 2014, at 9:08 AM, Jeff Garzik <jgarzik at bitpay.com> wrote:
+>> >>
+>> >>> On Mon, Sep 15, 2014 at 3:23 AM, Thomas Zander <
+>> thomas at thomaszander.se> wrote:
+>> >>> Any and all PGP related howtos will tell you that you should not
+>> trust or sign
+>> >>> a formerly-untrusted PGP (or GPG for that matter) key without seeing
+>> that
+>> >>> person in real life, verifying their identity etc.
+>> >>
+>> >> Such guidelines are a perfect example of why PGP WoT is useless and
+>> >> stupid geek wanking.
+>> >>
+>> >> A person's behavioural signature is what is relevant.  We know how
+>> >> Satoshi coded and wrote.  It was the online Satoshi with which we
+>> >> interacted.  The online Satoshi's PGP signature would be fine...
+>> >> assuming he established a pattern of use.
+>> >>
+>> >> As another example, I know the code contributions and PGP key signed
+>> >> by the online entity known as "sipa."  At a bitcoin conf I met a
+>> >> person with photo id labelled "Pieter Wuille" who claimed to be sipa,
+>> >> but that could have been an actor.  Absent a laborious and boring
+>> >> signed challenge process, for all we know, "sipa" is a supercomputing
+>> >> cluster of 500 gnomes.
+>> >>
+>> >> The point is, the "online entity known as Satoshi" is the relevant
+>> >> fingerprint.  That is easily established without any in-person
+>> >> meetings.
+>> >>
+>> >> --
+>> >> Jeff Garzik
+>> >> Bitcoin core developer and open source evangelist
+>> >> BitPay, Inc.      https://bitpay.com/
+>> >>
+>> >>
+>> ------------------------------------------------------------------------------
+>> >> Want excitement?
+>> >> Manually upgrade your production database.
+>> >> When you want reliability, choose Perforce
+>> >> Perforce version control. Predictably reliable.
+>> >>
+>> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+>> >> _______________________________________________
+>> >> Bitcoin-development mailing list
+>> >> Bitcoin-development at lists.sourceforge.net
+>> >> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>>
+>>
+>>
+>> --
+>> Jeff Garzik
+>> Bitcoin core developer and open source evangelist
+>> BitPay, Inc.      https://bitpay.com/
+>>
+>
+>
+>
+> ------------------------------------------------------------------------------
+> Want excitement?
+> Manually upgrade your production database.
+> When you want reliability, choose Perforce
+> Perforce version control. Predictably reliable.
+>
+> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140915/1fda7d57/attachment.html>
+
+From thomas at thomaszander.se  Mon Sep 15 14:38:34 2014
+From: thomas at thomaszander.se (ThomasZander.se)
+Date: Mon, 15 Sep 2014 16:38:34 +0200
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+	by Satoshi's PGP key?
+In-Reply-To: <3E354504-0203-4408-85A1-58A071E8546A@gmail.com>
+References: <20140913135528.GC6333@muck>
+	<CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>
+	<20140914062826.GB21586@muck>
+	<201409150923.02817.thomas@thomaszander.se>
+	<CAJHLa0Owjs=6vhy_RSD+VSAZgBq2pSYv5HhCdA4-XCGgX=Z6dA@mail.gmail.com>
+	<3E354504-0203-4408-85A1-58A071E8546A@gmail.com>
+Message-ID: <20140915143834.6000788.30676.294@thomaszander.se>
+
+?The reason it is in fact wanking is because pgp tried to solve a problem that can't be solved.
+It tried to provide distributed trust to a system of identity, while still depending on the local government (i.e centralized) for the upstream ID...
+
+It's a marriage that has no benefit.
+
+What we really want is (decentralized) identity management that allows me to create a new anonymous ID and use that as something more secure than trusting a behavior pattern to proof it's me.?
+
+Sent on the go. Excuse the brevity.
+? Original Message ?
+From: Brian Hoffman
+Sent: 15:35 mandag 15. september 2014
+To: Jeff Garzik
+Cc: Thomas Zander; Bitcoin Dev
+Subject: Re: [Bitcoin-development] Does anyone have anything at all signed by Satoshi's PGP key?
+
+I would agree that the in person aspect of the WoT is frustrating, but to dismiss this as "geek wanking" is the pot calling the kettle. 
+
+The value of in person vetting of identity is undeniable. Just because your risk acceptance is difference doesn't make it wanking. Please go see if you can get any kind of governmental clearance of credential without in-person vetting. Ask them if they accept your behavioral signature. 
+
+I know there is a lot of PGP hating these days but this comment doesn't necessarily apply to every situation. 
+
+
+
+> On Sep 15, 2014, at 9:08 AM, Jeff Garzik <jgarzik at bitpay.com> wrote:
+> 
+>> On Mon, Sep 15, 2014 at 3:23 AM, Thomas Zander <thomas at thomaszander.se> wrote:
+>> Any and all PGP related howtos will tell you that you should not trust or sign
+>> a formerly-untrusted PGP (or GPG for that matter) key without seeing that
+>> person in real life, verifying their identity etc.
+> 
+> Such guidelines are a perfect example of why PGP WoT is useless and
+> stupid geek wanking.
+> 
+> A person's behavioural signature is what is relevant. We know how
+> Satoshi coded and wrote. It was the online Satoshi with which we
+> interacted. The online Satoshi's PGP signature would be fine...
+> assuming he established a pattern of use.
+> 
+> As another example, I know the code contributions and PGP key signed
+> by the online entity known as "sipa." At a bitcoin conf I met a
+> person with photo id labelled "Pieter Wuille" who claimed to be sipa,
+> but that could have been an actor. Absent a laborious and boring
+> signed challenge process, for all we know, "sipa" is a supercomputing
+> cluster of 500 gnomes.
+> 
+> The point is, the "online entity known as Satoshi" is the relevant
+> fingerprint. That is easily established without any in-person
+> meetings.
+> 
+> -- 
+> Jeff Garzik
+> Bitcoin core developer and open source evangelist
+> BitPay, Inc. https://bitpay.com/
+> 
+> ------------------------------------------------------------------------------
+> Want excitement?
+> Manually upgrade your production database.
+> When you want reliability, choose Perforce
+> Perforce version control. Predictably reliable.
+> http://pubads.g.doubleclick.net/gampad/clk?id=157508191&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+
+From thomas at thomaszander.se  Mon Sep 15 15:10:21 2014
+From: thomas at thomaszander.se (Thomas Zander)
+Date: Mon, 15 Sep 2014 17:10:21 +0200
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+	by Satoshi's PGP key?
+In-Reply-To: <3E354504-0203-4408-85A1-58A071E8546A@gmail.com>
+References: <20140913135528.GC6333@muck>
+	<CAJHLa0Owjs=6vhy_RSD+VSAZgBq2pSYv5HhCdA4-XCGgX=Z6dA@mail.gmail.com>
+	<3E354504-0203-4408-85A1-58A071E8546A@gmail.com>
+Message-ID: <3586037.E6tZxYPG6n@coldstorage>
+
+The reason it is in fact geek wanking is because pgp tried to solve a problem 
+that can't be solved.
+It tried to provide distributed trust to a system of identity, while still 
+depending on the local governments (i.e. centralization) for the upstream ID.
+
+Its a marriage that has no benefits.
+
+What we really want is a (decentralized) identity management that allows me to 
+create a new anonymous ID and use that as something more secure when needed 
+that I have to proof its me.
+
+So for instance I start including a bitcoin public key in my email signature. 
+I don't sign the emails or anything like that, just to establish that everyone 
+has my public key many times in their email archives.
+Then when I need to proof its me, I can provide a signature on the content 
+that the requester wants me to sign.
+
+All the overhead of PGP and the WoT is really completely unneeded and just 
+means that less people use it.
+
+Consider this; people create accounts on GitHub or Reddit and those have in 
+fact more value than your pgp key!  Because they got the anonymous part right.
+
+
+On Monday 15. September 2014 09.32.03 Brian Hoffman wrote:
+> I would agree that the in person aspect of the WoT is frustrating, but to
+> dismiss this as "geek wanking" is the pot calling the kettle.
+> 
+> The value of in person vetting of identity is undeniable. Just because your
+> risk acceptance is difference doesn't make it wanking. Please go see if you
+> can get any kind of governmental clearance of credential without in-person
+> vetting. Ask them if they accept your behavioral signature.
+> 
+> I know there is a lot of PGP hating these days but this comment doesn't
+> necessarily apply to every situation.
+> > On Sep 15, 2014, at 9:08 AM, Jeff Garzik <jgarzik at bitpay.com> wrote:
+> >> On Mon, Sep 15, 2014 at 3:23 AM, Thomas Zander <thomas at thomaszander.se>
+> >> wrote: Any and all PGP related howtos will tell you that you should not
+> >> trust or sign a formerly-untrusted PGP (or GPG for that matter) key
+> >> without seeing that person in real life, verifying their identity etc.
+> > 
+> > Such guidelines are a perfect example of why PGP WoT is useless and
+> > stupid geek wanking.
+> > 
+> > A person's behavioural signature is what is relevant.  We know how
+> > Satoshi coded and wrote.  It was the online Satoshi with which we
+> > interacted.  The online Satoshi's PGP signature would be fine...
+> > assuming he established a pattern of use.
+> > 
+> > As another example, I know the code contributions and PGP key signed
+> > by the online entity known as "sipa."  At a bitcoin conf I met a
+> > person with photo id labelled "Pieter Wuille" who claimed to be sipa,
+> > but that could have been an actor.  Absent a laborious and boring
+> > signed challenge process, for all we know, "sipa" is a supercomputing
+> > cluster of 500 gnomes.
+> > 
+> > The point is, the "online entity known as Satoshi" is the relevant
+> > fingerprint.  That is easily established without any in-person
+> > meetings.
+
+
+
+
+From bip at mattwhitlock.name  Mon Sep 15 15:51:35 2014
+From: bip at mattwhitlock.name (Matt Whitlock)
+Date: Mon, 15 Sep 2014 11:51:35 -0400
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+	by Satoshi's PGP key?
+In-Reply-To: <3586037.E6tZxYPG6n@coldstorage>
+References: <20140913135528.GC6333@muck>
+	<3E354504-0203-4408-85A1-58A071E8546A@gmail.com>
+	<3586037.E6tZxYPG6n@coldstorage>
+Message-ID: <3205491.XcafbkJRvW@crushinator>
+
+On Monday, 15 September 2014, at 5:10 pm, Thomas Zander wrote:
+> So for instance I start including a bitcoin public key in my email signature. 
+> I don't sign the emails or anything like that, just to establish that everyone 
+> has my public key many times in their email archives.
+> Then when I need to proof its me, I can provide a signature on the content 
+> that the requester wants me to sign.
+
+That would not work. You would need to sign your messages. If you were merely attaching your public key to them, then the email server could have been systematically replacing your public key with some other public key, and then, when you would later try to provide a signature, your signature would not verify under the public key that everyone else had been seeing attached to your messages.
+
+
+
+From thomas at thomaszander.se  Mon Sep 15 16:07:37 2014
+From: thomas at thomaszander.se (Thomas Zander)
+Date: Mon, 15 Sep 2014 18:07:37 +0200
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+	by Satoshi's PGP key?
+In-Reply-To: <3205491.XcafbkJRvW@crushinator>
+References: <20140913135528.GC6333@muck> <3586037.E6tZxYPG6n@coldstorage>
+	<3205491.XcafbkJRvW@crushinator>
+Message-ID: <1691559.E4oGFnMDVX@coldstorage>
+
+On Monday 15. September 2014 11.51.35 Matt Whitlock wrote:
+>  If you were merely attaching your public key to them, then the email server
+> could have been systematically replacing your public key with some other
+> public key,
+
+The beauty of publicly archived mailinglists make it impossible to get away 
+with this without detection.
+
+I recall reading the awesome book "The inmates are running the asylum" which 
+states that solutions created by software engineers typically suffer from the 
+flaw of absolutes. (find the part where he describes homo-digitalus for more)
+
+I think this applies to PGP and your objection; in order to make it absolutely 
+correct, you need to introduce loads of things. Signatures, WoT, etc.
+PGP&GPG do this. But each change of the normal workflow means you loose about 
+50% of your audience...
+
+So, my silly example is not perfect. But I bet its good enough for most. In 
+the end the value of the imperfect solution is higher than the perfect one.
+
+
+
+From gmaxwell at gmail.com  Mon Sep 15 16:10:14 2014
+From: gmaxwell at gmail.com (Gregory Maxwell)
+Date: Mon, 15 Sep 2014 16:10:14 +0000
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+ by Satoshi's PGP key?
+In-Reply-To: <3205491.XcafbkJRvW@crushinator>
+References: <20140913135528.GC6333@muck>
+	<3E354504-0203-4408-85A1-58A071E8546A@gmail.com>
+	<3586037.E6tZxYPG6n@coldstorage> <3205491.XcafbkJRvW@crushinator>
+Message-ID: <CAAS2fgRXUZxHSPyCo-tNdFE8nSky5ocuaPp7Yo-SbTXinQOpNQ@mail.gmail.com>
+
+On Mon, Sep 15, 2014 at 3:51 PM, Matt Whitlock <bip at mattwhitlock.name> wrote:
+> On Monday, 15 September 2014, at 5:10 pm, Thomas Zander wrote:
+>> So for instance I start including a bitcoin public key in my email signature.
+>> I don't sign the emails or anything like that, just to establish that everyone
+>> has my public key many times in their email archives.
+>> Then when I need to proof its me, I can provide a signature on the content
+>> that the requester wants me to sign.
+>
+> That would not work. You would need to sign your messages. If you were merely attaching your public key to them, then the email server could have been systematically replacing your public key with some other public key, and then, when you would later try to provide a signature, your signature would not verify under the public key that everyone else had been seeing attached to your messages.
+
+If the server could replace the public key, it could replace the
+signature in all the same places.
+
+Please, can this stuff move to another list? It's offtopic.
+
+
+
+From pete at petertodd.org  Mon Sep 15 16:20:44 2014
+From: pete at petertodd.org (Peter Todd)
+Date: Mon, 15 Sep 2014 17:20:44 +0100
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+	by Satoshi's PGP key?
+In-Reply-To: <CAAS2fgRXUZxHSPyCo-tNdFE8nSky5ocuaPp7Yo-SbTXinQOpNQ@mail.gmail.com>
+References: <20140913135528.GC6333@muck>
+	<3E354504-0203-4408-85A1-58A071E8546A@gmail.com>
+	<3586037.E6tZxYPG6n@coldstorage> <3205491.XcafbkJRvW@crushinator>
+	<CAAS2fgRXUZxHSPyCo-tNdFE8nSky5ocuaPp7Yo-SbTXinQOpNQ@mail.gmail.com>
+Message-ID: <91006404-f6ac-4d46-b58e-1160d1cfe2ae@email.android.com>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+
+
+On 15 September 2014 17:10:14 BST, Gregory Maxwell <gmaxwell at gmail.com> wrote:
+>If the server could replace the public key, it could replace the
+>signature in all the same places.
+>
+>Please, can this stuff move to another list? It's offtopic.
+
++1
+
+My original post was OT really, although obviously this was the right venue to be sure the required audience saw it and settle the question.
+-----BEGIN PGP SIGNATURE-----
+Version: APG v1.1.1
+
+iQFQBAEBCAA6BQJUFxHcMxxQZXRlciBUb2RkIChsb3cgc2VjdXJpdHkga2V5KSA8
+cGV0ZUBwZXRlcnRvZGQub3JnPgAKCRAZnIM7qOfwhfCtCACLNgMrxRQ4YlX4Tkyt
+CIlqRh4AOLVRXeh6ER+BJJhJA+hbunNfH6kkROIinpBsFxlRfoHwrv2ax6GIlegO
+s1+MSLFAoOob3tLQY/LrVF0PMTbKybdQRqQopzu81hbLTCjpnrnN2sDpAOA/bDsV
+xDTHNVbOWS7UapkZf7AjueDfuyW3yhvcgsq1Tuc4r7pdKCEQA/HjBzIqyFT2K9hp
+uahaENzCfsCVsEiTmAu+p9EvXhLWmMRfRz15z7D/KtOBTI83/t/WR7UnWlSRHn4i
+Xyhj/iDv+kPj/vsGXZClCUZ7T/64ovVvoeY9Pk+1fc6okWWXmTHsH+R72szkhgEu
+O4QP
+=C27J
+-----END PGP SIGNATURE-----
+
+
+
+
+From justusranvier at riseup.net  Mon Sep 15 18:06:06 2014
+From: justusranvier at riseup.net (Justus Ranvier)
+Date: Mon, 15 Sep 2014 20:06:06 +0200
+Subject: [Bitcoin-development] Does anyone have anything at all signed
+ by Satoshi's PGP key?
+In-Reply-To: <CAJHLa0Owjs=6vhy_RSD+VSAZgBq2pSYv5HhCdA4-XCGgX=Z6dA@mail.gmail.com>
+References: <20140913135528.GC6333@muck>	<CAJHLa0MaE3Ki5Hs4Tu4dQNBW-EL-857N2kf-fVxYcXM6OO-84w@mail.gmail.com>	<20140914062826.GB21586@muck>	<201409150923.02817.thomas@thomaszander.se>
+	<CAJHLa0Owjs=6vhy_RSD+VSAZgBq2pSYv5HhCdA4-XCGgX=Z6dA@mail.gmail.com>
+Message-ID: <54172A8E.2020605@riseup.net>
+
+On 09/15/2014 03:08 PM, Jeff Garzik wrote:
+> Such guidelines are a perfect example of why PGP WoT is useless and
+> stupid geek wanking.
+> 
+> A person's behavioural signature is what is relevant.  We know how
+> Satoshi coded and wrote.  It was the online Satoshi with which we
+> interacted.  The online Satoshi's PGP signature would be fine...
+> assuming he established a pattern of use.
+
+I wrote up an example of how the WoT and the behavior signature might be
+combined via a game:
+
+http://bitcoinism.blogspot.ch/2013/09/building-pgp-web-of-trust-that-people.html
+
+tl;dr: "Identity" is not a name - it's a set of shared experiences with
+other people. Identity systems that want to be successful should focus
+on those shared experiences rather than names.
+
+-- 
+Support online privacy by using email encryption whenever possible.
+Learn how here: http://www.youtube.com/watch?v=bakOKJFtB-k
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: 0x38450DB5.asc
+Type: application/pgp-keys
+Size: 14046 bytes
+Desc: not available
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140915/571a6599/attachment.bin>
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 455 bytes
+Desc: OpenPGP digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140915/571a6599/attachment.sig>
+
+From support at crypto-games.net  Wed Sep 17 19:28:08 2014
+From: support at crypto-games.net (Vezalke)
+Date: Wed, 17 Sep 2014 19:28:08 +0000 (UTC)
+Subject: [Bitcoin-development]
+	=?utf-8?q?Payment_Protocol_Proposal=3A=09In?=
+	=?utf-8?q?voices/Payments/Receipts?=
+References: <CABsx9T0PsGLEAWRCjEDDFWQrb+DnJWQZ7mFLaZewAEX6vD1eHw@mail.gmail.com>
+	<20121128233619.GA6368@giles.gnomon.org.uk>
+	<CABsx9T09FYf2RTaMpmujt3qwTFc2JgnREH_7Hyk2mnCgb3CvAw@mail.gmail.com>
+	<20121129170713.GD6368@giles.gnomon.org.uk>
+	<CANEZrP233CytLs3PWBQ1TyuBTMv4sLGJkEMeGWYq5xRi+iLKew@mail.gmail.com>
+	<20121129185330.GE6368@giles.gnomon.org.uk>
+	<CABsx9T35qD_xJEVw002eAhJ1kr6x5aMU7RpD+U84XEOZXmXcYw@mail.gmail.com>
+	<CANEZrP2riPBViBqAOWfY9uSQwoEm=gN108JU988XvouMbai1Ug@mail.gmail.com>
+	<CABsx9T023aw11cq6iiZhT3cgfNYJXr=qG40Fzc7rYZOimJ=62w@mail.gmail.com>
+	<50C03BDA.6010600@petersson.at>
+	<CANEZrP1iS4_MFi2=3Qa4_rSGXe5EK8B0wWy43hXJOeKp-SfpPg@mail.gmail.com>
+	<CABsx9T2UBQXzDPj0zHio+9i0uKNqiPYwL=kYgWKSirXRvckQ4g@mail.gmail.com>
+	<CALf2ePx5jS@mail.gmail.com>
+Message-ID: <loom.20140917T212753-420@post.gmane.org>
+
+Alan Reiner <etotheipi <at> gmail.com> writes:
+
+> 
+> 
+> 
+> On Thu, Dec 6, 2012 at 11:56 AM, Gavin Andresen <gavinandresen <at>
+gmail.com> wrote:When I say "pass around" I'm not thinking of users copying
+and pasting, that would be a terrible user experience; all of that
+communication needs to happen automatically behind the scenes. Lets tackle
+that after we've got the simpler customer-pays-merchant flow working nicely
+(funded-escrow-pays-merchant is a subset of that, anyway).
+> 
+> 
+> 
+> 
+> I think that the "pass around" method needs to happen in addition to the
+methods of transparent protocols that occur behind the scenes. ?For one,
+there's a lot of CONOPs that need to be worked out by getting knowledgeable
+people using it, and providing feedback about how it could/should/will be
+used and how it could be improved. ?The pass-around method is simpler to
+implement and still usable by the types of users that will be using it in
+the beginning -- experts. ?Also, I see that for very large, important
+multi-sig tx/contracts/escrow, the "manual" method might be preferred --
+much the same way many people prefer manual-transmission cars even though
+automatics are "easier" -- some people/organizations will want the control. ??
+> 
+> I'm all for protocols that enable higher-level access to this
+functionality, I'm just saying there should be lower-level access, too.
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> ------------------------------------------------------------------------------
+> LogMeIn Rescue: Anywhere, Anytime Remote support for IT. Free Trial
+> Remotely access PCs and mobile devices and provide instant support
+> Improve your efficiency, and focus on delivering more value-add services
+> Discover what IT Professionals Know. Rescue delivers
+> http://p.sf.net/sfu/logmein_12329d2d
+> 
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development <at> lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+> 
+Another online space wagering stage has been propelled and targets Bitcoin,
+Litecoin and Dogecoin fans from everywhere throughout the world. 
+
+Presented in August, Crypto-Games.net is a straightforward space machine
+diversion that might be immediately played in any web program with the
+utilization of cryptocurrencies, making it one of the first few wagering
+destinations that are intended for Slot machine betting. 
+
+As indicated by its site, it emphasizes a four-reel space machine with one
+pay line that acknowledges wagers measuring from 50 Credits to a greatest of
+9,999 Credits, where playing with most extreme wager yields a gigantic big
+stake of 4,999,500 Credits. 
+
+Then, the store exchange routines for this opening machine amusement have
+been created to be productive with the stores taking online 2 to 10 minutes
+to be transformed and the withdrawals just 6 to 60 minutes without any
+transaction charges. Moreover, a QR code has as of now been added to suit
+versatile bettors utilizing their cell phones and tablets. 
+
+Also, the administrators have taken the additional mile to guarantee
+reasonableness by depending on the random.org API to deliver genuine
+arbitrariness that supplements the diversion's reasonable calculation. 
+
+The https://www.crypto-games.net opening diversion, on the other hand,
+cautions players to observe their remarkable ID number to abstain from
+losing access to their account. This is essential on the grounds that
+Crypto-Games does not oblige any type of record enlistment; rather, it
+composes into cookies, which are erased following 14 days. 
+
+Besides, it has taken off new extra arrangements for Crypto bettors aside
+from the 25% house edge that are up for gets through the referral system.
+
+
+
+
+
+
+
+From laanwj at gmail.com  Thu Sep 18 12:52:32 2014
+From: laanwj at gmail.com (Wladimir)
+Date: Thu, 18 Sep 2014 14:52:32 +0200
+Subject: [Bitcoin-development] [ann] Bitcoin Core 0.9.3 rc2 is available
+	for download
+Message-ID: <CA+s+GJA5D3s5ch_e8k09Yk9W5euMoU-UVVViLXSTgC-fgZx6mA@mail.gmail.com>
+
+FYI rc2 has been uploaded last weekend to
+https://bitcoin.org/bin/0.9.3/test/, with some further fixes in
+network and memory behaviour
+
+- Remove a useless millisleep in socket handler
+- Stricter memory limits on CNode
+- Better orphan transaction handling
+- Add `-maxorphantx=<n>` and `-maxorphanblocks=<n>` options for
+control over the maximum orphan counts
+
+Wladimir
+
+
+
+From jgarzik at bitpay.com  Sat Sep 20 13:00:39 2014
+From: jgarzik at bitpay.com (Jeff Garzik)
+Date: Sat, 20 Sep 2014 09:00:39 -0400
+Subject: [Bitcoin-development] Applying clang-format to Bitcoin Core
+Message-ID: <CAJHLa0PtUBGEbcfHH2A7-8+Rdbq=-tgSnsXABJzGM9ekEaWv2A@mail.gmail.com>
+
+We are slowly applying a consistent style to the C++ source, via
+clang-format (LLVM) and $repo/src/.clang-format.
+
+If you have a patch that is difficult to apply to the tree due to
+reformatting, simply apply clang-format and then rediff.
+
+-- 
+Jeff Garzik
+Bitcoin core developer and open source evangelist
+BitPay, Inc.      https://bitpay.com/
+
+
+
+From peter at grigor.ws  Sat Sep 20 15:38:15 2014
+From: peter at grigor.ws (Peter Grigor)
+Date: Sat, 20 Sep 2014 08:38:15 -0700
+Subject: [Bitcoin-development] From block 0 to block 72499 the Merkle root
+ is the same as the coinbase transaction id. Why is that?
+Message-ID: <CAGpx8BUav93VTHyaBcuqk+FmsNBrq_ue8L4exfZ1iq8Om_WGiA@mail.gmail.com>
+
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140920/37a7adcd/attachment.html>
+
+From christophe.biocca at gmail.com  Sat Sep 20 16:22:10 2014
+From: christophe.biocca at gmail.com (Christophe Biocca)
+Date: Sat, 20 Sep 2014 12:22:10 -0400
+Subject: [Bitcoin-development] From block 0 to block 72499 the Merkle
+ root is the same as the coinbase transaction id. Why is that?
+In-Reply-To: <CAGpx8BUav93VTHyaBcuqk+FmsNBrq_ue8L4exfZ1iq8Om_WGiA@mail.gmail.com>
+References: <CAGpx8BUav93VTHyaBcuqk+FmsNBrq_ue8L4exfZ1iq8Om_WGiA@mail.gmail.com>
+Message-ID: <CANOOu=-asuS31rYQ7Huc6201Z-zgO2q8eKTiJAkeh-gF7ETchA@mail.gmail.com>
+
+1. Not all of them (just the ones that have a coinbase transaction and
+nothing else).
+2. The merkle root of a tree with just one item is the hash of that item.
+
+On Sat, Sep 20, 2014 at 11:38 AM, Peter Grigor <peter at grigor.ws> wrote:
+>
+>
+> ------------------------------------------------------------------------------
+> Slashdot TV.  Video for Nerds.  Stuff that Matters.
+> http://pubads.g.doubleclick.net/gampad/clk?id=160591471&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+
+
+
+From pete at petertodd.org  Sat Sep 20 16:24:16 2014
+From: pete at petertodd.org (Peter Todd)
+Date: Sat, 20 Sep 2014 12:24:16 -0400
+Subject: [Bitcoin-development] From block 0 to block 72499 the Merkle
+ root is the same as the coinbase transaction id. Why is that?
+In-Reply-To: <CAGpx8BUav93VTHyaBcuqk+FmsNBrq_ue8L4exfZ1iq8Om_WGiA@mail.gmail.com>
+References: <CAGpx8BUav93VTHyaBcuqk+FmsNBrq_ue8L4exfZ1iq8Om_WGiA@mail.gmail.com>
+Message-ID: <20140920162416.GA28251@muck>
+
+On Sat, Sep 20, 2014 at 08:38:15AM -0700, Peter Grigor wrote:
+> From block 0 to block 72499 the Merkle root is the same as the
+> coinbase transaction id. Why is that?
+
+It's because of how the merkle tree algorithm works:
+
+    uint256 CBlock::BuildMerkleTree() const
+    {
+        vMerkleTree.clear();
+
+So here all the txids are pushed onto the vMerkleTree vector:
+
+        BOOST_FOREACH(const CTransaction& tx, vtx)
+            vMerkleTree.push_back(tx.GetHash());
+
+For most of the early blocks there's just the coinbase transaction and
+no other transactions.
+
+        int j = 0;
+        for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
+
+That means this for loop never executes! nSize = vtx.size() == 1, and
+the loop terminates when nSize <= 1
+
+        {
+            for (int i = 0; i < nSize; i += 2)
+            {
+                int i2 = std::min(i+1, nSize-1);
+                vMerkleTree.push_back(Hash(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
+                                           BEGIN(vMerkleTree[j+i2]), END(vMerkleTree[j+i2])));
+            }
+            j += nSize;
+        }
+        return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
+    }
+
+Thus the vMerkleTree still has only the coinbase txid in it, and and
+vMerkleTree.back() returns that txid as the merkle root. There's no
+problem with the merkle root algorithm working that way - to make a long
+story short all this means is that the merkle tree algorithm
+consistently uses the txid as the merkle root whenever there is only one
+transaction. The contents of the block is still being securely committed
+to by the merkleroot, which is the important thing, and there's no way
+to lie about those contents.
+
+There is however a serious flaw in the algorithm, unrelated to the case
+of a single transaction, where the merkle tree is indistinguishable from
+a merkle tree with duplicate txids if there are a non-power-of-two
+number of items in the tree. For bitcoin we fixed this flaw with BIP30
+and BIP34; for any other application you should *never* use the Satoshi
+merkle root calculation code. Get it right on day one and do things
+correctly.
+
+-- 
+'peter'[:-1]@petertodd.org
+00000000000000000fbf83c9e14d8711e4b2264ceda0d1d06d169c811387eadd
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 650 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140920/956a305a/attachment.sig>
+
+From etotheipi at gmail.com  Tue Sep 23 16:16:57 2014
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Tue, 23 Sep 2014 12:16:57 -0400
+Subject: [Bitcoin-development] Proposal: "No-Collision" mode for Multisig
+	BIP32 Wallets
+Message-ID: <54219CF9.7080500@gmail.com>
+
+This topic has been touched on briefly here before, but I wanted to
+solidify it and propose it as a BIP if there is wider support for it. 
+Also, the topic is difficult to discuss without lots of pictures -- so
+that's what I've done (mainly to describe it to my team, but also as
+general documentation).  It's in presentation form:
+
+https://s3.amazonaws.com/bitcoinarmory-media/MultisigWalletNoCollide.pdf
+
+The proposal is that for an M-of-N multisig wallet based on BIP32, there
+should be N internal chains and N external chains.  Each party is
+assigned a chain based on the lexicographic ordering of their wallet's
+root public key in the multisig.   This guarantees that no parties are
+generating and distributing the same addresses, and also provides a
+certain level of built-in book-keeping.  Coins being received on chain
+2*x were created by participant x (receiving), and coins received on
+2*x+1 are change outputs created by participant x (outgoing).  Thus,
+it's easy from simply looking at the wallet structure who was
+responsible for which transactions.
+
+Alternatively, we could change it to suggest that each "device" is
+assigned a pair of chains.  For a 2-of-3 there may 3 participants plus a
+CFO with a "watch-only" version of the multisig wallet.  Then you might
+use four pairs of chains.  I'm just not sure how they would be assigned.
+
+If this has been proposed before, then consider this my contribution to
+documentation. 
+-Alan
+
+P.S. -- "No-Collision Mode" is not a great name.  Happy to take
+suggestions for changing it.
+
+
+
+
+From justus at monetas.net  Tue Sep 23 16:37:20 2014
+From: justus at monetas.net (Justus Ranvier)
+Date: Tue, 23 Sep 2014 16:37:20 +0000
+Subject: [Bitcoin-development] Proposal: "No-Collision" mode for
+ Multisig BIP32 Wallets
+In-Reply-To: <54219CF9.7080500@gmail.com>
+References: <54219CF9.7080500@gmail.com>
+Message-ID: <5421A1C0.6080605@monetas.net>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+On 09/23/2014 04:16 PM, Alan Reiner wrote:
+> P.S. -- "No-Collision Mode" is not a great name.  Happy to take 
+> suggestions for changing it.
+
+I'd call it a "voting pool wallet", since that was the original
+application for this arrangement.
+
+Would be nice if you'd at least mention our work, since we did share
+it with you back in January and have been publicly documenting it ever
+since.
+
+Or does the fact that we're implementing it in btcwallet mean what
+we're working on is unmentionable here?
+
+- -- 
+Justus Ranvier                   | Monetas <http://monetas.net/>
+<mailto:justus at monetas.net>      | Public key ID : C3F7BB2638450DB5
+                                 | BM-2cTepVtZ6AyJAs2Y8LpcvZB8KbdaWLwKqc
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAEBCAAGBQJUIaHAAAoJEMP3uyY4RQ21nwoH/3MYi9JibblZYmSOvCT1vJrN
+Ih+Q2WNumIAI+Y9bh4bBgLuhnG5lXyHedhYEUW+mfuwGiX+92Uc47nwaWED2/Lte
+4Zk/KZnwLifdWCgKLdGpW6mzksRiOaVyU4vV5JchVOrGZZ2zYNIq+NcChtCph7Y5
+L202ReAG+1dfSpp4rFckuv7pTVjNcrq89UN1tJFDNQdxzIRd7bwoeCuvyFurZagB
+88bNiOl0BI3e090WC+CWmbC6BfqJiicn/d0gp/agW01wy7CVbLypPPTKmYqt3+54
+msLUgaRHcbjuyKqu8HMHpYtgYVSNFg2q+U4SgmEepzPAkQ97khbduqA6i1B0ULM=
+=t/xp
+-----END PGP SIGNATURE-----
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: 0x38450DB5.asc
+Type: application/pgp-keys
+Size: 14046 bytes
+Desc: not available
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140923/691a56c9/attachment.bin>
+
+From etotheipi at gmail.com  Tue Sep 23 16:48:34 2014
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Tue, 23 Sep 2014 12:48:34 -0400
+Subject: [Bitcoin-development] Proposal: "No-Collision" mode for
+ Multisig BIP32 Wallets
+In-Reply-To: <5421A1C0.6080605@monetas.net>
+References: <54219CF9.7080500@gmail.com> <5421A1C0.6080605@monetas.net>
+Message-ID: <5421A462.6030205@gmail.com>
+
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/23/2014 12:37 PM, Justus Ranvier wrote:
+> Would be nice if you'd at least mention our work, since we did share
+> it with you back in January and have been publicly documenting it ever
+> since.
+>
+> Or does the fact that we're implementing it in btcwallet mean what
+> we're working on is unmentionable here?
+>
+
+Please don't assume poor intentions or sneaky motives.  I get a lot of
+emails from a lot of people about a lot of things.  Nine months ago was
+an eternity in this world, and it can't be ruled out that I simply forgot.
+
+I have no problem giving credit where it is due, and I mentioned in my
+first email that I wasn't sure if my stuff was original.  Please
+recap/link it here so that it can be part of this discussion.
+
+- -Alan
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUIaRiAAoJEBHe6b77WWmFcBgP/2IiQWda5diBIrd8MjbtYz/X
+pF+B1zOipClil151pKN5h9f4CI75qwSBSG6pUS+QH1lCz97nr5AoVYV5SAaRzv0z
+L9Bz0PiHJFHd4IRbfuFqlPZB8mw2TMD7QWJx/1U+WmpnYYOGsUeJn25psIVZSRTU
+FTCsmYrA4cGZ4bZoUKI/eiXrHao8rm/zQ7QHKOMSFWZT57sNea67vlxPXKu+AkmK
+nEYa4hD0kD7/R/TrNcmRmOlmbqCnyjICd/yp8Lj26CdHPv3PAvaxUwSX3VhWPbdc
+UOiGeo+lXqRnBVpwMd+k7oFddwrc2k9ISRdUVsU86z3JdAXKl/dLS5UoOtfC1JA9
+m90TuRtq4QuuzjLF3brI9FthuHNowA//qaVfjo/AYgsKy15td9UBtFbt4E9w263M
+NiFEmFkXfbE1JmIvmPG3AQEEdQ1/nmWiN5UcLrBfauEHMDQ1fGd89A8IBpus7bWM
+kYXboW3E9RBN4lB6OdyYU4AuH0YQhZodmry4iElMPox/tclmNiaeqDR8UYhD5BMd
+eQN9zAALyR1IY1167Ki/abVfWVf5jF7b0Eeu/wAfwcble3sCFrvWWAwzHjNi3GjY
+gNfy1eDTbwLj2M63QbtB+YqzQBZx3+SY4euGKYQ1s1CVV9ibAFI52oxeMhwzVOWF
+ofeDK5BPL8H+5L3tk+1o
+=tX2n
+-----END PGP SIGNATURE-----
+
+
+
+
+
+From justus at monetas.net  Tue Sep 23 17:07:58 2014
+From: justus at monetas.net (Justus Ranvier)
+Date: Tue, 23 Sep 2014 17:07:58 +0000
+Subject: [Bitcoin-development] Proposal: "No-Collision" mode for
+ Multisig BIP32 Wallets
+In-Reply-To: <5421A462.6030205@gmail.com>
+References: <54219CF9.7080500@gmail.com> <5421A1C0.6080605@monetas.net>
+	<5421A462.6030205@gmail.com>
+Message-ID: <5421A8EE.4060300@monetas.net>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+On 09/23/2014 04:48 PM, Alan Reiner wrote:
+> Please recap/link it here so that it can be part of this
+> discussion.
+
+http://sourceforge.net/p/bitcoin/mailman/message/32736455/
+
+http://opentransactions.org/wiki/index.php/Deposit_Address_(voting_pools)
+
+Currently being implemented here:
+
+https://github.com/monetas/btcwallet/commits/vp
+
+- --
+
+Really what's so annoying is how the BIP numbering process is handled in
+such a way that proposals can be silently pigeonholed.
+
+Especially so in the case of an *informational* BIP which requires no
+action on anyone's part (except for not using the same BIP43 purpose
+code).
+
+We resolved this by changing the naming scheme for our proposals, and
+their associated purpose codes, to not rely on centrally-allocated
+numbers.
+
+https://github.com/Open-Transactions/rfc/tree/master/bips
+
+- -- 
+Justus Ranvier                   | Monetas <http://monetas.net/>
+<mailto:justus at monetas.net>      | Public key ID : C3F7BB2638450DB5
+                                 | BM-2cTepVtZ6AyJAs2Y8LpcvZB8KbdaWLwKqc
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAEBCAAGBQJUIajuAAoJEMP3uyY4RQ215dQH/1GNOmZd19/e2Ys7MNFx0gqz
+rDmTFBylU3lhJrMY4CDd4Duq5+2U7HgaovqgX8UqxquHWLQUwEzZLqdEPCifLg0c
+d/u90cRlClFAaOxPh4HV2/3aZoS2R27N+ZjOfziW7RZySBP/2fMt4/ra+SPbkcAQ
+oeplYgqMRDqW52C/o2zm4y4yb0TJPS+lzSNM+JfxHSPRyY55l0KzLJfUNz1RSOze
+A8UAwdsLiJROKPKiSrQcqFOejPV7uqSPh10ukm/AI0k8TbvX8ffGQ083394M9IuE
+DB/1eyeLQVP5+lQMWNrTHk3BQ75XBEDJoSukaRENcqxtHV2m1JzTWoS2CQBXi2M=
+=TwI3
+-----END PGP SIGNATURE-----
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: 0x38450DB5.asc
+Type: application/pgp-keys
+Size: 14046 bytes
+Desc: not available
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140923/c8cf6cc2/attachment.bin>
+
+From v at buterin.com  Tue Sep 23 17:57:29 2014
+From: v at buterin.com (Vitalik Buterin)
+Date: Tue, 23 Sep 2014 13:57:29 -0400
+Subject: [Bitcoin-development] Bitcoin-development Digest, Vol 40,
+	Issue 9
+In-Reply-To: <mailman.358444.1411492141.2178.bitcoin-development@lists.sourceforge.net>
+References: <mailman.358444.1411492141.2178.bitcoin-development@lists.sourceforge.net>
+Message-ID: <CAH8WSacmzmFs_L0NR0FunDuE+cfRyoKCq6dwG8qo8SM5K8C8vg@mail.gmail.com>
+
+Have you looked at how Coinvault does it? They have a similar setup, but
+sort the pubkeys at each address.
+
+On Tue, Sep 23, 2014 at 1:09 PM, <
+bitcoin-development-request at lists.sourceforge.net> wrote:
+
+> Send Bitcoin-development mailing list submissions to
+>         bitcoin-development at lists.sourceforge.net
+>
+> To subscribe or unsubscribe via the World Wide Web, visit
+>         https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+> or, via email, send a message with subject or body 'help' to
+>         bitcoin-development-request at lists.sourceforge.net
+>
+> You can reach the person managing the list at
+>         bitcoin-development-owner at lists.sourceforge.net
+>
+> When replying, please edit your Subject line so it is more specific
+> than "Re: Contents of Bitcoin-development digest..."
+>
+>
+> Today's Topics:
+>
+>    1. Re: Proposal: "No-Collision" mode for Multisig BIP32 Wallets
+>       (Justus Ranvier)
+>    2. Re: Proposal: "No-Collision" mode for Multisig BIP32 Wallets
+>       (Alan Reiner)
+>    3. Re: Proposal: "No-Collision" mode for Multisig BIP32 Wallets
+>       (Justus Ranvier)
+>
+>
+> ----------------------------------------------------------------------
+>
+> Message: 1
+> Date: Tue, 23 Sep 2014 16:37:20 +0000
+> From: Justus Ranvier <justus at monetas.net>
+> Subject: Re: [Bitcoin-development] Proposal: "No-Collision" mode for
+>         Multisig BIP32 Wallets
+> To: bitcoin-development at lists.sourceforge.net
+> Message-ID: <5421A1C0.6080605 at monetas.net>
+> Content-Type: text/plain; charset="utf-8"
+>
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA256
+>
+> On 09/23/2014 04:16 PM, Alan Reiner wrote:
+> > P.S. -- "No-Collision Mode" is not a great name.  Happy to take
+> > suggestions for changing it.
+>
+> I'd call it a "voting pool wallet", since that was the original
+> application for this arrangement.
+>
+> Would be nice if you'd at least mention our work, since we did share
+> it with you back in January and have been publicly documenting it ever
+> since.
+>
+> Or does the fact that we're implementing it in btcwallet mean what
+> we're working on is unmentionable here?
+>
+> - --
+> Justus Ranvier                   | Monetas <http://monetas.net/>
+> <mailto:justus at monetas.net>      | Public key ID : C3F7BB2638450DB5
+>                                  | BM-2cTepVtZ6AyJAs2Y8LpcvZB8KbdaWLwKqc
+> -----BEGIN PGP SIGNATURE-----
+>
+> iQEcBAEBCAAGBQJUIaHAAAoJEMP3uyY4RQ21nwoH/3MYi9JibblZYmSOvCT1vJrN
+> Ih+Q2WNumIAI+Y9bh4bBgLuhnG5lXyHedhYEUW+mfuwGiX+92Uc47nwaWED2/Lte
+> 4Zk/KZnwLifdWCgKLdGpW6mzksRiOaVyU4vV5JchVOrGZZ2zYNIq+NcChtCph7Y5
+> L202ReAG+1dfSpp4rFckuv7pTVjNcrq89UN1tJFDNQdxzIRd7bwoeCuvyFurZagB
+> 88bNiOl0BI3e090WC+CWmbC6BfqJiicn/d0gp/agW01wy7CVbLypPPTKmYqt3+54
+> msLUgaRHcbjuyKqu8HMHpYtgYVSNFg2q+U4SgmEepzPAkQ97khbduqA6i1B0ULM=
+> =t/xp
+> -----END PGP SIGNATURE-----
+> -------------- next part --------------
+> A non-text attachment was scrubbed...
+> Name: 0x38450DB5.asc
+> Type: application/pgp-keys
+> Size: 14046 bytes
+> Desc: not available
+>
+> ------------------------------
+>
+> Message: 2
+> Date: Tue, 23 Sep 2014 12:48:34 -0400
+> From: Alan Reiner <etotheipi at gmail.com>
+> Subject: Re: [Bitcoin-development] Proposal: "No-Collision" mode for
+>         Multisig BIP32 Wallets
+> To: bitcoin-development at lists.sourceforge.net
+> Message-ID: <5421A462.6030205 at gmail.com>
+> Content-Type: text/plain; charset=ISO-8859-1
+>
+>
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> On 09/23/2014 12:37 PM, Justus Ranvier wrote:
+> > Would be nice if you'd at least mention our work, since we did share
+> > it with you back in January and have been publicly documenting it ever
+> > since.
+> >
+> > Or does the fact that we're implementing it in btcwallet mean what
+> > we're working on is unmentionable here?
+> >
+>
+> Please don't assume poor intentions or sneaky motives.  I get a lot of
+> emails from a lot of people about a lot of things.  Nine months ago was
+> an eternity in this world, and it can't be ruled out that I simply forgot.
+>
+> I have no problem giving credit where it is due, and I mentioned in my
+> first email that I wasn't sure if my stuff was original.  Please
+> recap/link it here so that it can be part of this discussion.
+>
+> - -Alan
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1
+>
+> iQIcBAEBAgAGBQJUIaRiAAoJEBHe6b77WWmFcBgP/2IiQWda5diBIrd8MjbtYz/X
+> pF+B1zOipClil151pKN5h9f4CI75qwSBSG6pUS+QH1lCz97nr5AoVYV5SAaRzv0z
+> L9Bz0PiHJFHd4IRbfuFqlPZB8mw2TMD7QWJx/1U+WmpnYYOGsUeJn25psIVZSRTU
+> FTCsmYrA4cGZ4bZoUKI/eiXrHao8rm/zQ7QHKOMSFWZT57sNea67vlxPXKu+AkmK
+> nEYa4hD0kD7/R/TrNcmRmOlmbqCnyjICd/yp8Lj26CdHPv3PAvaxUwSX3VhWPbdc
+> UOiGeo+lXqRnBVpwMd+k7oFddwrc2k9ISRdUVsU86z3JdAXKl/dLS5UoOtfC1JA9
+> m90TuRtq4QuuzjLF3brI9FthuHNowA//qaVfjo/AYgsKy15td9UBtFbt4E9w263M
+> NiFEmFkXfbE1JmIvmPG3AQEEdQ1/nmWiN5UcLrBfauEHMDQ1fGd89A8IBpus7bWM
+> kYXboW3E9RBN4lB6OdyYU4AuH0YQhZodmry4iElMPox/tclmNiaeqDR8UYhD5BMd
+> eQN9zAALyR1IY1167Ki/abVfWVf5jF7b0Eeu/wAfwcble3sCFrvWWAwzHjNi3GjY
+> gNfy1eDTbwLj2M63QbtB+YqzQBZx3+SY4euGKYQ1s1CVV9ibAFI52oxeMhwzVOWF
+> ofeDK5BPL8H+5L3tk+1o
+> =tX2n
+> -----END PGP SIGNATURE-----
+>
+>
+>
+>
+>
+> ------------------------------
+>
+> Message: 3
+> Date: Tue, 23 Sep 2014 17:07:58 +0000
+> From: Justus Ranvier <justus at monetas.net>
+> Subject: Re: [Bitcoin-development] Proposal: "No-Collision" mode for
+>         Multisig BIP32 Wallets
+> To: bitcoin-development at lists.sourceforge.net
+> Message-ID: <5421A8EE.4060300 at monetas.net>
+> Content-Type: text/plain; charset="utf-8"
+>
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA256
+>
+> On 09/23/2014 04:48 PM, Alan Reiner wrote:
+> > Please recap/link it here so that it can be part of this
+> > discussion.
+>
+> http://sourceforge.net/p/bitcoin/mailman/message/32736455/
+>
+> http://opentransactions.org/wiki/index.php/Deposit_Address_(voting_pools)
+>
+> Currently being implemented here:
+>
+> https://github.com/monetas/btcwallet/commits/vp
+>
+> - --
+>
+> Really what's so annoying is how the BIP numbering process is handled in
+> such a way that proposals can be silently pigeonholed.
+>
+> Especially so in the case of an *informational* BIP which requires no
+> action on anyone's part (except for not using the same BIP43 purpose
+> code).
+>
+> We resolved this by changing the naming scheme for our proposals, and
+> their associated purpose codes, to not rely on centrally-allocated
+> numbers.
+>
+> https://github.com/Open-Transactions/rfc/tree/master/bips
+>
+> - --
+> Justus Ranvier                   | Monetas <http://monetas.net/>
+> <mailto:justus at monetas.net>      | Public key ID : C3F7BB2638450DB5
+>                                  | BM-2cTepVtZ6AyJAs2Y8LpcvZB8KbdaWLwKqc
+> -----BEGIN PGP SIGNATURE-----
+>
+> iQEcBAEBCAAGBQJUIajuAAoJEMP3uyY4RQ215dQH/1GNOmZd19/e2Ys7MNFx0gqz
+> rDmTFBylU3lhJrMY4CDd4Duq5+2U7HgaovqgX8UqxquHWLQUwEzZLqdEPCifLg0c
+> d/u90cRlClFAaOxPh4HV2/3aZoS2R27N+ZjOfziW7RZySBP/2fMt4/ra+SPbkcAQ
+> oeplYgqMRDqW52C/o2zm4y4yb0TJPS+lzSNM+JfxHSPRyY55l0KzLJfUNz1RSOze
+> A8UAwdsLiJROKPKiSrQcqFOejPV7uqSPh10ukm/AI0k8TbvX8ffGQ083394M9IuE
+> DB/1eyeLQVP5+lQMWNrTHk3BQ75XBEDJoSukaRENcqxtHV2m1JzTWoS2CQBXi2M=
+> =TwI3
+> -----END PGP SIGNATURE-----
+> -------------- next part --------------
+> A non-text attachment was scrubbed...
+> Name: 0x38450DB5.asc
+> Type: application/pgp-keys
+> Size: 14046 bytes
+> Desc: not available
+>
+> ------------------------------
+>
+>
+> ------------------------------------------------------------------------------
+> Meet PCI DSS 3.0 Compliance Requirements with EventLog Analyzer
+> Achieve PCI DSS 3.0 Compliant Status with Out-of-the-box PCI DSS Reports
+> Are you Audit-Ready for PCI DSS 3.0 Compliance? Download White paper
+> Comply to PCI DSS 3.0 Requirement 10 and 11.5 with EventLog Analyzer
+>
+> http://pubads.g.doubleclick.net/gampad/clk?id=154622311&iu=/4140/ostg.clktrk
+>
+> ------------------------------
+>
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+> End of Bitcoin-development Digest, Vol 40, Issue 9
+> **************************************************
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140923/4ea46881/attachment.html>
+
+From etotheipi at gmail.com  Tue Sep 23 18:45:39 2014
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Tue, 23 Sep 2014 14:45:39 -0400
+Subject: [Bitcoin-development] Bitcoin-development Digest, Vol 40,
+	Issue 9
+In-Reply-To: <CAH8WSacmzmFs_L0NR0FunDuE+cfRyoKCq6dwG8qo8SM5K8C8vg@mail.gmail.com>
+References: <mailman.358444.1411492141.2178.bitcoin-development@lists.sourceforge.net>
+	<CAH8WSacmzmFs_L0NR0FunDuE+cfRyoKCq6dwG8qo8SM5K8C8vg@mail.gmail.com>
+Message-ID: <CALf2ePwooCNsK72GLXXSC7v-ucyqpJfB=K8euSusFBHmJ7UG8w@mail.gmail.com>
+
+Yes, we sort the keys at each address as well.  But this isn't about key
+sorting, it's about assigning each device a different branch of the BIP 32
+tree to avoid accidental address re use and to make it self evident which
+devices were used for each transaction in the overall wallet history.  I
+only suggested sorting the root public keys as a way to assign which
+internal/external pair of chains the device should use.
+
+@Justus... Looking at the links you sent I'm not clear how it is related.
+And naming it "key voting pools" seems unrelated to why we are proposing
+this scheme.  I'll need more than naked links to understand (I'm not saying
+it isn't related, I'm just not seeing the connection)
+
+-Alan
+
+Sent from my overpriced smartphone
+On Sep 23, 2014 2:25 PM, "Vitalik Buterin" <v at buterin.com> wrote:
+
+> Have you looked at how Coinvault does it? They have a similar setup, but
+> sort the pubkeys at each address.
+>
+> On Tue, Sep 23, 2014 at 1:09 PM, <
+> bitcoin-development-request at lists.sourceforge.net> wrote:
+>
+>> Send Bitcoin-development mailing list submissions to
+>>         bitcoin-development at lists.sourceforge.net
+>>
+>> To subscribe or unsubscribe via the World Wide Web, visit
+>>         https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>> or, via email, send a message with subject or body 'help' to
+>>         bitcoin-development-request at lists.sourceforge.net
+>>
+>> You can reach the person managing the list at
+>>         bitcoin-development-owner at lists.sourceforge.net
+>>
+>> When replying, please edit your Subject line so it is more specific
+>> than "Re: Contents of Bitcoin-development digest..."
+>>
+>>
+>> Today's Topics:
+>>
+>>    1. Re: Proposal: "No-Collision" mode for Multisig BIP32 Wallets
+>>       (Justus Ranvier)
+>>    2. Re: Proposal: "No-Collision" mode for Multisig BIP32 Wallets
+>>       (Alan Reiner)
+>>    3. Re: Proposal: "No-Collision" mode for Multisig BIP32 Wallets
+>>       (Justus Ranvier)
+>>
+>>
+>> ----------------------------------------------------------------------
+>>
+>> Message: 1
+>> Date: Tue, 23 Sep 2014 16:37:20 +0000
+>> From: Justus Ranvier <justus at monetas.net>
+>> Subject: Re: [Bitcoin-development] Proposal: "No-Collision" mode for
+>>         Multisig BIP32 Wallets
+>> To: bitcoin-development at lists.sourceforge.net
+>> Message-ID: <5421A1C0.6080605 at monetas.net>
+>> Content-Type: text/plain; charset="utf-8"
+>>
+>> -----BEGIN PGP SIGNED MESSAGE-----
+>> Hash: SHA256
+>>
+>> On 09/23/2014 04:16 PM, Alan Reiner wrote:
+>> > P.S. -- "No-Collision Mode" is not a great name.  Happy to take
+>> > suggestions for changing it.
+>>
+>> I'd call it a "voting pool wallet", since that was the original
+>> application for this arrangement.
+>>
+>> Would be nice if you'd at least mention our work, since we did share
+>> it with you back in January and have been publicly documenting it ever
+>> since.
+>>
+>> Or does the fact that we're implementing it in btcwallet mean what
+>> we're working on is unmentionable here?
+>>
+>> - --
+>> Justus Ranvier                   | Monetas <http://monetas.net/>
+>> <mailto:justus at monetas.net>      | Public key ID : C3F7BB2638450DB5
+>>                                  | BM-2cTepVtZ6AyJAs2Y8LpcvZB8KbdaWLwKqc
+>> -----BEGIN PGP SIGNATURE-----
+>>
+>> iQEcBAEBCAAGBQJUIaHAAAoJEMP3uyY4RQ21nwoH/3MYi9JibblZYmSOvCT1vJrN
+>> Ih+Q2WNumIAI+Y9bh4bBgLuhnG5lXyHedhYEUW+mfuwGiX+92Uc47nwaWED2/Lte
+>> 4Zk/KZnwLifdWCgKLdGpW6mzksRiOaVyU4vV5JchVOrGZZ2zYNIq+NcChtCph7Y5
+>> L202ReAG+1dfSpp4rFckuv7pTVjNcrq89UN1tJFDNQdxzIRd7bwoeCuvyFurZagB
+>> 88bNiOl0BI3e090WC+CWmbC6BfqJiicn/d0gp/agW01wy7CVbLypPPTKmYqt3+54
+>> msLUgaRHcbjuyKqu8HMHpYtgYVSNFg2q+U4SgmEepzPAkQ97khbduqA6i1B0ULM=
+>> =t/xp
+>> -----END PGP SIGNATURE-----
+>> -------------- next part --------------
+>> A non-text attachment was scrubbed...
+>> Name: 0x38450DB5.asc
+>> Type: application/pgp-keys
+>> Size: 14046 bytes
+>> Desc: not available
+>>
+>> ------------------------------
+>>
+>> Message: 2
+>> Date: Tue, 23 Sep 2014 12:48:34 -0400
+>> From: Alan Reiner <etotheipi at gmail.com>
+>> Subject: Re: [Bitcoin-development] Proposal: "No-Collision" mode for
+>>         Multisig BIP32 Wallets
+>> To: bitcoin-development at lists.sourceforge.net
+>> Message-ID: <5421A462.6030205 at gmail.com>
+>> Content-Type: text/plain; charset=ISO-8859-1
+>>
+>>
+>> -----BEGIN PGP SIGNED MESSAGE-----
+>> Hash: SHA1
+>>
+>> On 09/23/2014 12:37 PM, Justus Ranvier wrote:
+>> > Would be nice if you'd at least mention our work, since we did share
+>> > it with you back in January and have been publicly documenting it ever
+>> > since.
+>> >
+>> > Or does the fact that we're implementing it in btcwallet mean what
+>> > we're working on is unmentionable here?
+>> >
+>>
+>> Please don't assume poor intentions or sneaky motives.  I get a lot of
+>> emails from a lot of people about a lot of things.  Nine months ago was
+>> an eternity in this world, and it can't be ruled out that I simply forgot.
+>>
+>> I have no problem giving credit where it is due, and I mentioned in my
+>> first email that I wasn't sure if my stuff was original.  Please
+>> recap/link it here so that it can be part of this discussion.
+>>
+>> - -Alan
+>> -----BEGIN PGP SIGNATURE-----
+>> Version: GnuPG v1
+>>
+>> iQIcBAEBAgAGBQJUIaRiAAoJEBHe6b77WWmFcBgP/2IiQWda5diBIrd8MjbtYz/X
+>> pF+B1zOipClil151pKN5h9f4CI75qwSBSG6pUS+QH1lCz97nr5AoVYV5SAaRzv0z
+>> L9Bz0PiHJFHd4IRbfuFqlPZB8mw2TMD7QWJx/1U+WmpnYYOGsUeJn25psIVZSRTU
+>> FTCsmYrA4cGZ4bZoUKI/eiXrHao8rm/zQ7QHKOMSFWZT57sNea67vlxPXKu+AkmK
+>> nEYa4hD0kD7/R/TrNcmRmOlmbqCnyjICd/yp8Lj26CdHPv3PAvaxUwSX3VhWPbdc
+>> UOiGeo+lXqRnBVpwMd+k7oFddwrc2k9ISRdUVsU86z3JdAXKl/dLS5UoOtfC1JA9
+>> m90TuRtq4QuuzjLF3brI9FthuHNowA//qaVfjo/AYgsKy15td9UBtFbt4E9w263M
+>> NiFEmFkXfbE1JmIvmPG3AQEEdQ1/nmWiN5UcLrBfauEHMDQ1fGd89A8IBpus7bWM
+>> kYXboW3E9RBN4lB6OdyYU4AuH0YQhZodmry4iElMPox/tclmNiaeqDR8UYhD5BMd
+>> eQN9zAALyR1IY1167Ki/abVfWVf5jF7b0Eeu/wAfwcble3sCFrvWWAwzHjNi3GjY
+>> gNfy1eDTbwLj2M63QbtB+YqzQBZx3+SY4euGKYQ1s1CVV9ibAFI52oxeMhwzVOWF
+>> ofeDK5BPL8H+5L3tk+1o
+>> =tX2n
+>> -----END PGP SIGNATURE-----
+>>
+>>
+>>
+>>
+>>
+>> ------------------------------
+>>
+>> Message: 3
+>> Date: Tue, 23 Sep 2014 17:07:58 +0000
+>> From: Justus Ranvier <justus at monetas.net>
+>> Subject: Re: [Bitcoin-development] Proposal: "No-Collision" mode for
+>>         Multisig BIP32 Wallets
+>> To: bitcoin-development at lists.sourceforge.net
+>> Message-ID: <5421A8EE.4060300 at monetas.net>
+>> Content-Type: text/plain; charset="utf-8"
+>>
+>> -----BEGIN PGP SIGNED MESSAGE-----
+>> Hash: SHA256
+>>
+>> On 09/23/2014 04:48 PM, Alan Reiner wrote:
+>> > Please recap/link it here so that it can be part of this
+>> > discussion.
+>>
+>> http://sourceforge.net/p/bitcoin/mailman/message/32736455/
+>>
+>> http://opentransactions.org/wiki/index.php/Deposit_Address_(voting_pools)
+>>
+>> Currently being implemented here:
+>>
+>> https://github.com/monetas/btcwallet/commits/vp
+>>
+>> - --
+>>
+>> Really what's so annoying is how the BIP numbering process is handled in
+>> such a way that proposals can be silently pigeonholed.
+>>
+>> Especially so in the case of an *informational* BIP which requires no
+>> action on anyone's part (except for not using the same BIP43 purpose
+>> code).
+>>
+>> We resolved this by changing the naming scheme for our proposals, and
+>> their associated purpose codes, to not rely on centrally-allocated
+>> numbers.
+>>
+>> https://github.com/Open-Transactions/rfc/tree/master/bips
+>>
+>> - --
+>> Justus Ranvier                   | Monetas <http://monetas.net/>
+>> <mailto:justus at monetas.net>      | Public key ID : C3F7BB2638450DB5
+>>                                  | BM-2cTepVtZ6AyJAs2Y8LpcvZB8KbdaWLwKqc
+>> -----BEGIN PGP SIGNATURE-----
+>>
+>> iQEcBAEBCAAGBQJUIajuAAoJEMP3uyY4RQ215dQH/1GNOmZd19/e2Ys7MNFx0gqz
+>> rDmTFBylU3lhJrMY4CDd4Duq5+2U7HgaovqgX8UqxquHWLQUwEzZLqdEPCifLg0c
+>> d/u90cRlClFAaOxPh4HV2/3aZoS2R27N+ZjOfziW7RZySBP/2fMt4/ra+SPbkcAQ
+>> oeplYgqMRDqW52C/o2zm4y4yb0TJPS+lzSNM+JfxHSPRyY55l0KzLJfUNz1RSOze
+>> A8UAwdsLiJROKPKiSrQcqFOejPV7uqSPh10ukm/AI0k8TbvX8ffGQ083394M9IuE
+>> DB/1eyeLQVP5+lQMWNrTHk3BQ75XBEDJoSukaRENcqxtHV2m1JzTWoS2CQBXi2M=
+>> =TwI3
+>> -----END PGP SIGNATURE-----
+>> -------------- next part --------------
+>> A non-text attachment was scrubbed...
+>> Name: 0x38450DB5.asc
+>> Type: application/pgp-keys
+>> Size: 14046 bytes
+>> Desc: not available
+>>
+>> ------------------------------
+>>
+>>
+>> ------------------------------------------------------------------------------
+>> Meet PCI DSS 3.0 Compliance Requirements with EventLog Analyzer
+>> Achieve PCI DSS 3.0 Compliant Status with Out-of-the-box PCI DSS Reports
+>> Are you Audit-Ready for PCI DSS 3.0 Compliance? Download White paper
+>> Comply to PCI DSS 3.0 Requirement 10 and 11.5 with EventLog Analyzer
+>>
+>> http://pubads.g.doubleclick.net/gampad/clk?id=154622311&iu=/4140/ostg.clktrk
+>>
+>> ------------------------------
+>>
+>> _______________________________________________
+>> Bitcoin-development mailing list
+>> Bitcoin-development at lists.sourceforge.net
+>> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>>
+>>
+>> End of Bitcoin-development Digest, Vol 40, Issue 9
+>> **************************************************
+>>
+>
+>
+>
+> ------------------------------------------------------------------------------
+> Meet PCI DSS 3.0 Compliance Requirements with EventLog Analyzer
+> Achieve PCI DSS 3.0 Compliant Status with Out-of-the-box PCI DSS Reports
+> Are you Audit-Ready for PCI DSS 3.0 Compliance? Download White paper
+> Comply to PCI DSS 3.0 Requirement 10 and 11.5 with EventLog Analyzer
+>
+> http://pubads.g.doubleclick.net/gampad/clk?id=154622311&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140923/5557b219/attachment.html>
+
+From v at buterin.com  Tue Sep 23 19:57:10 2014
+From: v at buterin.com (Vitalik Buterin)
+Date: Tue, 23 Sep 2014 15:57:10 -0400
+Subject: [Bitcoin-development] Bitcoin-development Digest, Vol 40,
+	Issue 9
+In-Reply-To: <CALf2ePwooCNsK72GLXXSC7v-ucyqpJfB=K8euSusFBHmJ7UG8w@mail.gmail.com>
+References: <mailman.358444.1411492141.2178.bitcoin-development@lists.sourceforge.net>
+	<CAH8WSacmzmFs_L0NR0FunDuE+cfRyoKCq6dwG8qo8SM5K8C8vg@mail.gmail.com>
+	<CALf2ePwooCNsK72GLXXSC7v-ucyqpJfB=K8euSusFBHmJ7UG8w@mail.gmail.com>
+Message-ID: <CAH8WSafgyoq17caFhPpZxAErfms1GvKGG+G9Kz2LmvahphJ69g@mail.gmail.com>
+
+Okay I see, that makes sense.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140923/60514ec6/attachment.html>
+
+From memwallet.info at gmail.com  Tue Sep 23 21:12:04 2014
+From: memwallet.info at gmail.com (Mem Wallet)
+Date: Tue, 23 Sep 2014 17:12:04 -0400
+Subject: [Bitcoin-development] cryptographic review requested
+Message-ID: <CAKzHBKkHpod+7T0uCtESVNFmgFAbGF8-AFJxKmfUwA-pkt_BrA@mail.gmail.com>
+
+Hello,
+I've made a proposal for a standardized ecies scheme for bitcoin
+communication. To address gmaxwell's criticism, I'd like to also
+follow up with a proposed change to BIP44, such that a structured
+wallet would also include a series of identity keys, both addresses
+which will be used for signing, and public keys which would be used
+as destinations for encrypted messages.
+
+If anyone is familiar with ECIES and would be interested, there is a
+working implementation at http://memwallet.info/btcmssgs.html,
+which also includes this whitepaper:
+
+Abstract This document describes a scheme for sending signed encrypted
+messages using bitcoin public and private keys. Motivation PGP and
+Bitmessage and other secure communications channels exist. This standard
+allows for secure messaging using a bitcoin wallet alone, without the need
+for other software. This standard allows the owner of an address to
+conveniently prove ownership to the holder of another address privately
+without the need for separate secure communications channels. Specification:
+Message Format In the rest of this text we will assume the public key
+cryptography used in Bitcoin. The || operator is concatenation. All
+operations are defined over binary, and not text conversion of the data.
+When serializing public keys the compressed encoding is always used, even
+if the input parameters are passed as uncompressed. Bitcoin addresses are
+always serialized from compressed public keys, and for mainnet. (directives
+to use testnet or uncompressed keys ignored) String literals are
+represented as if for the C programming language in native UTF-8. No
+assumptions are made about the payload message format, it may even be
+binary. Caveat Decryptor. Plain unformatted text message payloads are
+recommended to use utf-8.
+
+   - CompactSize format is a variable size little endian length field
+   serialization format, know as a bitcoin "Variable length integer"
+   - CompactSizePrefix(X) = CompactSize(X) || X
+   - QTHASH(x) = SHA256((SHA256( CompactSizePrefix("Bitcoin Signed
+   Message:\n") || CompactSizePrefix(x) )
+
+This standard assumes the reader is familiar with the bitcoin compact
+signature format, which is a 65 byte signature which allows the verifier to
+recover the public key associated with the signature, eliminating the need
+to send it with the message. Once consequence of this format is that
+signatures of tampered messages will nearly always result in some public
+key, but it will not be the same as the orignial signing key. The address
+of the sender will be provided to enable validation of the signature. The
+format is a 1 byte recid, followed by ECDSA R then S values.
+
+   - CompactSign( PrivateKey, 32 byte QT Hash ) == 65 byte message
+   - CompactVerify( 65 byte message, 32 bytes Hash ) public key counterpart
+   of (PrivateKey)
+   - ECIES with HMAC_SHA256 for mac, PBKDF2 for KDF
+   - PBKDF2 is used with 2048 iterations, salt=( "Bitcoin Secure Message"
+   || ecies_nonce_publickey )
+   - AES is used with 256 bit keys, and CFB mode, with a 128 bit feedback
+   buffer. No padding or envelope, simply a pure byte cipher
+   - compact_signed_message = 0x01 || CompactSizePrefix(M) ||
+   Sender_Address || Signature
+   - compact_unsigned_message = 0x00 || CompactSizePrefix(M)
+   - Secure message format: ECIES( compact_signed_message or
+   compact_unsigned_message )
+
+Summary of the functions defined:
+
+   - eM = SendMessage( M, Signing_Key, Dest_Pub )
+   - M,Sender_Address = ReceiveMessage( eM, Decrypting_Key ) It is
+   acceptable for deterministic nonces to be used for signatures, however
+   nonces generated for ECIES must be high quality random bytes. (excepting
+   unit test vectors)
+
+Message Sending Inputs:
+
+   - The message to send "M" (treat as precise binary bytes, no space
+   stripping or normalization)
+   - The bitcoin private key "Signing_Key" to be used to sign the message
+   - The bitcoin public key "Dest_Pub" to be used as the destination of the
+   message Algorithm Calculations:
+   - Calculate the QTHASH(M) to obtain "M_hash", 32 bytes of data
+   - if signing Sign with CompactSign(Signing_Key,M_hash) to obtain
+   "Signature", 65 bytes of data ** Calculate the compressed address of
+   Signing_Key to obtain "Sender_Address" 21 bytes of data ** Serialize 0x01
+   || CompactSizePrefix(M) || Sender_Address || Signature to obtain
+   "Signed_Message"
+   - if not signing, instead Serialize 0x00 || CompactSizePrefix(M) to
+   obtain "Unsigned_Message"
+   - Generate 32 random bytes "ecies_nonce_bytes"
+   - Generate a bitcoin private key from ecies_nonce_bytes, "Nonce_Key" 32
+   bytes of data (retry if invalid)
+   - Derive the compressed public key of Nonce_Key, "Nonce_Pub", 33 bytes
+   of data
+   - ECMultiply Dest_Pub by Nonce_Key to obtain the point
+   "Shared_Secret_Point"
+   - Serialize Shared_Secret_Point as a compressed point "Shared_Secret"
+   - Derive "KeyingBytes" = PBKDF2( Shared_Secret ) to get 80 bytes of data
+   - Directly Derive "AES256_Key" from the first 32 bytes of KeyingBytes
+   (index 0 to 32)
+   - Directly Derive "HMAC_Key" from the second 32 bytes of KeyingBytes
+   (index 32 to 64)
+   - Directly Derive "AES_IV" from the last 16 bytes of KeyingBytes (index
+   64 to 80)
+   - Encrypt Signed_Message or Unsigned_Message using AES256_cfb_128 using
+   AES_IV and AES256_Key to obtain "Encrypted_Payload". Same length as M
+   - Compute the HMAC_SHA256 of Encrypted_Payload using HMAC_Key, truncate
+   to the first 8 bytes to obtain "Message_HMAC"
+
+Serialization output
+
+   - Serialize Nonce_Pub || Encrypted_Payload || Message_HMAC to obtain
+   "eM" For text transmission eM may be sent encoded with base 64, otherwise
+   binary is preferred.
+
+Message Receiving Inputs:
+
+   - The message received "eM" (decode from base64 if needed)
+   - The bitcoin private key "Decrypting_Key" to be used to decode the
+   message Algorithm Calculations:
+   - Deserliaize eM to recover "Nonce_Pub", "Encrypted_Payload", and
+   "Message_HMAC"
+   - ECMultiply Nonce_Pub by Decrypting_Key to recover
+   "Shared_Secret_Point"
+   - Serialize Shared_Secret_Point as a compressed point to yield
+   "Shared_Secret", 33 bytes of data
+   - Derive "KeyingBytes" = PBKDF2( Shared_Secret ) to get 80 bytes of data
+   - Directly Derive "AES256_Key" from the first 32 bytes of KeyingBytes
+   (index 0 to 32)
+   - Directly Derive "HMAC_Key" from the second 32 bytes of KeyingBytes
+   (index 32 to 64)
+   - Directly Derive "AES_IV" from the last 16 bytes of KeyingBytes (index
+   64 to 80)
+   - Compute the HMAC_SHA256 of Encrypted_Payload using HMAC_Key, truncate
+   to the first 8 bytes to compare with Message_HMAC
+   - If the Message_HMAC did not match, the message is corrpted so abort
+   - Decrypt Encrypted_Payload using AES256_cfb, AES_IV and AES256_Key to
+   recover "Payload_Message"
+   - Verify that the first byte is a 0x01 or 0x00, else abort. 0x01
+   indicates signed
+   - if signed Deserialize "Payload_Message" to obtain "M",
+   "Sender_Address", and "Signature"
+   - if not signed Deserialize "Payload_Message" to obtain "M", and return
+   M
+   - Calculate the QTHASH(M) to obtain "M_hash", 32 bytes of data
+   - Call CompactVerify(Signature, M_hash) to obtain "Signing_Pubkey"
+   - Calculate the compressed address of Signing_Pubkey to obtian
+   "Sender_Address_check" 21 bytes of data
+   - Compare Sender_Address_check and Sender_Address, if they are not
+   identical, fail/stop
+
+Output:
+
+   - Output Sender_Address to indicate who the mesage is from, and that the
+   signature is valid and untampered with
+   - Output M, considering it is valid and the content untampered with
+
+Test Vectors By convention keys will be in WIF format, public keys in
+base58_check format, messages in c style UTF-8 string literals. Encrypted
+messages are in Base64 format. Compliant implementations will use random
+nonces from a cryptographically strong DRBG. For the units tests, they will
+be provided in hex format. The nonce bytes provided are to be used both for
+the ECIES ecies_nonce_bytes, as well as for the Signature algorithm. Test
+vector 1
+
+   - M = "Hello, World!\n"
+   - nonce bytes =
+   7357000000000000000000000000000000000000000000000000000000000000
+   - Dest_Pub = 6ebngTeKJNTjhVj67YhSw5EBNf6sqdGrz7KAT8kiFRwwL8QjHr
+   - Signing_Key = L48ftytpCTGe8GCkfmX1BQoR9yq6DZCoeTsNkxGR4UEiHjQV3uDF
+   - eM =
+   A34UI90GVmD1wJ0sMEwSsAaTG6bL+vHE0Ebk078EI7qAHZSWxYBy3rQTKw4XyQUgCnH90pXwwJRRfPIzlSINTiHm+rs
+   f8hL972pDsnjK5H4mBwu6koi0JCJeisH2j899Z97D9Dy7z9y8V7mW5q3HJDNPiRx99CW2hODHOzNlqHSKIItDyqwqMVoHJH7y1rA=
+   Decrypting WIF = Kwc89APmzQx9bT3u3iUYoCKmhKK4tgcnJih27r9QsxhrHyYY6U8F
+   - Signing_Addr = 1LCA11Udyw784zBhN3VQYsRadSUbUpeJrw
+
+Test vector 2
+
+   - M = "Test Message\n??\n"
+   - nonce bytes =
+   00CDEF3636363636363635c5c5c5c5c5c5c5c5c3e3ee3e5c5c5c5c5c53636363
+   - Dest_Pub = 5RARVjiFrm4gBSEc3NQkhqSrmxtixY1Q4NNoQr5fhwK8gMQDLr
+   - Signing_Key = L3uN7ev8T5HV8ckp75YgMLzG6ijZ1AYAL8vKBubvvSmLw72yey4x
+   - eM =
+   AjUnA/xZbNa1uXu/fh2ZrEDFWNtpwBe5lQi4qRoTzUo6RF5EByEZ4n/eZmWk7MaHViGeO4yPXhQYyTK4O5XbRknXon4ApQcxsh
+   EaTj0QfoDLYYZ2/CL9p9G8aN2RCoXdcDrYwZ7KyRLdFnCZvUuvv4VZNZW8/h4fT7sf0MKl7H9eCv9OVaKwPJe2pyaNDshfzY12FMQ=
+
+   - Decrypting WIF = L5UxEELoqFr8eri8nsrBUX2YFmLKZYG6oYBjEUpRSnXwvofdfbgM
+   - Signing_Addr = 1HxcmSvFiviw1RDyzoPgktJfzgKcJ4pHeh
+
+Implementations http://memwallet.info/btcmssgs.html Acknowledgements
+Implementation by: 76NPRHE2g5pSvbLgP8fEEtBvfPB4zte56veXdxXfaXcsQwRjZB aka
+1Lk96ASyr3k6ZoTFGLrUgxGuctNKF24V5q Credit Must be given to bitaddress.org
+brainwallet.org, and many others who have made crypto and bitcoin easy to
+code for in javascript.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140923/6e476796/attachment.html>
+
+From gmaxwell at gmail.com  Fri Sep 26 01:53:58 2014
+From: gmaxwell at gmail.com (Gregory Maxwell)
+Date: Thu, 25 Sep 2014 18:53:58 -0700
+Subject: [Bitcoin-development] BIP43 Purpose code for voting pool HD
+	wallets
+In-Reply-To: <53F38542.2000704@monetas.net>
+References: <53F38542.2000704@monetas.net>
+Message-ID: <CAAS2fgT7eUDUHqwtuMF9cj0LvzHdZXxyan+c2ep1dQ8dQGOrHw@mail.gmail.com>
+
+On Tue, Aug 19, 2014 at 10:11 AM, Justus Ranvier <justus at monetas.net> wrote:
+> Two draft information BIPs are attached.
+
+I've pinged some people privately but also pinging the list? no
+commentary on this proposal?
+
+
+
+From voisine at gmail.com  Fri Sep 26 02:02:03 2014
+From: voisine at gmail.com (Aaron Voisine)
+Date: Thu, 25 Sep 2014 19:02:03 -0700
+Subject: [Bitcoin-development] SPV clients and relaying double spends
+Message-ID: <CACq0ZD4Ki=7Tba_2UhmuH-dPCbOnfXrJRcLPc+fP6Uur4FpG_A@mail.gmail.com>
+
+There was some discussion of having nodes relay double-spends in order
+to alert the network about double spend attempts.
+
+A lot more users will be using SPV wallets in the future, and one of
+the techniques SPV clients use to judge how likely a transaction is to
+be confirmed is if it propagates across the network. I wonder if and
+when double-spend relaying is introduced, if nodes should also send
+BIP61 reject messages or something along those lines to indicate which
+transactions those nodes believe to be invalid, but are relaying
+anyway.
+
+This would be subject to sybil attacks, as is monitoring propagation,
+however it does still increase the cost of performing a 0 confirmation
+double spend attack on an SPV client above just relaying double-spends
+without indicating if a node believes the transaction to be valid.
+
+Aaron Voisine
+breadwallet.com
+
+
+
+From justus at monetas.net  Fri Sep 26 02:09:56 2014
+From: justus at monetas.net (Justus Ranvier)
+Date: Fri, 26 Sep 2014 02:09:56 +0000
+Subject: [Bitcoin-development] BIP43 Purpose code for voting pool HD
+	wallets
+In-Reply-To: <CAAS2fgT7eUDUHqwtuMF9cj0LvzHdZXxyan+c2ep1dQ8dQGOrHw@mail.gmail.com>
+References: <53F38542.2000704@monetas.net>
+	<CAAS2fgT7eUDUHqwtuMF9cj0LvzHdZXxyan+c2ep1dQ8dQGOrHw@mail.gmail.com>
+Message-ID: <5424CAF4.1070205@monetas.net>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+On 09/26/2014 01:53 AM, Gregory Maxwell wrote:
+> On Tue, Aug 19, 2014 at 10:11 AM, Justus Ranvier
+> <justus at monetas.net> wrote:
+>> Two draft information BIPs are attached.
+> 
+> I've pinged some people privately but also pinging the list? no 
+> commentary on this proposal?
+> 
+
+Regarding the BIP process itself, I rather think it's broken in the
+case of informational BIPs.
+
+Proposals that require explicit action on the part of others do not
+logically belong in the same process as purely information proposals
+that do not require any explicit action by others are going to be
+carried out regardless.
+
+The only reason we proposed these as BIPs at all was to support the
+intent of BIP43.
+
+- -- 
+Justus Ranvier                   | Monetas <http://monetas.net/>
+<mailto:justus at monetas.net>      | Public key ID : C3F7BB2638450DB5
+                                 | BM-2cTepVtZ6AyJAs2Y8LpcvZB8KbdaWLwKqc
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAEBCAAGBQJUJMrzAAoJEMP3uyY4RQ217DMH/1oGHayVo4smLM/OKeu1qqXC
+Xex4NNh6g7Jsu2ulfJ5ow3g7jHEDzTBp33THhUv6cnV7CpDvTC+Y24LDRrYwOBQo
+YuQ9u0NNtrcgoi+6vs8NuGO+yZyTyBYs1emOipsICsg42H8yhEHlrMyfOTJsO6r/
+nAiqR+QH6isNOjQerd9Fs0nYQ6VANs8IksL41L8ch9YAvgKx7C8WxdcQrk/S2pNL
+JwD7Q729J34x34HPnOb5j5Rfm1gvQInYELBu0YBaCy7D05PZd5nPSYqUC3n35hUA
+AMvVf65jdQVBjvjlcqDPAPdBTQ3qjhQ+7EAWKJrwlrzhGXaWA3HpipRDUSyqzBg=
+=OhH8
+-----END PGP SIGNATURE-----
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: 0x38450DB5.asc
+Type: application/pgp-keys
+Size: 14046 bytes
+Desc: not available
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140926/ac776cd5/attachment.bin>
+
+From voisine at gmail.com  Fri Sep 26 02:12:04 2014
+From: voisine at gmail.com (Aaron Voisine)
+Date: Thu, 25 Sep 2014 19:12:04 -0700
+Subject: [Bitcoin-development] SPV clients and relaying double spends
+In-Reply-To: <1447373.AzvO89eGJS@crushinator>
+References: <CACq0ZD4Ki=7Tba_2UhmuH-dPCbOnfXrJRcLPc+fP6Uur4FpG_A@mail.gmail.com>
+	<1447373.AzvO89eGJS@crushinator>
+Message-ID: <CACq0ZD55G7sAXuu-UxoVJuuk1rwxKKwAPg4qkRoTreD1X2fc9Q@mail.gmail.com>
+
+Something like that would be a great help for SPV clients that can't
+detect double spends on their own. (still limited of course to sybil
+attack concerns)
+
+Aaron Voisine
+breadwallet.com
+
+
+On Thu, Sep 25, 2014 at 7:07 PM, Matt Whitlock <bip at mattwhitlock.name> wrote:
+> What's to stop an attacker from broadcasting millions of spends of the same output(s) and overwhelming nodes with slower connections? Might it be a better strategy not to relay the actual transactions (after the first) but rather only propagate (once) some kind of double-spend alert?
+>
+>
+> On Thursday, 25 September 2014, at 7:02 pm, Aaron Voisine wrote:
+>> There was some discussion of having nodes relay double-spends in order
+>> to alert the network about double spend attempts.
+>>
+>> A lot more users will be using SPV wallets in the future, and one of
+>> the techniques SPV clients use to judge how likely a transaction is to
+>> be confirmed is if it propagates across the network. I wonder if and
+>> when double-spend relaying is introduced, if nodes should also send
+>> BIP61 reject messages or something along those lines to indicate which
+>> transactions those nodes believe to be invalid, but are relaying
+>> anyway.
+>>
+>> This would be subject to sybil attacks, as is monitoring propagation,
+>> however it does still increase the cost of performing a 0 confirmation
+>> double spend attack on an SPV client above just relaying double-spends
+>> without indicating if a node believes the transaction to be valid.
+>>
+>> Aaron Voisine
+>> breadwallet.com
+>
+
+
+
+From bip at mattwhitlock.name  Fri Sep 26 02:07:28 2014
+From: bip at mattwhitlock.name (Matt Whitlock)
+Date: Thu, 25 Sep 2014 22:07:28 -0400
+Subject: [Bitcoin-development] SPV clients and relaying double spends
+In-Reply-To: <CACq0ZD4Ki=7Tba_2UhmuH-dPCbOnfXrJRcLPc+fP6Uur4FpG_A@mail.gmail.com>
+References: <CACq0ZD4Ki=7Tba_2UhmuH-dPCbOnfXrJRcLPc+fP6Uur4FpG_A@mail.gmail.com>
+Message-ID: <1447373.AzvO89eGJS@crushinator>
+
+What's to stop an attacker from broadcasting millions of spends of the same output(s) and overwhelming nodes with slower connections? Might it be a better strategy not to relay the actual transactions (after the first) but rather only propagate (once) some kind of double-spend alert?
+
+
+On Thursday, 25 September 2014, at 7:02 pm, Aaron Voisine wrote:
+> There was some discussion of having nodes relay double-spends in order
+> to alert the network about double spend attempts.
+> 
+> A lot more users will be using SPV wallets in the future, and one of
+> the techniques SPV clients use to judge how likely a transaction is to
+> be confirmed is if it propagates across the network. I wonder if and
+> when double-spend relaying is introduced, if nodes should also send
+> BIP61 reject messages or something along those lines to indicate which
+> transactions those nodes believe to be invalid, but are relaying
+> anyway.
+> 
+> This would be subject to sybil attacks, as is monitoring propagation,
+> however it does still increase the cost of performing a 0 confirmation
+> double spend attack on an SPV client above just relaying double-spends
+> without indicating if a node believes the transaction to be valid.
+> 
+> Aaron Voisine
+> breadwallet.com
+
+
+
+
+From bip at mattwhitlock.name  Fri Sep 26 02:16:43 2014
+From: bip at mattwhitlock.name (Matt Whitlock)
+Date: Thu, 25 Sep 2014 22:16:43 -0400
+Subject: [Bitcoin-development] SPV clients and relaying double spends
+In-Reply-To: <CACq0ZD55G7sAXuu-UxoVJuuk1rwxKKwAPg4qkRoTreD1X2fc9Q@mail.gmail.com>
+References: <CACq0ZD4Ki=7Tba_2UhmuH-dPCbOnfXrJRcLPc+fP6Uur4FpG_A@mail.gmail.com>
+	<1447373.AzvO89eGJS@crushinator>
+	<CACq0ZD55G7sAXuu-UxoVJuuk1rwxKKwAPg4qkRoTreD1X2fc9Q@mail.gmail.com>
+Message-ID: <6165581.aoAyGZkGge@crushinator>
+
+Probably the first double-spend attempt (i.e., the second transaction to spend the same output(s) as another tx already in the mempool) would still need to be relayed. A simple "double-spend alert" wouldn't work because it could be forged. But after there have been two attempts to spend the same output, no further transactions spending that same output should be relayed, in order to prevent flooding the network.
+
+
+On Thursday, 25 September 2014, at 7:12 pm, Aaron Voisine wrote:
+> Something like that would be a great help for SPV clients that can't
+> detect double spends on their own. (still limited of course to sybil
+> attack concerns)
+> 
+> Aaron Voisine
+> breadwallet.com
+> 
+> 
+> On Thu, Sep 25, 2014 at 7:07 PM, Matt Whitlock <bip at mattwhitlock.name> wrote:
+> > What's to stop an attacker from broadcasting millions of spends of the same output(s) and overwhelming nodes with slower connections? Might it be a better strategy not to relay the actual transactions (after the first) but rather only propagate (once) some kind of double-spend alert?
+> >
+> >
+> > On Thursday, 25 September 2014, at 7:02 pm, Aaron Voisine wrote:
+> >> There was some discussion of having nodes relay double-spends in order
+> >> to alert the network about double spend attempts.
+> >>
+> >> A lot more users will be using SPV wallets in the future, and one of
+> >> the techniques SPV clients use to judge how likely a transaction is to
+> >> be confirmed is if it propagates across the network. I wonder if and
+> >> when double-spend relaying is introduced, if nodes should also send
+> >> BIP61 reject messages or something along those lines to indicate which
+> >> transactions those nodes believe to be invalid, but are relaying
+> >> anyway.
+> >>
+> >> This would be subject to sybil attacks, as is monitoring propagation,
+> >> however it does still increase the cost of performing a 0 confirmation
+> >> double spend attack on an SPV client above just relaying double-spends
+> >> without indicating if a node believes the transaction to be valid.
+> >>
+> >> Aaron Voisine
+> >> breadwallet.com
+> >
+
+
+
+From etotheipi at gmail.com  Fri Sep 26 02:31:15 2014
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Thu, 25 Sep 2014 22:31:15 -0400
+Subject: [Bitcoin-development] BIP43 Purpose code for voting pool HD
+	wallets
+In-Reply-To: <CAAS2fgT7eUDUHqwtuMF9cj0LvzHdZXxyan+c2ep1dQ8dQGOrHw@mail.gmail.com>
+References: <53F38542.2000704@monetas.net>
+	<CAAS2fgT7eUDUHqwtuMF9cj0LvzHdZXxyan+c2ep1dQ8dQGOrHw@mail.gmail.com>
+Message-ID: <5424CFF3.50404@gmail.com>
+
+I'm in favor of BIP43.
+
+Adding a "Purpose" node can be used as an identifier for what kind of
+tree is in the wallet file we're reading.   I can envision a few
+different, common tree structures.  Perhaps using a non-hardened
+first-layer derivation (we have clients who want this).  Similarly, my
+proposal for a "No-collision mode" for multisig BIP32 trees
+<http://sourceforge.net/p/bitcoin/mailman/message/32860512/> is another
+variant that might get some traction but not everyone will use it. 
+These things could be "supported" by simply changing the BIP43 "Purpose"
+index and wallet software could be designed to recognize and react to
+the Purpose node for any number of different tree structures, and ignore
+any trees that it doesn't recognize (or maybe be able to view the
+balance across all the leaves of the tree but not expand it)
+
+We have clients with special use-cases (complex multi-layer trees) that
+are unlikely to be recycled across users.  In such cases we might just
+use a "random" Purpose that is recognized by their system, and know that
+other software won't mess with it.  Though it would be better if that
+field was encoded in the root seed, instead.
+
+Nonetheless, putting that extra layer between the root and the
+"important" tree nodes provides flexibility to BIP32 as a whole.
+-Alan
+
+
+On 09/25/2014 09:53 PM, Gregory Maxwell wrote:
+> On Tue, Aug 19, 2014 at 10:11 AM, Justus Ranvier <justus at monetas.net> wrote:
+>> Two draft information BIPs are attached.
+> I've pinged some people privately but also pinging the list? no
+> commentary on this proposal?
+>
+> ------------------------------------------------------------------------------
+> Meet PCI DSS 3.0 Compliance Requirements with EventLog Analyzer
+> Achieve PCI DSS 3.0 Compliant Status with Out-of-the-box PCI DSS Reports
+> Are you Audit-Ready for PCI DSS 3.0 Compliance? Download White paper
+> Comply to PCI DSS 3.0 Requirement 10 and 11.5 with EventLog Analyzer
+> http://pubads.g.doubleclick.net/gampad/clk?id=154622311&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140925/f4b201f1/attachment.html>
+
+From kanzure at gmail.com  Fri Sep 26 02:32:44 2014
+From: kanzure at gmail.com (Bryan Bishop)
+Date: Thu, 25 Sep 2014 21:32:44 -0500
+Subject: [Bitcoin-development] BIP43 Purpose code for voting pool HD
+	wallets
+In-Reply-To: <CAAS2fgT7eUDUHqwtuMF9cj0LvzHdZXxyan+c2ep1dQ8dQGOrHw@mail.gmail.com>
+References: <53F38542.2000704@monetas.net>
+	<CAAS2fgT7eUDUHqwtuMF9cj0LvzHdZXxyan+c2ep1dQ8dQGOrHw@mail.gmail.com>
+Message-ID: <CABaSBazgFQmkJnWJXXTZCQnA2xtwrcFHdY5FPAM=x399xRgaXA@mail.gmail.com>
+
+On Thu, Sep 25, 2014 at 8:53 PM, Gregory Maxwell <gmaxwell at gmail.com> wrote:
+> I've pinged some people privately but also pinging the list? no
+> commentary on this proposal?
+
+One possible reason is that non-subscribed users aren't able to access
+the file through sourceforge. The attachment through their web
+interface is giving back HTTP 500.
+
+see http://sourceforge.net/p/bitcoin/mailman/attachment/53F38542.2000704%40monetas.net/1/
+
+- Bryan
+http://heybryan.org/
+1 512 203 0507
+
+
+
+From voisine at gmail.com  Fri Sep 26 02:37:13 2014
+From: voisine at gmail.com (Aaron Voisine)
+Date: Thu, 25 Sep 2014 19:37:13 -0700
+Subject: [Bitcoin-development] SPV clients and relaying double spends
+In-Reply-To: <6165581.aoAyGZkGge@crushinator>
+References: <CACq0ZD4Ki=7Tba_2UhmuH-dPCbOnfXrJRcLPc+fP6Uur4FpG_A@mail.gmail.com>
+	<1447373.AzvO89eGJS@crushinator>
+	<CACq0ZD55G7sAXuu-UxoVJuuk1rwxKKwAPg4qkRoTreD1X2fc9Q@mail.gmail.com>
+	<6165581.aoAyGZkGge@crushinator>
+Message-ID: <CACq0ZD6sMHW6QEHHqDkaZwEwyfuk1CUjb0BRhzt3B+g+8CoP5A@mail.gmail.com>
+
+Of course you wouldn't want nodes to propagate alerts without
+independently verifying them, otherwise anyone could just issue alerts
+for every new transaction.
+
+Aaron Voisine
+breadwallet.com
+
+
+On Thu, Sep 25, 2014 at 7:16 PM, Matt Whitlock <bip at mattwhitlock.name> wrote:
+> Probably the first double-spend attempt (i.e., the second transaction to spend the same output(s) as another tx already in the mempool) would still need to be relayed. A simple "double-spend alert" wouldn't work because it could be forged. But after there have been two attempts to spend the same output, no further transactions spending that same output should be relayed, in order to prevent flooding the network.
+>
+>
+> On Thursday, 25 September 2014, at 7:12 pm, Aaron Voisine wrote:
+>> Something like that would be a great help for SPV clients that can't
+>> detect double spends on their own. (still limited of course to sybil
+>> attack concerns)
+>>
+>> Aaron Voisine
+>> breadwallet.com
+>>
+>>
+>> On Thu, Sep 25, 2014 at 7:07 PM, Matt Whitlock <bip at mattwhitlock.name> wrote:
+>> > What's to stop an attacker from broadcasting millions of spends of the same output(s) and overwhelming nodes with slower connections? Might it be a better strategy not to relay the actual transactions (after the first) but rather only propagate (once) some kind of double-spend alert?
+>> >
+>> >
+>> > On Thursday, 25 September 2014, at 7:02 pm, Aaron Voisine wrote:
+>> >> There was some discussion of having nodes relay double-spends in order
+>> >> to alert the network about double spend attempts.
+>> >>
+>> >> A lot more users will be using SPV wallets in the future, and one of
+>> >> the techniques SPV clients use to judge how likely a transaction is to
+>> >> be confirmed is if it propagates across the network. I wonder if and
+>> >> when double-spend relaying is introduced, if nodes should also send
+>> >> BIP61 reject messages or something along those lines to indicate which
+>> >> transactions those nodes believe to be invalid, but are relaying
+>> >> anyway.
+>> >>
+>> >> This would be subject to sybil attacks, as is monitoring propagation,
+>> >> however it does still increase the cost of performing a 0 confirmation
+>> >> double spend attack on an SPV client above just relaying double-spends
+>> >> without indicating if a node believes the transaction to be valid.
+>> >>
+>> >> Aaron Voisine
+>> >> breadwallet.com
+>> >
+
+
+
+From christophe.biocca at gmail.com  Fri Sep 26 03:34:50 2014
+From: christophe.biocca at gmail.com (Christophe Biocca)
+Date: Thu, 25 Sep 2014 23:34:50 -0400
+Subject: [Bitcoin-development] SPV clients and relaying double spends
+In-Reply-To: <CACq0ZD6sMHW6QEHHqDkaZwEwyfuk1CUjb0BRhzt3B+g+8CoP5A@mail.gmail.com>
+References: <CACq0ZD4Ki=7Tba_2UhmuH-dPCbOnfXrJRcLPc+fP6Uur4FpG_A@mail.gmail.com>
+	<1447373.AzvO89eGJS@crushinator>
+	<CACq0ZD55G7sAXuu-UxoVJuuk1rwxKKwAPg4qkRoTreD1X2fc9Q@mail.gmail.com>
+	<6165581.aoAyGZkGge@crushinator>
+	<CACq0ZD6sMHW6QEHHqDkaZwEwyfuk1CUjb0BRhzt3B+g+8CoP5A@mail.gmail.com>
+Message-ID: <CANOOu=8-x_eLXP7JARyqjVs6YbM+NRk3N_ProJ6D+U2rqeAohw@mail.gmail.com>
+
+A lot of this discussion has already occured. Some code was even
+merged into master, then reverted.
+
+See:
+https://github.com/bitcoin/bitcoin/issues/4550
+https://github.com/bitcoin/bitcoin/pull/4570
+
+It would probably be a good idea to start from that code, as it
+addresses many of the possible pitfalls you've been discussing.
+
+On Thu, Sep 25, 2014 at 10:37 PM, Aaron Voisine <voisine at gmail.com> wrote:
+> Of course you wouldn't want nodes to propagate alerts without
+> independently verifying them, otherwise anyone could just issue alerts
+> for every new transaction.
+>
+> Aaron Voisine
+> breadwallet.com
+>
+>
+> On Thu, Sep 25, 2014 at 7:16 PM, Matt Whitlock <bip at mattwhitlock.name> wrote:
+>> Probably the first double-spend attempt (i.e., the second transaction to spend the same output(s) as another tx already in the mempool) would still need to be relayed. A simple "double-spend alert" wouldn't work because it could be forged. But after there have been two attempts to spend the same output, no further transactions spending that same output should be relayed, in order to prevent flooding the network.
+>>
+>>
+>> On Thursday, 25 September 2014, at 7:12 pm, Aaron Voisine wrote:
+>>> Something like that would be a great help for SPV clients that can't
+>>> detect double spends on their own. (still limited of course to sybil
+>>> attack concerns)
+>>>
+>>> Aaron Voisine
+>>> breadwallet.com
+>>>
+>>>
+>>> On Thu, Sep 25, 2014 at 7:07 PM, Matt Whitlock <bip at mattwhitlock.name> wrote:
+>>> > What's to stop an attacker from broadcasting millions of spends of the same output(s) and overwhelming nodes with slower connections? Might it be a better strategy not to relay the actual transactions (after the first) but rather only propagate (once) some kind of double-spend alert?
+>>> >
+>>> >
+>>> > On Thursday, 25 September 2014, at 7:02 pm, Aaron Voisine wrote:
+>>> >> There was some discussion of having nodes relay double-spends in order
+>>> >> to alert the network about double spend attempts.
+>>> >>
+>>> >> A lot more users will be using SPV wallets in the future, and one of
+>>> >> the techniques SPV clients use to judge how likely a transaction is to
+>>> >> be confirmed is if it propagates across the network. I wonder if and
+>>> >> when double-spend relaying is introduced, if nodes should also send
+>>> >> BIP61 reject messages or something along those lines to indicate which
+>>> >> transactions those nodes believe to be invalid, but are relaying
+>>> >> anyway.
+>>> >>
+>>> >> This would be subject to sybil attacks, as is monitoring propagation,
+>>> >> however it does still increase the cost of performing a 0 confirmation
+>>> >> double spend attack on an SPV client above just relaying double-spends
+>>> >> without indicating if a node believes the transaction to be valid.
+>>> >>
+>>> >> Aaron Voisine
+>>> >> breadwallet.com
+>>> >
+>
+> ------------------------------------------------------------------------------
+> Meet PCI DSS 3.0 Compliance Requirements with EventLog Analyzer
+> Achieve PCI DSS 3.0 Compliant Status with Out-of-the-box PCI DSS Reports
+> Are you Audit-Ready for PCI DSS 3.0 Compliance? Download White paper
+> Comply to PCI DSS 3.0 Requirement 10 and 11.5 with EventLog Analyzer
+> http://pubads.g.doubleclick.net/gampad/clk?id=154622311&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+From s7r at sky-ip.org  Fri Sep 26 16:27:01 2014
+From: s7r at sky-ip.org (s7r)
+Date: Fri, 26 Sep 2014 19:27:01 +0300
+Subject: [Bitcoin-development] SPV clients and relaying double spends
+In-Reply-To: <6165581.aoAyGZkGge@crushinator>
+References: <CACq0ZD4Ki=7Tba_2UhmuH-dPCbOnfXrJRcLPc+fP6Uur4FpG_A@mail.gmail.com>	<1447373.AzvO89eGJS@crushinator>	<CACq0ZD55G7sAXuu-UxoVJuuk1rwxKKwAPg4qkRoTreD1X2fc9Q@mail.gmail.com>
+	<6165581.aoAyGZkGge@crushinator>
+Message-ID: <542593D5.20907@sky-ip.org>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+
+
+On 9/26/2014 5:16 AM, Matt Whitlock wrote:
+> Probably the first double-spend attempt (i.e., the second 
+> transaction to spend the same output(s) as another tx already in 
+> the mempool) would still need to be relayed. A simple
+> "double-spend alert" wouldn't work because it could be forged. But
+> after there have been two attempts to spend the same output, no
+> further transactions spending that same output should be relayed,
+> in order to prevent flooding the network.
+> 
+This sounds rational - is this already implemented nowadays or *SHOULD
+BE* implemented to prevent this attack type in the future?
+> 
+> On Thursday, 25 September 2014, at 7:12 pm, Aaron Voisine wrote:
+>> Something like that would be a great help for SPV clients that 
+>> can't detect double spends on their own. (still limited of
+>> course to sybil attack concerns)
+>> 
+>> Aaron Voisine breadwallet.com
+>> 
+>> 
+>> On Thu, Sep 25, 2014 at 7:07 PM, Matt Whitlock 
+>> <bip at mattwhitlock.name> wrote:
+>>> What's to stop an attacker from broadcasting millions of
+>>> spends of the same output(s) and overwhelming nodes with
+>>> slower connections? Might it be a better strategy not to relay
+>>> the actual transactions (after the first) but rather only
+>>> propagate (once) some kind of double-spend alert?
+>>> 
+>>> 
+>>> On Thursday, 25 September 2014, at 7:02 pm, Aaron Voisine 
+>>> wrote:
+>>>> There was some discussion of having nodes relay
+>>>> double-spends in order to alert the network about double
+>>>> spend attempts.
+>>>> 
+>>>> A lot more users will be using SPV wallets in the future,
+>>>> and one of the techniques SPV clients use to judge how likely
+>>>> a transaction is to be confirmed is if it propagates across
+>>>> the network. I wonder if and when double-spend relaying is 
+>>>> introduced, if nodes should also send BIP61 reject messages 
+>>>> or something along those lines to indicate which
+>>>> transactions those nodes believe to be invalid, but are
+>>>> relaying anyway.
+>>>> 
+>>>> This would be subject to sybil attacks, as is monitoring 
+>>>> propagation, however it does still increase the cost of 
+>>>> performing a 0 confirmation double spend attack on an SPV 
+>>>> client above just relaying double-spends without indicating 
+>>>> if a node believes the transaction to be valid.
+>>>> 
+>>>> Aaron Voisine breadwallet.com
+>>> 
+> 
+> ------------------------------------------------------------------------------
+>
+>
+> 
+Meet PCI DSS 3.0 Compliance Requirements with EventLog Analyzer
+> Achieve PCI DSS 3.0 Compliant Status with Out-of-the-box PCI DSS 
+> Reports Are you Audit-Ready for PCI DSS 3.0 Compliance? Download 
+> White paper Comply to PCI DSS 3.0 Requirement 10 and 11.5 with 
+> EventLog Analyzer 
+> http://pubads.g.doubleclick.net/gampad/clk?id=154622311&iu=/4140/ostg.clktrk
+>
+>
+> 
+_______________________________________________
+> Bitcoin-development mailing list 
+> Bitcoin-development at lists.sourceforge.net 
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+> 
+
+- -- 
+s7r
+PGP Fingerprint: 7C36 9232 5ABD FB0B 3021 03F1 837F A52C 8126 5B11
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (MingW32)
+
+iQEcBAEBAgAGBQJUJZPVAAoJEIN/pSyBJlsRfgoIAI4x4qITdCDyYx/I1+z4eGz3
+u7zDbVGQEPsUlrgEZLf503TNUIKmEgYQvgQDGEdOQk615XlkrTJeqt5oLh9DVJKj
+TaXRqKgBp4iNd6BIIs1gKl0CzmH9sJ7U9ojhTS5aV7ZUhinO0WZlgISYaBZ3t9Kw
+t//jb8QNLqISOeotiO9A2jb06UVRf9Gh0FUSBYTJ/st0UvLWt286zT+4XOaeVI/c
+9I9nkTsd/jdw1Eorfcd5T8iHBORcdn9g+5+UpuXVq7d3KA5FA6oetzBVHgUfTMjF
+q9LAe0W9IUVSiRj+wWvADzlxeUwWjsHnJDxdGihBg/g+k6SfPnOAxEC1UjCH+OU=
+=kaIX
+-----END PGP SIGNATURE-----
+
+
+
+From laanwj at gmail.com  Sat Sep 27 13:56:56 2014
+From: laanwj at gmail.com (Wladimir)
+Date: Sat, 27 Sep 2014 15:56:56 +0200
+Subject: [Bitcoin-development] [ann] Bitcoin Core 0.9.3 has been released
+Message-ID: <CA+s+GJDURMKKYJgcO6q8HhpzX+x0VVX7qk-9U4EZeOWbX0PDyw@mail.gmail.com>
+
+Bitcoin Core version 0.9.3 is now available from:
+
+  https://bitcoin.org/bin/0.9.3/
+
+This is a new minor version release, bringing only bug fixes and updated
+translations. Upgrading to this release is recommended.
+
+Please report bugs using the issue tracker at github:
+
+  https://github.com/bitcoin/bitcoin/issues
+
+Upgrading and downgrading
+==========================
+
+How to Upgrade
+--------------
+
+If you are running an older version, shut it down. Wait until it has completely
+shut down (which might take a few minutes for older versions), then run the
+installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
+bitcoind/bitcoin-qt (on Linux).
+
+If you are upgrading from version 0.7.2 or earlier, the first time you run
+0.9.3 your blockchain files will be re-indexed, which will take anywhere from
+30 minutes to several hours, depending on the speed of your machine.
+
+Downgrading warnings
+--------------------
+
+The 'chainstate' for this release is not always compatible with previous
+releases, so if you run 0.9.x and then decide to switch back to a
+0.8.x release you might get a blockchain validation error when starting the
+old release (due to 'pruned outputs' being omitted from the index of
+unspent transaction outputs).
+
+Running the old release with the -reindex option will rebuild the chainstate
+data structures and correct the problem.
+
+Also, the first time you run a 0.8.x release on a 0.9 wallet it will rescan
+the blockchain for missing spent coins, which will take a long time (tens
+of minutes on a typical machine).
+
+0.9.3 Release notes
+=======================
+
+RPC:
+- Avoid a segfault on getblock if it can't read a block from disk
+- Add paranoid return value checks in base58
+
+Protocol and network code:
+- Don't poll showmyip.com, it doesn't exist anymore
+- Add a way to limit deserialized string lengths and use it
+- Add a new checkpoint at block 295,000
+- Increase IsStandard() scriptSig length
+- Avoid querying DNS seeds, if we have open connections
+- Remove a useless millisleep in socket handler
+- Stricter memory limits on CNode
+- Better orphan transaction handling
+- Add `-maxorphantx=<n>` and `-maxorphanblocks=<n>` options for
+control over the maximum orphan transactions and blocks
+
+Wallet:
+- Check redeemScript size does not exceed 520 byte limit
+- Ignore (and warn about) too-long redeemScripts while loading wallet
+
+GUI:
+- fix 'opens in testnet mode when presented with a BIP-72 link with no fallback'
+- AvailableCoins: acquire cs_main mutex
+- Fix unicode character display on MacOSX
+
+Miscellaneous:
+- key.cpp: fail with a friendlier message on missing ssl EC support
+- Remove bignum dependency for scripts
+- Upgrade OpenSSL to 1.0.1i (see
+https://www.openssl.org/news/secadv_20140806.txt - just to be sure, no
+critical issues for Bitcoin Core)
+- Upgrade miniupnpc to 1.9.20140701
+- Fix boost detection in build system on some platforms
+
+Credits
+--------
+
+Thanks to everyone who contributed to this release:
+
+- Andrew Poelstra
+- Cory Fields
+- Gavin Andresen
+- Jeff Garzik
+- Johnathan Corgan
+- Julian Haight
+- Michael Ford
+- Pavel Vasin
+- Peter Todd
+- phantomcircuit
+- Pieter Wuille
+- Rose Toomey
+- Ruben Dario Ponticelli
+- shshshsh
+- Trevin Hofmann
+- Warren Togami
+- Wladimir J. van der Laan
+- Zak Wilcox
+
+As well as everyone that helped translating on
+[Transifex](https://www.transifex.com/projects/p/bitcoin/).
+
+
+
+From melvincarvalho at gmail.com  Sat Sep 27 19:32:02 2014
+From: melvincarvalho at gmail.com (Melvin Carvalho)
+Date: Sat, 27 Sep 2014 21:32:02 +0200
+Subject: [Bitcoin-development] [ann] Bitcoin Core 0.9.3 has been released
+In-Reply-To: <CA+s+GJDURMKKYJgcO6q8HhpzX+x0VVX7qk-9U4EZeOWbX0PDyw@mail.gmail.com>
+References: <CA+s+GJDURMKKYJgcO6q8HhpzX+x0VVX7qk-9U4EZeOWbX0PDyw@mail.gmail.com>
+Message-ID: <CAKaEYhLf9Qn6jdwCp0757sr+7NtSXg+=onXpfZZMSUhbyGU0cw@mail.gmail.com>
+
+On 27 September 2014 15:56, Wladimir <laanwj at gmail.com> wrote:
+
+> Bitcoin Core version 0.9.3 is now available from:
+>
+>   https://bitcoin.org/bin/0.9.3/
+>
+> This is a new minor version release, bringing only bug fixes and updated
+> translations. Upgrading to this release is recommended.
+>
+> Please report bugs using the issue tracker at github:
+>
+>   https://github.com/bitcoin/bitcoin/issues
+>
+> Upgrading and downgrading
+> ==========================
+>
+> How to Upgrade
+> --------------
+>
+> If you are running an older version, shut it down. Wait until it has
+> completely
+> shut down (which might take a few minutes for older versions), then run the
+> installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac)
+> or
+> bitcoind/bitcoin-qt (on Linux).
+>
+> If you are upgrading from version 0.7.2 or earlier, the first time you run
+> 0.9.3 your blockchain files will be re-indexed, which will take anywhere
+> from
+> 30 minutes to several hours, depending on the speed of your machine.
+>
+> Downgrading warnings
+> --------------------
+>
+> The 'chainstate' for this release is not always compatible with previous
+> releases, so if you run 0.9.x and then decide to switch back to a
+> 0.8.x release you might get a blockchain validation error when starting the
+> old release (due to 'pruned outputs' being omitted from the index of
+> unspent transaction outputs).
+>
+> Running the old release with the -reindex option will rebuild the
+> chainstate
+> data structures and correct the problem.
+>
+> Also, the first time you run a 0.8.x release on a 0.9 wallet it will rescan
+> the blockchain for missing spent coins, which will take a long time (tens
+> of minutes on a typical machine).
+>
+> 0.9.3 Release notes
+> =======================
+>
+> RPC:
+> - Avoid a segfault on getblock if it can't read a block from disk
+> - Add paranoid return value checks in base58
+>
+> Protocol and network code:
+> - Don't poll showmyip.com, it doesn't exist anymore
+> - Add a way to limit deserialized string lengths and use it
+> - Add a new checkpoint at block 295,000
+> - Increase IsStandard() scriptSig length
+> - Avoid querying DNS seeds, if we have open connections
+> - Remove a useless millisleep in socket handler
+> - Stricter memory limits on CNode
+> - Better orphan transaction handling
+> - Add `-maxorphantx=<n>` and `-maxorphanblocks=<n>` options for
+> control over the maximum orphan transactions and blocks
+>
+> Wallet:
+> - Check redeemScript size does not exceed 520 byte limit
+> - Ignore (and warn about) too-long redeemScripts while loading wallet
+>
+> GUI:
+> - fix 'opens in testnet mode when presented with a BIP-72 link with no
+> fallback'
+> - AvailableCoins: acquire cs_main mutex
+> - Fix unicode character display on MacOSX
+>
+> Miscellaneous:
+> - key.cpp: fail with a friendlier message on missing ssl EC support
+> - Remove bignum dependency for scripts
+> - Upgrade OpenSSL to 1.0.1i (see
+> https://www.openssl.org/news/secadv_20140806.txt - just to be sure, no
+> critical issues for Bitcoin Core)
+> - Upgrade miniupnpc to 1.9.20140701
+> - Fix boost detection in build system on some platforms
+>
+> Credits
+> --------
+>
+> Thanks to everyone who contributed to this release:
+>
+> - Andrew Poelstra
+> - Cory Fields
+> - Gavin Andresen
+> - Jeff Garzik
+> - Johnathan Corgan
+> - Julian Haight
+> - Michael Ford
+> - Pavel Vasin
+> - Peter Todd
+> - phantomcircuit
+> - Pieter Wuille
+> - Rose Toomey
+> - Ruben Dario Ponticelli
+> - shshshsh
+> - Trevin Hofmann
+> - Warren Togami
+> - Wladimir J. van der Laan
+> - Zak Wilcox
+>
+> As well as everyone that helped translating on
+> [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+>
+
+Great work!
+
+Apologies if this has been covered.  But I was curious about:
+
+- Increase IsStandard() scriptSig length
+
+Is there some place I read more to understand this change?
+
+
+>
+>
+> ------------------------------------------------------------------------------
+> Meet PCI DSS 3.0 Compliance Requirements with EventLog Analyzer
+> Achieve PCI DSS 3.0 Compliant Status with Out-of-the-box PCI DSS Reports
+> Are you Audit-Ready for PCI DSS 3.0 Compliance? Download White paper
+> Comply to PCI DSS 3.0 Requirement 10 and 11.5 with EventLog Analyzer
+>
+> http://pubads.g.doubleclick.net/gampad/clk?id=154622311&iu=/4140/ostg.clktrk
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140927/036469f3/attachment.html>
+
+From pete at petertodd.org  Sat Sep 27 19:39:23 2014
+From: pete at petertodd.org (Peter Todd)
+Date: Sat, 27 Sep 2014 15:39:23 -0400
+Subject: [Bitcoin-development] [ann] Bitcoin Core 0.9.3 has been released
+In-Reply-To: <CAKaEYhLf9Qn6jdwCp0757sr+7NtSXg+=onXpfZZMSUhbyGU0cw@mail.gmail.com>
+References: <CA+s+GJDURMKKYJgcO6q8HhpzX+x0VVX7qk-9U4EZeOWbX0PDyw@mail.gmail.com>
+	<CAKaEYhLf9Qn6jdwCp0757sr+7NtSXg+=onXpfZZMSUhbyGU0cw@mail.gmail.com>
+Message-ID: <20140927193923.GA5551@savin.petertodd.org>
+
+On Sat, Sep 27, 2014 at 09:32:02PM +0200, Melvin Carvalho wrote:
+> > As well as everyone that helped translating on
+> > [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+> >
+> 
+> Great work!
+> 
+> Apologies if this has been covered.  But I was curious about:
+> 
+> - Increase IsStandard() scriptSig length
+> 
+> Is there some place I read more to understand this change?
+
+commit 84fe0ffd685627689bbbcd14cf419938f2a100b2
+Author: Peter Todd <pete at petertodd.org>
+Date:   Mon Mar 10 16:38:44 2014 -0400
+
+    Increase IsStandard() scriptSig length
+
+    Removes the limits on number of pubkeys for P2SH CHECKMULTISIG outputs.
+    Previously with the 500 byte scriptSig limit there were odd restrictions
+    where even a 1-of-12 P2SH could be spent in a standard transaction(1),
+    yet multisig scriptPubKey's requiring more signatures quickly ran out of
+    scriptSig space.
+
+    From a "stuff-data-in-the-blockchain" point of view not much has changed
+    as with the prior commit now only allowing the dummy value to be null
+    the newly allowed scriptSig space can only be used for signatures. In
+    any case, just using more outputs is trivial and doesn't cost much.
+
+    1) See 779b519480d8c5346de6e635119c7ee772e97ec872240c45e558f582a37b4b73
+       Mined by BTC Guild.
+
+diff --git a/src/main.cpp b/src/main.cpp
+index a0b6842..63b87b8 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -513,10 +513,14 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
+
+     BOOST_FOREACH(const CTxIn& txin, tx.vin)
+     {
+-        // Biggest 'standard' txin is a 3-signature 3-of-3 CHECKMULTISIG
+-        // pay-to-script-hash, which is 3 ~80-byte signatures, 3
+-        // ~65-byte public keys, plus a few script ops.
+-        if (txin.scriptSig.size() > 500) {
++        // Biggest 'standard' txin is a 15-of-15 P2SH multisig with compressed
++        // keys. (remember the 520 byte limit on redeemScript size) That works
++        // out to a (15*(33+1))+3=513 byte redeemScript, 513+1+15*(73+1)=1624
++        // bytes of scriptSig, which we round off to 1650 bytes for some minor
++        // future-proofing. That's also enough to spend a 20-of-20
++        // CHECKMULTISIG scriptPubKey, though such a scriptPubKey is not
++        // considered standard)
++        if (txin.scriptSig.size() > 1650) {
+             reason = "scriptsig-size";
+             return false;
+         }
+
+-- 
+'peter'[:-1]@petertodd.org
+0000000000000000188beaebec22c62bcff1a5d92e5d21432e797ec717cfed3a
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 650 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140927/533f0890/attachment.sig>
+
+From tomh at thinlink.com  Sun Sep 28 02:55:44 2014
+From: tomh at thinlink.com (Tom Harding)
+Date: Sat, 27 Sep 2014 19:55:44 -0700
+Subject: [Bitcoin-development] SPV clients and relaying double spends
+In-Reply-To: <CACq0ZD6sMHW6QEHHqDkaZwEwyfuk1CUjb0BRhzt3B+g+8CoP5A@mail.gmail.com>
+References: <CACq0ZD4Ki=7Tba_2UhmuH-dPCbOnfXrJRcLPc+fP6Uur4FpG_A@mail.gmail.com>	<1447373.AzvO89eGJS@crushinator>	<CACq0ZD55G7sAXuu-UxoVJuuk1rwxKKwAPg4qkRoTreD1X2fc9Q@mail.gmail.com>	<6165581.aoAyGZkGge@crushinator>
+	<CACq0ZD6sMHW6QEHHqDkaZwEwyfuk1CUjb0BRhzt3B+g+8CoP5A@mail.gmail.com>
+Message-ID: <542778B0.7090202@thinlink.com>
+
+On 9/25/2014 7:37 PM, Aaron Voisine wrote:
+> Of course you wouldn't want nodes to propagate alerts without
+> independently verifying them
+How would a node independently verify a double-spend alert, other than 
+by having access to an actual signed double-spend?
+
+#4570 relays the first double-spend AS an alert.  Running this branch on 
+mainnet, I have been keeping a live list of relayed double-spend 
+transactions at http://respends.thinlink.com
+
+
+
+
+From pete at petertodd.org  Sun Sep 28 05:15:53 2014
+From: pete at petertodd.org (Peter Todd)
+Date: Sun, 28 Sep 2014 01:15:53 -0400
+Subject: [Bitcoin-development]  replace-by-fee v0.9.3 release
+In-Reply-To: <542778B0.7090202@thinlink.com>
+References: <CACq0ZD4Ki=7Tba_2UhmuH-dPCbOnfXrJRcLPc+fP6Uur4FpG_A@mail.gmail.com>
+	<1447373.AzvO89eGJS@crushinator>
+	<CACq0ZD55G7sAXuu-UxoVJuuk1rwxKKwAPg4qkRoTreD1X2fc9Q@mail.gmail.com>
+	<6165581.aoAyGZkGge@crushinator>
+	<CACq0ZD6sMHW6QEHHqDkaZwEwyfuk1CUjb0BRhzt3B+g+8CoP5A@mail.gmail.com>
+	<542778B0.7090202@thinlink.com>
+Message-ID: <20140928051553.GB11287@savin.petertodd.org>
+
+On Sat, Sep 27, 2014 at 07:55:44PM -0700, Tom Harding wrote:
+> On 9/25/2014 7:37 PM, Aaron Voisine wrote:
+> > Of course you wouldn't want nodes to propagate alerts without
+> > independently verifying them
+> How would a node independently verify a double-spend alert, other than 
+> by having access to an actual signed double-spend?
+> 
+> #4570 relays the first double-spend AS an alert.  Running this branch on 
+> mainnet, I have been keeping a live list of relayed double-spend 
+> transactions at http://respends.thinlink.com
+
+Speaking of, I ported my replace-by-fee branch the recent v0.9.3
+release: https://github.com/petertodd/bitcoin/tree/replace-by-fee-v0.9.3
+
+I actually ported it a few days ago; that release has been running on a
+half-dozen or so nodes right now for a few days with no issues.
+
+The v0.9.3 release's scriptSig size limit increase adds a new category
+of double-spending exploit. I'm not going to get time to add that
+exploit to my replace-by-fee toolkit(1) for at least another week or so
+though - pull-reqs accepted.
+
+1) https://github.com/petertodd/replace-by-fee-tools
+
+-- 
+'peter'[:-1]@petertodd.org
+0000000000000000084778cc7b7394a48d65c9451a59dcf98d0f1e1078f39c3a
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 650 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140928/5ab04989/attachment.sig>
+
+From luke at dashjr.org  Sun Sep 28 17:03:50 2014
+From: luke at dashjr.org (Luke Dashjr)
+Date: Sun, 28 Sep 2014 17:03:50 +0000
+Subject: [Bitcoin-development] replace-by-fee v0.9.3 release
+In-Reply-To: <20140928051553.GB11287@savin.petertodd.org>
+References: <CACq0ZD4Ki=7Tba_2UhmuH-dPCbOnfXrJRcLPc+fP6Uur4FpG_A@mail.gmail.com>
+	<542778B0.7090202@thinlink.com>
+	<20140928051553.GB11287@savin.petertodd.org>
+Message-ID: <201409281703.51377.luke@dashjr.org>
+
+On Sunday, September 28, 2014 5:15:53 AM Peter Todd wrote:
+> On Sat, Sep 27, 2014 at 07:55:44PM -0700, Tom Harding wrote:
+> > On 9/25/2014 7:37 PM, Aaron Voisine wrote:
+> > > Of course you wouldn't want nodes to propagate alerts without
+> > > independently verifying them
+> > 
+> > How would a node independently verify a double-spend alert, other than
+> > by having access to an actual signed double-spend?
+> > 
+> > #4570 relays the first double-spend AS an alert.  Running this branch on
+> > mainnet, I have been keeping a live list of relayed double-spend
+> > transactions at http://respends.thinlink.com
+> 
+> Speaking of, I ported my replace-by-fee branch the recent v0.9.3
+> release: https://github.com/petertodd/bitcoin/tree/replace-by-fee-v0.9.3
+> 
+> I actually ported it a few days ago; that release has been running on a
+> half-dozen or so nodes right now for a few days with no issues.
+> 
+> The v0.9.3 release's scriptSig size limit increase adds a new category
+> of double-spending exploit. I'm not going to get time to add that
+> exploit to my replace-by-fee toolkit(1) for at least another week or so
+> though - pull-reqs accepted.
+> 
+> 1) https://github.com/petertodd/replace-by-fee-tools
+
+Do you have or can you provide a version compatible with CPFP, such that a 
+child paying a higher fee trumps the parent's replacement?
+
+Preferably something that will merge cleanly into 0.9.x-ljr :)
+
+Luke
+
+
+
+From pete at petertodd.org  Mon Sep 29 02:35:53 2014
+From: pete at petertodd.org (Peter Todd)
+Date: Sun, 28 Sep 2014 22:35:53 -0400
+Subject: [Bitcoin-development] New opcodes and transaction version numbers
+ (was 'relax the IsStandard rules for P2SH transactions')
+In-Reply-To: <CABsx9T1uC9sMzbPJa4MGpBNoQ4S255Tfo66+wwCoND_bQtvT7Q@mail.gmail.com>
+References: <CABsx9T2+_tLOPELm+K54D=6SNkHg1ZeO_T1jSM=CQZYJKGODFw@mail.gmail.com>
+	<20140618001503.GA8360@savin>
+	<CABsx9T2O42pER0b1v9oeU14_K=KVWVqHzcfFmWAhSxoYAn12vg@mail.gmail.com>
+	<20140619100909.GA3544@savin>
+	<CABsx9T1uC9sMzbPJa4MGpBNoQ4S255Tfo66+wwCoND_bQtvT7Q@mail.gmail.com>
+Message-ID: <20140929023553.GA11877@savin.petertodd.org>
+
+On Thu, Jun 19, 2014 at 09:54:31AM -0400, Gavin Andresen wrote:
+> RE: soft-forks bumping version numbers:
+> 
+> Yes, we have consensus that is the way we will do it.  I should probably
+> turn https://gist.github.com/gavinandresen/2355445 into an informational
+> BIP.
+
+That gist is mistaken. To see the problem consider the "re-define
+OP_NOP1 to be OP_Q_CHECKSIGVERIFY" example. It says "Transactions that
+use the new opcode are given a new version number." The problem is in
+the definition of "use"
+
+Lets first suppose that the evaluation of a scriptPubKey was done
+according to the transaction version # of the transaction creating the
+scriptPubKey. This is technically feasible as the UTXO set records the
+version of the transaction creating the txout. However if I create a
+P2SH address whose redeemScript makes use of a new opcode - say the new
+OP_Q_CHECKSIGVERIFY - non-upgraded clients sending funds to that address
+will be creating scriptPubKeys whose contents can be spent by anyone.
+Not exactly ideal! This can be solved by upgrading the address format at
+the same time to let senders know they must send the funds in a
+transaction with an increased version number, but obviously needing new
+addresses for every new opcode defeats the purpose of P2SH.
+
+On the other hand suppose scriptPubKey evaluation is done according to
+the version of the transaction spending the scriptPubKey. This is
+insecure as now transaction outputs using the new opcode can be
+trivially spent by just spending them in a transaction with the previous
+version number; the OP_Q_CHECKSIGVERIFY is evaluated as OP_NOP and
+checks nothing.
+
+If txouts be spent only by transactions with nVersion >= the nVersion of
+the transaction spending them, but again you're forced to upgrade the
+address format for every new opcode. Interestingly this shows that the
+common assertion that "P2SH should have been done by upgrading the tx
+version #" is in fact wrong except for the fact that P2SH required an
+address format upgrade anyway; doing that for future opcode upgrades
+would be a mistake.
+
+With the above in mind the "Relax IsStandard rules for P2SH
+transactions" pull-req(1) is incomplete as it doesn't blacklist usage of
+the upgradable NOPx opcodes. After a future soft-fork redefining a NOPx
+opcodes' behavior non-upgraded nodes will accept and mine transactions
+that may now be invalid, the latter creating invalid blocks and thus
+false confirmations. I've created a pull-req to fix this issue by
+specifically blacklisting the NOPx opcodes if they are executed:
+
+    https://github.com/bitcoin/bitcoin/pull/5000
+
+Secondly the "Blockchain Rule Update Process" gist above should be
+rewritten to say that new opcodes will be enabled for all scripts by the
+block nVersion upgrade mechanism; scripts must never depend on a NOPx
+opcode being executed least they be rendered unspendable by a future
+upgrade.
+
+By comparison BIP62 proposes that the transaction version # be increased
+to indicate that the sender wants anti-malleability rules to be applied.
+This is an appropriate usage of tx version numbers as in this case the
+person creating the transaction wants the anti-malleability rules
+applied; the creator of the scriptPubKey's being spent does not care
+whether or not they are spent in a transaction that is or is not
+malleable. Equally the new owners of the txouts being created don't in
+general care how they were created. (modulo certain special-purpose
+protocols where they would have the transaction anyway)
+
+1) https://github.com/bitcoin/bitcoin/pull/4365
+
+-- 
+'peter'[:-1]@petertodd.org
+000000000000000005ec432fd4c506119a0123a028911fa3981bcde0568b66ab
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 650 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140928/36647802/attachment.sig>
+
+From etotheipi at gmail.com  Mon Sep 29 04:30:11 2014
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Mon, 29 Sep 2014 00:30:11 -0400
+Subject: [Bitcoin-development] New opcodes and transaction version
+ numbers (was 'relax the IsStandard rules for P2SH transactions')
+In-Reply-To: <20140929023553.GA11877@savin.petertodd.org>
+References: <CABsx9T2+_tLOPELm+K54D=6SNkHg1ZeO_T1jSM=CQZYJKGODFw@mail.gmail.com>	<20140618001503.GA8360@savin>	<CABsx9T2O42pER0b1v9oeU14_K=KVWVqHzcfFmWAhSxoYAn12vg@mail.gmail.com>	<20140619100909.GA3544@savin>	<CABsx9T1uC9sMzbPJa4MGpBNoQ4S255Tfo66+wwCoND_bQtvT7Q@mail.gmail.com>
+	<20140929023553.GA11877@savin.petertodd.org>
+Message-ID: <5428E053.7070601@gmail.com>
+
+On 09/28/2014 10:35 PM, Peter Todd wrote:
+> This can be solved by upgrading the address format at
+> the same time to let senders know they must send the funds in a
+> transaction with an increased version number, but obviously needing new
+> addresses for every new opcode defeats the purpose of P2SH.
+
+Can't this be solved with a single update to the address format,
+allowing a tx version number to be part of the address serialization? 
+Then the sending software will apply that version to the payment tx.   
+Of course, I'm not sure if allowing nodes to create transactions with
+version numbers outside of their programming is safe.  It seems like it
+should be since we're talking about soft forks anyway, but there's
+probably some subtleties I'm overlooking.
+
+
+
+
+From pete at petertodd.org  Mon Sep 29 05:35:26 2014
+From: pete at petertodd.org (Peter Todd)
+Date: Mon, 29 Sep 2014 01:35:26 -0400
+Subject: [Bitcoin-development] New opcodes and transaction version
+ numbers (was 'relax the IsStandard rules for P2SH transactions')
+In-Reply-To: <5428E053.7070601@gmail.com>
+References: <CABsx9T2+_tLOPELm+K54D=6SNkHg1ZeO_T1jSM=CQZYJKGODFw@mail.gmail.com>
+	<20140618001503.GA8360@savin>
+	<CABsx9T2O42pER0b1v9oeU14_K=KVWVqHzcfFmWAhSxoYAn12vg@mail.gmail.com>
+	<20140619100909.GA3544@savin>
+	<CABsx9T1uC9sMzbPJa4MGpBNoQ4S255Tfo66+wwCoND_bQtvT7Q@mail.gmail.com>
+	<20140929023553.GA11877@savin.petertodd.org>
+	<5428E053.7070601@gmail.com>
+Message-ID: <20140929053526.GA21446@savin.petertodd.org>
+
+On Mon, Sep 29, 2014 at 12:30:11AM -0400, Alan Reiner wrote:
+> On 09/28/2014 10:35 PM, Peter Todd wrote:
+> > This can be solved by upgrading the address format at
+> > the same time to let senders know they must send the funds in a
+> > transaction with an increased version number, but obviously needing new
+> > addresses for every new opcode defeats the purpose of P2SH.
+> 
+> Can't this be solved with a single update to the address format,
+> allowing a tx version number to be part of the address serialization? 
+> Then the sending software will apply that version to the payment tx.   
+> Of course, I'm not sure if allowing nodes to create transactions with
+> version numbers outside of their programming is safe.  It seems like it
+> should be since we're talking about soft forks anyway, but there's
+> probably some subtleties I'm overlooking.
+
+Keep in mind that when a *wallet* - not a node - creates a transaction
+the scriptPubKeys in the transaction outputs have been specified by the
+receiver(s) and aren't executed until they are spent. Modulo sigops(1)
+there is absolutely no reason why the wallet should care what the
+contents of those scriptPubKeys are at all.
+
+This is particularly apparent when you remember that there may be
+multiple recipients of a transaction. If I'm paying Alice and Bob, who
+have specified that they want the transaction to have version number 2
+and 3 respectively, now what? Do we take the highest of the two and
+constrain ourselves for how scripts are interpreted for all eternity? It
+just doesn't make very much sense.
+
+Meanwhile the man-hours of effort that would be required to implement
+that "one-time" address format change is huge - it took literally years
+for everyone to update their software to just support P2SH addresses.
+I'm working on a CHECKLOCKTIMEVERIFY implementation right now, and know
+of exchanges who would like to use it ASAP. Why make them wait years for
+everyone to upgrade?
+
+On that basis alone I think the question ought to be why should we use
+transaction version numbers to enable new opcodes rather than just
+enabling them globally based on block version numbers.
+
+
+1) Satoshi implemented a per-block sigop limit to prevent blocks from
+causing an unreasonable number of signature checking operations, but
+rather than computing that limit based on the scripts actually executed,
+the limit is computed based on the contents of all scriptSigs and
+scriptPubKeys in the block. This is bizzare given that the contents of
+the latter are *not* executed, and the former misses the prevout
+scriptPubKeys that *are* executed. In short this means you can create a
+block that passes the sigop limit, yet executes millions of expensive
+signature operations by being filled with scriptSigs spending txouts
+with large numbers of sigops in their scriptPubKeys. P2SH improves on
+this situation somewhat by counting the sigops in redeemScripts towards
+the limit, but missed the opportunity to just count all sigops in all
+scriptSigs directly.
+
+-- 
+'peter'[:-1]@petertodd.org
+0000000000000000092e056ab9c5a3242bfa911ba9a0a8a3836bcd4b5fcab2f8
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 650 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20140929/8fd41a18/attachment.sig>
+

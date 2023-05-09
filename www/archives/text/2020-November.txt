@@ -1,0 +1,1457 @@
+From karl at dglab.com  Mon Nov  2 12:11:40 2020
+From: karl at dglab.com (=?UTF-8?B?44Ki44Or44Og44CA44Kr44O844Or44Oo44OP44Oz?=)
+Date: Mon, 2 Nov 2020 21:11:40 +0900
+Subject: [bitcoin-dev] RFC BIP-0002: Defer, not reject.
+In-Reply-To: <CALJw2w5bvLFeBAdWs=zQhR+hTcXqV18ntV3+tC-DzBuzCWPTOg@mail.gmail.com>
+References: <CALJw2w5bvLFeBAdWs=zQhR+hTcXqV18ntV3+tC-DzBuzCWPTOg@mail.gmail.com>
+Message-ID: <CALJw2w4fA_QyjdE9KX7thh2gB13BqZ701g311GPeCyQGG3AvhQ@mail.gmail.com>
+
+Follow-up to this: there is now an alternative to this which proposes
+that the rejection criteria in BIP 2 is updated to require there to be
+an actual concern. This is here:
+https://github.com/bitcoin/bips/pull/1016
+
+Please nod or something at either or both of them.
+
+On Tue, Oct 13, 2020 at 7:06 PM ?????????? <karl at dglab.com> wrote:
+>
+> Hello,
+>
+> I am making a minor proposed change to BIP-0002
+>
+> https://github.com/bitcoin/bips/pull/1012
+>
+> I propose that we change the 3-year-rule to allow anyone to change the
+> status of a BIP to "Deferred", rather than "Rejected".
+>
+> Rejecting a BIP already has ambiguous meaning in BIP-0002 as it
+> stands, with "hard" rejects:
+>
+> > The BIP editor will not unreasonably reject a BIP. Reasons for rejecting BIPs include duplication of effort, disregard for formatting rules, being too unfocused or too broad, being technically unsound, not providing proper motivation or addressing backwards compatibility, or not in keeping with the Bitcoin philosophy.
+>
+> and "soft" rejects:
+>
+> > BIPs should be changed from Draft or Proposed status, to Rejected status, upon request by any person, if they have not made progress in three years. Such a BIP may be changed to Draft status if the champion provides revisions that meaningfully address public criticism of the proposal, or to Proposed status if it meets the criteria required as described in the previous paragraph.
+>
+> My proposal is that we disambiguate the second into "deferred" instead.
+>
+> Alternatively, we add a new status e.g. "Inactive".
+
+From schmidty at gmail.com  Fri Nov  6 19:49:44 2020
+From: schmidty at gmail.com (Mike Schmidt)
+Date: Fri, 6 Nov 2020 13:49:44 -0600
+Subject: [bitcoin-dev] Progress on bech32 for future Segwit Versions
+	(BIP-173)
+In-Reply-To: <CAMeZzJeG00q9DPQacidto5H16Ryb6ou6tnMDK1jnAuncnVXnsA@mail.gmail.com>
+References: <87imblmutl.fsf@rustcorp.com.au>
+ <20201008145938.vrmm33f6sugdc7qm@ganymede>
+ <87r1q0e06p.fsf@rustcorp.com.au>
+ <sYf9B0e3UaSdMfdBfChon1Vr7BRFdH_6mgzuXIt_xbtlKtdqns9JJp90dRlNfvwBoRq57YEVrKbKX-dHDWz7TE0gobU4u8dGGJTcFFz2n60=@wuille.net>
+ <877drn2g6q.fsf@rustcorp.com.au>
+ <S6FCoLsmwaQUhrtSURemcTcG8tUWTXYkBf-0Q0hxCpObfJQ0TXNcmJrQhoqy7ttWwtGnvyS-bJ5RSXJoPizAgjuMognzVnu3SM3wMujKy88=@wuille.net>
+ <878sc120f5.fsf@rustcorp.com.au> <20201020102952.4iwpugi5dxawufgo@ganymede>
+ <Kw_jwhASjriebJpsuUyi0u9EQmIVR1pQ3Jocqd9VeVDlmoH9s36bFAwr3PXu_pJd-Xly-hKun_yenLwbJvVIYWmlAiF5lMxuquLO2pTmlLo=@wuille.net>
+ <CAMeZzJeG00q9DPQacidto5H16Ryb6ou6tnMDK1jnAuncnVXnsA@mail.gmail.com>
+Message-ID: <CAMeZzJdQuS1-0qPvY+0-yqRfVXgZV_2hmHB5hZwykm5WxjUkgg@mail.gmail.com>
+
+Well I sure picked a bad couple weeks to volunteer to send a bunch of
+Bitcoin test transactions...
+
+While I tested less than I would have liked, there are some notable results:
+
+- Green wallet segwit v1 send resulted in funds being sent to the wrong
+address (bc1qmfr3p9j00pfxjh0zmgp99y8zftmd3s5pmedqhyptwy6lm87hf5sstpn3we
+instead of my intended destination, Pieter's r5n8 address. You can see this
+with Rusty's test transaction as well:
+ef1662fd2eb736612afb1b60e3efabfdf700b1c4822733d9dbe1bfee607a5b9b
+Blockstream is aware of the issue and has fixes.
+- Blockchain.com's wallet behaved similarly, sending to the same, incorrect
+address. Rusty's blockchain.com transaction for reference:
+64b0fcb22d57b3c920fee1a97b9facec5b128d9c895a49c7d321292fb4156c21
+I will be reaching out to Blockchain's team to let them know about this.
+- Blockchain.info's explorer suffers similarly, "Unable to decode output
+address" when viewing a tx with v1 output, and inability to display address
+details for a v1 address
+- Bitgo accepts a v1 send address, but then a ?Server error? during send
+occurs
+- Coinbase (web) reported on final step of sending: Your send failed Please
+enter a valid email or Bitcoin address
+- brd sends successfully to v1
+- bitrefill, casa, xapo, wasabi, all previously failed address validation,
+and still fail address validation
+- binance, bitmex, kraken, all previously failed address validation, but
+now accept v1 addresses. I did not attempt full send with these services,
+simply passing initial validations.
+- While Riccardo noted that Aqua successfully sent to Pieter's address
+(b48a59fa9e036e997ba733904f631b1a64f5274be646698e49fd542141ca9404) Ive been
+informed Aqua has disabled send to v1 addresses for now.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201106/9b92d93c/attachment.html>
+
+From dkbryant at gmail.com  Wed Nov 11 15:06:54 2020
+From: dkbryant at gmail.com (Dan Bryant)
+Date: Wed, 11 Nov 2020 09:06:54 -0600
+Subject: [bitcoin-dev] Bitcoin Archaeology
+Message-ID: <CAAUFj113SCpCKyXwVqt+dtcHczNMZD7hPj8D65oDZHkhpx+rzA@mail.gmail.com>
+
+TLDR; How to build old OpenSSL releases in MSYS/MinGW v1.0.11
+
+In a similar vein to the Github Artic Code Vault, and the Nakamoto
+Institute, I thought it would be educational to do a build of the first
+three versions of Bitcoin (v0.1.0, v0.1.3, and v0.1.5) [ref1].  Don't
+worry, I will keep these on a VLAN and not spam the IRC channel.
+
+Wanting to be as accurate as possible, I spun up some VMs to try to
+recreate the vintage Oct 2009 toolchains that were used.  The original
+Satoshi posts seem to imply that the builds could be done using Visual C++
+version 6.0 or MinGW and MSYS (which were at v1.0.11).  Since it looks like
+most versions of VC 6 have been purged from the internet, the only option
+left is MinGW which is still up on sourceforge.  Most things seemed to
+build OK, with the exception of OpenSSL, which looks to fail due to some
+issues in mk1mf.pl [ref2]  Perhaps there was a bad version of perl in MSYS
+v1.0.11, I'm not sure.
+
+So my question is..  Has anyone been here long enough to recall the steps
+to build OpenSSL v0.9.8h in MSYS 1.0.11?  Or, does anyone know where to
+find a non-sketchy copy of Visual C++ 6.0?
+
+My options so far seem to be.
+
+1. Try to find out how Satoshi did the MinGW OpenSSL build back in 2009.
+2. Try to do the OpenSSL build through Cygwin which could cross-complile to
+MinGW at the time
+3. Try to do the  OpenSSL build through Msys2 with later versions of perl
+and libc
+4. Buy some sketchy version of VC 6 on ebay and try that
+5. Patch Bitcoin 0.1.0 to use OpenSSL v1.0.0 where they fixed the perl bug
+6. Give up and use a precompiled OpenSSL release
+7. Give up and use the Linux build methods introduced in Bitcoin v0.1.6
+
+I realize this all sounds like a fool's folly, but it seems important (at
+some level) to be able to reproduce these old builds.  But perhaps it's
+just my OCD.
+
+Thoughts?
+
+For those interested.  The mk1mf.pl bug seems to be in parsing the list of
+headers through either the var_add, clean_up_ws, or do_copy_rule subs.  I
+see both the headers and header directories being parsed, but the
+directories are dropped when building the make rules causing make to assume
+all headers are at root, failing the build.  Perhaps there is a version
+sed, basename or dirname that is missing in MSYS, but I've failed to find
+the dependency yet.
+
+* ref1: https://satoshi.nakamotoinstitute.org/code/
+* ref1: https://github.com/openssl/openssl/blob/OpenSSL_0_9_8h/util/mk1mf.pl
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201111/bfd33ca1/attachment.html>
+
+From dkbryant at gmail.com  Sat Nov 14 17:00:12 2020
+From: dkbryant at gmail.com (Dan Bryant)
+Date: Sat, 14 Nov 2020 11:00:12 -0600
+Subject: [bitcoin-dev] Bitcoin Archaeology
+In-Reply-To: <CAAUFj113SCpCKyXwVqt+dtcHczNMZD7hPj8D65oDZHkhpx+rzA@mail.gmail.com>
+References: <CAAUFj113SCpCKyXwVqt+dtcHczNMZD7hPj8D65oDZHkhpx+rzA@mail.gmail.com>
+Message-ID: <CAAUFj11GMycwsEG+GmyitgdWLY6vL0US6xomOTbVw3b5YNoDKw@mail.gmail.com>
+
+Finally got it working,but was a bit harder than I expected.  I had to
+forgo the OpenSSL modifications that Satoshi originally suggested.  I also
+switched to Strawberry Perl.  Those two changes seemed to fix the OpenSSL
+build.  Everything else was all essentially as documented in v0.4.0, which
+is the first version to put all the build steps out in detail.  The one
+exception is the bitcoin build itself.  There are three minor issues that
+can be worked around with copy commands.
+
+1. The Makefile points to /wxWidgets/lib/vc_lib/ where it should really
+point to /wxWidgets/lib/gcc_lib/
+2. The Makefile points to /OpenSSL/include where it should really point to
+/OpenSSL/outinc
+3. The Makefile builds to /obj without first creating the directory
+
+That covers v0.1.5, and I think it will probably be smooth sailing from
+there all the way to v0.4.0.  I'll verify that my v0.1.5 toolchain can
+build v0.1.0 and v0.1.3 as well.  For anyone interested, here are the
+binaries I used to create the build environment.  All of them are
+vintage and would have been accessible to Satoshi with the exception of
+Win2012 and VirtualBox.  I'll try to reproduce my work on a Win2000 which
+is now quasi-open-domain.
+
+For anyone wanting to give it a shot...
+
+* https://www.microsoft.com/en-us/evalcenter/evaluate-hyper-v-server-2012
+*
+https://download.virtualbox.org/virtualbox/6.1.12/VirtualBox-6.1.12-139181-Win.exe
+* https://downloads.sourceforge.net/gnuwin32/zlib-1.2.3-bin.zip
+* https://downloads.sourceforge.net/gnuwin32/bzip2-1.0.5-bin.zip
+* https://downloads.sourceforge.net/gnuwin32/libarchive-2.4.12-1-bin.zip
+* https://downloads.sourceforge.net/mingw/binutils-2.19.1-mingw32-bin.tar.gz
+* https://downloads.sourceforge.net/mingw/gcc-core-3.4.5-20051220-1.tar.gz
+* https://downloads.sourceforge.net/mingw/gcc-g++-3.4.5-20051220-1.tar.gz
+* https://downloads.sourceforge.net/mingw/mingwrt-3.15.2-mingw32-dev.tar.gz
+* https://downloads.sourceforge.net/mingw/mingwrt-3.15.2-mingw32-dll.tar.gz
+* https://downloads.sourceforge.net/mingw/w32api-3.13-mingw32-dev.tar.gz
+*
+https://downloads.sourceforge.net/mingw/mingw32-make-3.81-20080326-2.tar.gz
+* https://downloads.sourceforge.net/mingw/MSYS-1.0.11.exe
+* https://downloads.sourceforge.net/mingw/msysDTK-1.0.1.exe
+* http://strawberryperl.com/download/5.8.8/strawberry-perl-5.8.8.2.zip
+* https://github.com/bitcoin/bitcoin/archive/v0.1.5.zip
+* https://downloads.sourceforge.net/wxwindows/wxWidgets-2.8.11.zip
+* https://github.com/openssl/openssl/archive/OpenSSL_0_9_8h.zip
+* https://download.oracle.com/berkeley-db/db-4.7.25.NC.zip
+* https://downloads.sourceforge.net/boost/1.37.0/boost_1_37_0.zip
+*
+https://downloads.sourceforge.net/boost/boost-jam/boost-jam-3.1.17-1-ntx86.zip
+
+
+On Wed, Nov 11, 2020 at 9:06 AM Dan Bryant <dkbryant at gmail.com> wrote:
+
+> TLDR; How to build old OpenSSL releases in MSYS/MinGW v1.0.11
+>
+> In a similar vein to the Github Artic Code Vault, and the Nakamoto
+> Institute, I thought it would be educational to do a build of the first
+> three versions of Bitcoin (v0.1.0, v0.1.3, and v0.1.5) [ref1].  Don't
+> worry, I will keep these on a VLAN and not spam the IRC channel.
+>
+> Wanting to be as accurate as possible, I spun up some VMs to try to
+> recreate the vintage Oct 2009 toolchains that were used.  The original
+> Satoshi posts seem to imply that the builds could be done using Visual C++
+> version 6.0 or MinGW and MSYS (which were at v1.0.11).  Since it looks like
+> most versions of VC 6 have been purged from the internet, the only option
+> left is MinGW which is still up on sourceforge.  Most things seemed to
+> build OK, with the exception of OpenSSL, which looks to fail due to some
+> issues in mk1mf.pl [ref2]  Perhaps there was a bad version of perl in
+> MSYS v1.0.11, I'm not sure.
+>
+> So my question is..  Has anyone been here long enough to recall the steps
+> to build OpenSSL v0.9.8h in MSYS 1.0.11?  Or, does anyone know where to
+> find a non-sketchy copy of Visual C++ 6.0?
+>
+> My options so far seem to be.
+>
+> 1. Try to find out how Satoshi did the MinGW OpenSSL build back in 2009.
+> 2. Try to do the OpenSSL build through Cygwin which could
+> cross-complile to MinGW at the time
+> 3. Try to do the  OpenSSL build through Msys2 with later versions of perl
+> and libc
+> 4. Buy some sketchy version of VC 6 on ebay and try that
+> 5. Patch Bitcoin 0.1.0 to use OpenSSL v1.0.0 where they fixed the perl bug
+> 6. Give up and use a precompiled OpenSSL release
+> 7. Give up and use the Linux build methods introduced in Bitcoin v0.1.6
+>
+> I realize this all sounds like a fool's folly, but it seems important (at
+> some level) to be able to reproduce these old builds.  But perhaps it's
+> just my OCD.
+>
+> Thoughts?
+>
+> For those interested.  The mk1mf.pl bug seems to be in parsing the list
+> of headers through either the var_add, clean_up_ws, or do_copy_rule subs.
+> I see both the headers and header directories being parsed, but the
+> directories are dropped when building the make rules causing make to assume
+> all headers are at root, failing the build.  Perhaps there is a version
+> sed, basename or dirname that is missing in MSYS, but I've failed to find
+> the dependency yet.
+>
+> * ref1: https://satoshi.nakamotoinstitute.org/code/
+> * ref1:
+> https://github.com/openssl/openssl/blob/OpenSSL_0_9_8h/util/mk1mf.pl
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201114/41d8e903/attachment.html>
+
+From dkbryant at gmail.com  Sun Nov 15 05:41:33 2020
+From: dkbryant at gmail.com (Dan Bryant)
+Date: Sat, 14 Nov 2020 23:41:33 -0600
+Subject: [bitcoin-dev] Bitcoin Archaeology
+In-Reply-To: <CAAUFj11GMycwsEG+GmyitgdWLY6vL0US6xomOTbVw3b5YNoDKw@mail.gmail.com>
+References: <CAAUFj113SCpCKyXwVqt+dtcHczNMZD7hPj8D65oDZHkhpx+rzA@mail.gmail.com>
+ <CAAUFj11GMycwsEG+GmyitgdWLY6vL0US6xomOTbVw3b5YNoDKw@mail.gmail.com>
+Message-ID: <CAAUFj11kc1UwxMNu5qBwnp8L7ihrh5A8X5FXkjLMSkmLCKfC0Q@mail.gmail.com>
+
+I think I'm set now.  I should have everything I need from v0.1.0 to 0.3.13
+when they changed the compiler.  I'll refine it a bit more then eventually
+start posting the binary builds on the repo below.  I might go ahead and
+disable the IRC bot to ensure people don't inadvertently spam the
+`#bitcoin` IRC.  Since I have a patch process worked out it should be
+fairly straight forward.  Since the official builds pickup at v0.8.6, I'll
+likely stop there.
+
+https://github.com/brianddk/bitcoin-archaeology
+
+
+On Sat, Nov 14, 2020 at 11:00 AM Dan Bryant <dkbryant at gmail.com> wrote:
+
+> Finally got it working,but was a bit harder than I expected.  I had to
+> forgo the OpenSSL modifications that Satoshi originally suggested.  I also
+> switched to Strawberry Perl.  Those two changes seemed to fix the OpenSSL
+> build.  Everything else was all essentially as documented in v0.4.0, which
+> is the first version to put all the build steps out in detail.  The one
+> exception is the bitcoin build itself.  There are three minor issues that
+> can be worked around with copy commands.
+>
+> 1. The Makefile points to /wxWidgets/lib/vc_lib/ where it should really
+> point to /wxWidgets/lib/gcc_lib/
+> 2. The Makefile points to /OpenSSL/include where it should really point to
+> /OpenSSL/outinc
+> 3. The Makefile builds to /obj without first creating the directory
+>
+> That covers v0.1.5, and I think it will probably be smooth sailing from
+> there all the way to v0.4.0.  I'll verify that my v0.1.5 toolchain can
+> build v0.1.0 and v0.1.3 as well.  For anyone interested, here are the
+> binaries I used to create the build environment.  All of them are
+> vintage and would have been accessible to Satoshi with the exception of
+> Win2012 and VirtualBox.  I'll try to reproduce my work on a Win2000 which
+> is now quasi-open-domain.
+>
+> For anyone wanting to give it a shot...
+>
+> * https://www.microsoft.com/en-us/evalcenter/evaluate-hyper-v-server-2012
+> *
+> https://download.virtualbox.org/virtualbox/6.1.12/VirtualBox-6.1.12-139181-Win.exe
+> * https://downloads.sourceforge.net/gnuwin32/zlib-1.2.3-bin.zip
+> * https://downloads.sourceforge.net/gnuwin32/bzip2-1.0.5-bin.zip
+> * https://downloads.sourceforge.net/gnuwin32/libarchive-2.4.12-1-bin.zip
+> *
+> https://downloads.sourceforge.net/mingw/binutils-2.19.1-mingw32-bin.tar.gz
+> * https://downloads.sourceforge.net/mingw/gcc-core-3.4.5-20051220-1.tar.gz
+> * https://downloads.sourceforge.net/mingw/gcc-g++-3.4.5-20051220-1.tar.gz
+> *
+> https://downloads.sourceforge.net/mingw/mingwrt-3.15.2-mingw32-dev.tar.gz
+> *
+> https://downloads.sourceforge.net/mingw/mingwrt-3.15.2-mingw32-dll.tar.gz
+> * https://downloads.sourceforge.net/mingw/w32api-3.13-mingw32-dev.tar.gz
+> *
+> https://downloads.sourceforge.net/mingw/mingw32-make-3.81-20080326-2.tar.gz
+> * https://downloads.sourceforge.net/mingw/MSYS-1.0.11.exe
+> * https://downloads.sourceforge.net/mingw/msysDTK-1.0.1.exe
+> * http://strawberryperl.com/download/5.8.8/strawberry-perl-5.8.8.2.zip
+> * https://github.com/bitcoin/bitcoin/archive/v0.1.5.zip
+> * https://downloads.sourceforge.net/wxwindows/wxWidgets-2.8.11.zip
+> * https://github.com/openssl/openssl/archive/OpenSSL_0_9_8h.zip
+> * https://download.oracle.com/berkeley-db/db-4.7.25.NC.zip
+> * https://downloads.sourceforge.net/boost/1.37.0/boost_1_37_0.zip
+> *
+> https://downloads.sourceforge.net/boost/boost-jam/boost-jam-3.1.17-1-ntx86.zip
+>
+>
+> On Wed, Nov 11, 2020 at 9:06 AM Dan Bryant <dkbryant at gmail.com> wrote:
+>
+>> TLDR; How to build old OpenSSL releases in MSYS/MinGW v1.0.11
+>>
+>> In a similar vein to the Github Artic Code Vault, and the Nakamoto
+>> Institute, I thought it would be educational to do a build of the first
+>> three versions of Bitcoin (v0.1.0, v0.1.3, and v0.1.5) [ref1].  Don't
+>> worry, I will keep these on a VLAN and not spam the IRC channel.
+>>
+>> Wanting to be as accurate as possible, I spun up some VMs to try to
+>> recreate the vintage Oct 2009 toolchains that were used.  The original
+>> Satoshi posts seem to imply that the builds could be done using Visual C++
+>> version 6.0 or MinGW and MSYS (which were at v1.0.11).  Since it looks like
+>> most versions of VC 6 have been purged from the internet, the only option
+>> left is MinGW which is still up on sourceforge.  Most things seemed to
+>> build OK, with the exception of OpenSSL, which looks to fail due to some
+>> issues in mk1mf.pl [ref2]  Perhaps there was a bad version of perl in
+>> MSYS v1.0.11, I'm not sure.
+>>
+>> So my question is..  Has anyone been here long enough to recall the steps
+>> to build OpenSSL v0.9.8h in MSYS 1.0.11?  Or, does anyone know where to
+>> find a non-sketchy copy of Visual C++ 6.0?
+>>
+>> My options so far seem to be.
+>>
+>> 1. Try to find out how Satoshi did the MinGW OpenSSL build back in 2009.
+>> 2. Try to do the OpenSSL build through Cygwin which could
+>> cross-complile to MinGW at the time
+>> 3. Try to do the  OpenSSL build through Msys2 with later versions of perl
+>> and libc
+>> 4. Buy some sketchy version of VC 6 on ebay and try that
+>> 5. Patch Bitcoin 0.1.0 to use OpenSSL v1.0.0 where they fixed the perl bug
+>> 6. Give up and use a precompiled OpenSSL release
+>> 7. Give up and use the Linux build methods introduced in Bitcoin v0.1.6
+>>
+>> I realize this all sounds like a fool's folly, but it seems important (at
+>> some level) to be able to reproduce these old builds.  But perhaps it's
+>> just my OCD.
+>>
+>> Thoughts?
+>>
+>> For those interested.  The mk1mf.pl bug seems to be in parsing the list
+>> of headers through either the var_add, clean_up_ws, or do_copy_rule subs.
+>> I see both the headers and header directories being parsed, but the
+>> directories are dropped when building the make rules causing make to assume
+>> all headers are at root, failing the build.  Perhaps there is a version
+>> sed, basename or dirname that is missing in MSYS, but I've failed to find
+>> the dependency yet.
+>>
+>> * ref1: https://satoshi.nakamotoinstitute.org/code/
+>> * ref1:
+>> https://github.com/openssl/openssl/blob/OpenSSL_0_9_8h/util/mk1mf.pl
+>>
+>>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201114/33a421d0/attachment-0001.html>
+
+From sridhar87 at gmail.com  Sun Nov 15 22:18:17 2020
+From: sridhar87 at gmail.com (Sridhar G)
+Date: Sun, 15 Nov 2020 23:18:17 +0100
+Subject: [bitcoin-dev] CoinPools based on m-of-n Schnorr aggregated
+	signatures
+Message-ID: <CAF8yEM_gur=r2WvQ=y3bE53cfds=gQT3se-GAspHvMQzUnW-9Q@mail.gmail.com>
+
+Hi everyone,
+
+N-of-n multisig transaction using Schnorr aggregate signature is trivial
+and is similar to the current P2PKH. I would like to propose a model for
+m-of-n multisig transactions using Schnorr aggregate signatures and use
+this to enable CoinPools for off-chain scalability.
+
+1. Creating the pool
+
+A transaction is made on the bitcoin network with an output having the
+following script:
+
+<pub_key_1> <pub_key_2> <pub_key_3> .. <pub_key_N> N M OP_POOL
+
+Bitcoin network will create a ?pool? with all the ?N? public keys and note
+down the threshold M for this pool. This UTXO would be referred as <POOL_ID>
+
+2. Depositing money to pool
+
+Deposits can be made to a pool with <POOL_ID> with the following script
+
+<POOL_ID> OP_LOAD_POOL_AGG_PUB_KEY OP_CHECKSIG
+
+3. Redeeming money from pool
+
+Redeem script would contain the aggregated signature from all signers and
+the bitmap of signers.
+
+*<AGG_SIG> <SIGNERS_BITMAP>* <POOL_ID>  OP_LOAD_POOL_AGG_PUB_KEY
+OP_CHECKSIG
+
+
+With <AGG_SIG> <SIGNERS_BITMAP> provided by the person that redeems money
+from a pool, where
+
+<AGG_SIG> - is the aggregated signature
+
+<SIGNERS_BITMAP> - Is a bitmap representing whether the member of the pool
+at position 'i' of bitmap has signed or not(1 = signed, 0 - has not signed)
+
+
+
+So we will be introducing two new opcodes:
+
+   1.
+
+   OP_POOL - this will be used to create a new coin pool.
+   2.
+
+   OP_LOAD_POOL_AGG_PUB_KEY - This opcode does three things
+   1.
+
+      loads the pool (POOL_ID)
+      2.
+
+      checks if there are atleast 'm' signers (based on SIGNERS_BITMAP)
+      3.
+
+      aggregates the public key of the signers. (based on SIGNERS_BITMAP)
+
+      The opcode uses the top two elements from the stack- the first
+element from the stack specifies the POOL_ID to load, which will load the
+public keys from the pool. This opcode also checks if there are ?M?
+signers(as specified at the time of creation of the pool) and aggregates
+the public keys that have signed based on SIGNERS_BITMAP using Schnorr
+aggregate signature scheme and puts back this aggregated public key onto
+the stack.
+
+
+SIGNERS_BITMAP is a 32 byte value, and represents a bitmap of which public
+keys from the pool have signed the transaction.
+
+Having this scheme would enable-
+
+   1.
+
+   Scalability of m-of-n multisig transactions - People can deposit money
+   to a pool(with 32 byte SIGNERS_BITMAP, we can allow for 256 possible
+   signers).
+   2.
+
+   Trust minimized off-chain scalability solutions due to the use of a
+   sufficiently large pool of signers. Most existing pools might allow for
+   only a few signers as having many signers would mean higher transaction
+   cost.
+
+
+Downsides:
+
+   1.
+
+   We need to have the public keys of the members of the pool exposed.
+
+
+Despite the downsides of exposing public keys, do you think this would be a
+viable scheme for enabling CoinPool for the Bitcoin network? Or, any scheme
+that may expose public keys is a no-go in the Bitcoin network?
+
+
+Thanks! Looking for your feedback and thoughts on this.
+
+-Sridhar
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201115/cab0a90a/attachment.html>
+
+From ZmnSCPxj at protonmail.com  Mon Nov 16 01:32:11 2020
+From: ZmnSCPxj at protonmail.com (ZmnSCPxj)
+Date: Mon, 16 Nov 2020 01:32:11 +0000
+Subject: [bitcoin-dev] CoinPools based on m-of-n Schnorr aggregated
+	signatures
+In-Reply-To: <CAF8yEM_gur=r2WvQ=y3bE53cfds=gQT3se-GAspHvMQzUnW-9Q@mail.gmail.com>
+References: <CAF8yEM_gur=r2WvQ=y3bE53cfds=gQT3se-GAspHvMQzUnW-9Q@mail.gmail.com>
+Message-ID: <1XMBkdX-KiAjYBAfntpqYxiBPaiJ-S-n11NNwroEMLBp6G7jV1EPAhF0aFaz_pz-PZ-7gxcMfCwg04ofcMqKzYe5rz826mHSJ2eZXsBxXYw=@protonmail.com>
+
+Good morning Sridhar,
+
+My understanding is that it is still possible to generate an m-of-n aggregated pubkey, it "just" requires an interactive setup (i.e. all n signers have to talk to each other and send data a few times to each other) and they have to keep extra data around in order to "sign for" the n - m missing signers.
+`andytoshi` and `pwuille` can probably teach you the details.
+
+Of course, if you want to trade off the interactive setup + data storage, for extra block space and a privacy loss, that seems a reasonable tradeoff to make.
+
+My understanding is that current plan is to implement a `OP_CHECKSIGADD`, where your script would be:
+
+   <0> <pubkey1> OP_CHECKSIGADD <pubkey2> OP_CHECKSIGADD <pubkey3> OP_CHECKSIGADD <m> OP_EQUAL
+
+However, `OP_CHECKSIGADD` would have individual signatures from the m participating signers.
+Your `OP_POOL`, as I understand it, would instead have a single m-of-m signature.
+
+This adds another tradeoff:
+
+* `OP_CHECKSIGADD` takes up more block space, but each signer can give their signature independently without having to enter a signing sessiong with other participating signers.
+  * For example, this can reduce the number of communication rounds and the latency.
+  * A participating signer can emit its own signature and then go offline and you can still use its signature when you have gotten the required m participants.
+* `OP_POOL` takes less block space, but all participating signers have to be online simultaneously.
+
+I think the fact that `OP_POOL` requires all participating signers to be online simultaneously to generate a single signature sort of defeats the purpose, as (by my naive understanding, which could be grossly wrong) in the m-of-n key setup, the extra data needed would be stored by all participants, so even if one participant loses this data any of the others can still provide it.
+Interactive setup may not be so onerous if you are doing multiple interactive signing sessions later anyway.
+So doing a verifiable secret sharing at interactive setup, to generate a single pubkey that is just used directly as the pubkey of the UTXO, would end up being smaller and more private anyway, and would "just" require interactive setup + storage of extra data.
+
+I guess the question is: just how big is the extra data in the m-of-n verifiable secret sharing?
+
+Regards,
+ZmnSCPxj
+
+
+> Hi everyone,
+>
+> N-of-n multisig transaction using Schnorr aggregate signature is trivial and is similar to the current P2PKH. I would like to propose a model for m-of-n multisig transactions using Schnorr aggregate signatures and use this to enable CoinPools for off-chain scalability.
+>
+> 1. Creating the pool
+>
+> A transaction is made on the bitcoin network with an output having the following script:
+>
+> <pub_key_1> <pub_key_2> <pub_key_3> .. <pub_key_N> N M OP_POOL
+>
+> Bitcoin network will create a ?pool? with all the ?N? public keys and note down the threshold M for this pool. This UTXO would be referred as <POOL_ID>
+>
+> 2. Depositing money to pool
+>
+> Deposits can be made to a pool with <POOL_ID> with the following script
+>
+> <POOL_ID> OP_LOAD_POOL_AGG_PUB_KEY OP_CHECKSIG
+>
+> 3. Redeeming money from pool
+>
+> Redeem script would contain the aggregated signature from all signers and the bitmap of signers.
+>
+> <AGG_SIG> <SIGNERS_BITMAP> <POOL_ID>? OP_LOAD_POOL_AGG_PUB_KEY OP_CHECKSIG
+>
+> With <AGG_SIG> <SIGNERS_BITMAP> provided by the person that redeems money from a pool, where
+>
+> <AGG_SIG> - is the aggregated signature
+>
+> <SIGNERS_BITMAP> - Is a bitmap representing whether the member of the pool at position 'i' of bitmap has signed or not(1 = signed, 0 - has not signed)
+>
+> So we will be introducing two new opcodes:
+>
+> 1.  OP_POOL - this will be used to create a new coin pool.
+>
+> 2.  OP_LOAD_POOL_AGG_PUB_KEY - This opcode does three things
+>
+>
+> 1.  loads the pool (POOL_ID)
+>
+> 2.  checks if there are atleast 'm' signers (based on SIGNERS_BITMAP)
+>
+> 3.  aggregates the public key of the signers. (based on SIGNERS_BITMAP)
+>
+>
+> The opcode uses the top two elements from the stack- the first element from the stack specifies the POOL_ID to load, which will load the public keys from the pool. This opcode also checks if there are ?M? signers(as specified at the time of creation of the pool) and aggregates the public keys that have signed based on SIGNERS_BITMAP using Schnorr aggregate signature scheme and puts back this aggregated public key onto the stack.
+>
+> SIGNERS_BITMAP is a 32 byte value, and represents a bitmap of which public keys from the pool have signed the transaction.
+>
+> Having this scheme would enable-
+>
+> 1.  Scalability of m-of-n multisig transactions - People can deposit money to a pool(with 32 byte SIGNERS_BITMAP, we can allow for 256 possible signers).
+>
+> 2.  Trust minimized off-chain scalability solutions due to the use of a sufficiently large pool of signers. Most existing pools might allow for only a few signers as having many signers would mean higher transaction cost.
+>
+>
+> Downsides:
+>
+> 1.  We need to have the public keys of the members of the pool exposed.
+>
+>
+> Despite the downsides of exposing public keys, do you think this would be a viable scheme for enabling CoinPool for the Bitcoin network? Or, any scheme that may expose public keys is a no-go in the Bitcoin network?
+>
+> Thanks! Looking for your feedback and thoughts on this.
+>
+> -Sridhar
+
+
+
+From ferdinando at ametrano.net  Mon Nov 16 23:01:34 2020
+From: ferdinando at ametrano.net (Ferdinando M. Ametrano)
+Date: Tue, 17 Nov 2020 00:01:34 +0100
+Subject: [bitcoin-dev] Against proprietary and PoR fields in PSBT BIP174
+Message-ID: <CADfmNEk3nr33MMym1D_n8_DWgj39AWoOuTpFbBO0U6MZis_=vA@mail.gmail.com>
+
+Hi all,
+
+While implementing PSBT support in the *btclib* library (
+https://github.com/btclib-org/btclib), I have failed to understand the
+rationale for the *proprietary* and *proof-of-reserves* types.
+
+First off, at face value they have nothing to do with the operations
+intrinsically required to finalize a valid transaction from PSBT
+manipulation.
+
+Moreover, whatever information content they can provide for non-standard
+PSBT manipulation, that content could stay in the *unknown* field without
+any loss of generality. How to structure and deal with unknown data would
+be the responsibility of proprietary software or users wanting to provide
+proof-of-reserve. As long as BIP174 clearly prescribes that unknown data
+must be kept during PSBT manipulation, that should be enough.
+
+Let me stress the above point: I have a project where we include
+proprietary information in the PSBT. Any PSBT software supporting unknown
+data gently keeps our proprietary information and our proprietary software
+retrieves that data from serialized PSBT with no problem. There is no need
+for a PSBT implementation to provide explicit support for *proprietary* and
+*proof-of-reserves* types.
+
+My last conclusion is reinforced by the evidence of all PSBT
+implementations I know of, including bitcoin core and HWI, not implementing
+proprietary and proof-of-reserve types. There is a high probability that
+part of BIP174 would be just ignored.
+
+Am I missing something?
+
+Thanks
+--
+*Ferdinando M. Ametrano*
+www.ametrano.net/about
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201117/0e8032c8/attachment.html>
+
+From ferdinando at ametrano.net  Mon Nov 16 23:38:19 2020
+From: ferdinando at ametrano.net (Ferdinando M. Ametrano)
+Date: Tue, 17 Nov 2020 00:38:19 +0100
+Subject: [bitcoin-dev] Against proprietary and PoR fields in PSBT BIP174
+In-Reply-To: <CADfmNEk3nr33MMym1D_n8_DWgj39AWoOuTpFbBO0U6MZis_=vA@mail.gmail.com>
+References: <CADfmNEk3nr33MMym1D_n8_DWgj39AWoOuTpFbBO0U6MZis_=vA@mail.gmail.com>
+Message-ID: <CADfmNEkJfvefTaAg42PU5DWu1PLJhXxptVY69yVJNRCdx4fuBQ@mail.gmail.com>
+
+After having checked that the BIP174 test vectors do not cover the
+*proprietary* and *proof-of-reserves* types, I went ahead and submitted a
+PR to the bips repo for the removal of those fields from the PSBT
+specifications
+
+https://github.com/bitcoin/bips/pull/1038
+
+--
+*Ferdinando M. Ametrano*
+www.ametrano.net/about
+
+
+On Tue, Nov 17, 2020 at 12:01 AM Ferdinando M. Ametrano <
+ferdinando at ametrano.net> wrote:
+
+> Hi all,
+>
+> While implementing PSBT support in the *btclib* library (
+> https://github.com/btclib-org/btclib), I have failed to understand the
+> rationale for the *proprietary* and *proof-of-reserves* types.
+>
+> First off, at face value they have nothing to do with the operations
+> intrinsically required to finalize a valid transaction from PSBT
+> manipulation.
+>
+> Moreover, whatever information content they can provide for non-standard
+> PSBT manipulation, that content could stay in the *unknown* field without
+> any loss of generality. How to structure and deal with unknown data would
+> be the responsibility of proprietary software or users wanting to provide
+> proof-of-reserve. As long as BIP174 clearly prescribes that unknown data
+> must be kept during PSBT manipulation, that should be enough.
+>
+> Let me stress the above point: I have a project where we include
+> proprietary information in the PSBT. Any PSBT software supporting unknown
+> data gently keeps our proprietary information and our proprietary software
+> retrieves that data from serialized PSBT with no problem. There is no need
+> for a PSBT implementation to provide explicit support for *proprietary*
+> and *proof-of-reserves* types.
+>
+> My last conclusion is reinforced by the evidence of all PSBT
+> implementations I know of, including bitcoin core and HWI, not implementing
+> proprietary and proof-of-reserve types. There is a high probability that
+> part of BIP174 would be just ignored.
+>
+> Am I missing something?
+>
+> Thanks
+> --
+> *Ferdinando M. Ametrano*
+> www.ametrano.net/about
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201117/3fe0ccf0/attachment.html>
+
+From dkbryant at gmail.com  Sat Nov 21 22:59:36 2020
+From: dkbryant at gmail.com (Dan Bryant)
+Date: Sat, 21 Nov 2020 16:59:36 -0600
+Subject: [bitcoin-dev] Bitcoin Archaeology
+In-Reply-To: <CAAUFj11kc1UwxMNu5qBwnp8L7ihrh5A8X5FXkjLMSkmLCKfC0Q@mail.gmail.com>
+References: <CAAUFj113SCpCKyXwVqt+dtcHczNMZD7hPj8D65oDZHkhpx+rzA@mail.gmail.com>
+ <CAAUFj11GMycwsEG+GmyitgdWLY6vL0US6xomOTbVw3b5YNoDKw@mail.gmail.com>
+ <CAAUFj11kc1UwxMNu5qBwnp8L7ihrh5A8X5FXkjLMSkmLCKfC0Q@mail.gmail.com>
+Message-ID: <CAAUFj12m2cQhsEtk0XcFQjurgwKHtJHHpfWZ3shZWeM3Ac==uw@mail.gmail.com>
+
+I've gathered all the source archives from v0.1.0 to v0.9.0 with the
+exception of one.
+
+I can't get v0.1.2 anywhere.  None of the crawlers from Web Archive seemed
+to have captured it.  I realize the build was recalled, but I would still
+like to examine it purely out of curiosity.
+
+Does anyone know of a mirror or have a personal copy of "bitcoin-0.1.2.rar"
+from 2009 / 2010 that they would be willing to share?  Even a checksum
+would be nice so I could verify what I had if I ever come across it in the
+future.
+
+First and last sighting of it on Web Archive:
+
+*
+http://web.archive.org/web/20091127010808/http://sourceforge.net/projects/bitcoin/files
+*
+http://web.archive.org/web/20101210071124/http://sourceforge.net:80/projects/bitcoin/files/Bitcoin/
+
+On Sat, Nov 14, 2020 at 11:41 PM Dan Bryant <dkbryant at gmail.com> wrote:
+
+> I think I'm set now.  I should have everything I need from v0.1.0 to
+> 0.3.13 when they changed the compiler.  I'll refine it a bit more then
+> eventually start posting the binary builds on the repo below.  I might go
+> ahead and disable the IRC bot to ensure people don't inadvertently spam the
+> `#bitcoin` IRC.  Since I have a patch process worked out it should be
+> fairly straight forward.  Since the official builds pickup at v0.8.6, I'll
+> likely stop there.
+>
+> https://github.com/brianddk/bitcoin-archaeology
+>
+>
+> On Sat, Nov 14, 2020 at 11:00 AM Dan Bryant <dkbryant at gmail.com> wrote:
+>
+>> Finally got it working,but was a bit harder than I expected.  I had to
+>> forgo the OpenSSL modifications that Satoshi originally suggested.  I also
+>> switched to Strawberry Perl.  Those two changes seemed to fix the OpenSSL
+>> build.  Everything else was all essentially as documented in v0.4.0, which
+>> is the first version to put all the build steps out in detail.  The one
+>> exception is the bitcoin build itself.  There are three minor issues that
+>> can be worked around with copy commands.
+>>
+>> 1. The Makefile points to /wxWidgets/lib/vc_lib/ where it should really
+>> point to /wxWidgets/lib/gcc_lib/
+>> 2. The Makefile points to /OpenSSL/include where it should really point
+>> to /OpenSSL/outinc
+>> 3. The Makefile builds to /obj without first creating the directory
+>>
+>> That covers v0.1.5, and I think it will probably be smooth sailing from
+>> there all the way to v0.4.0.  I'll verify that my v0.1.5 toolchain can
+>> build v0.1.0 and v0.1.3 as well.  For anyone interested, here are the
+>> binaries I used to create the build environment.  All of them are
+>> vintage and would have been accessible to Satoshi with the exception of
+>> Win2012 and VirtualBox.  I'll try to reproduce my work on a Win2000 which
+>> is now quasi-open-domain.
+>>
+>> For anyone wanting to give it a shot...
+>>
+>> * https://www.microsoft.com/en-us/evalcenter/evaluate-hyper-v-server-2012
+>> *
+>> https://download.virtualbox.org/virtualbox/6.1.12/VirtualBox-6.1.12-139181-Win.exe
+>> * https://downloads.sourceforge.net/gnuwin32/zlib-1.2.3-bin.zip
+>> * https://downloads.sourceforge.net/gnuwin32/bzip2-1.0.5-bin.zip
+>> * https://downloads.sourceforge.net/gnuwin32/libarchive-2.4.12-1-bin.zip
+>> *
+>> https://downloads.sourceforge.net/mingw/binutils-2.19.1-mingw32-bin.tar.gz
+>> *
+>> https://downloads.sourceforge.net/mingw/gcc-core-3.4.5-20051220-1.tar.gz
+>> * https://downloads.sourceforge.net/mingw/gcc-g++-3.4.5-20051220-1.tar.gz
+>> *
+>> https://downloads.sourceforge.net/mingw/mingwrt-3.15.2-mingw32-dev.tar.gz
+>> *
+>> https://downloads.sourceforge.net/mingw/mingwrt-3.15.2-mingw32-dll.tar.gz
+>> * https://downloads.sourceforge.net/mingw/w32api-3.13-mingw32-dev.tar.gz
+>> *
+>> https://downloads.sourceforge.net/mingw/mingw32-make-3.81-20080326-2.tar.gz
+>> * https://downloads.sourceforge.net/mingw/MSYS-1.0.11.exe
+>> * https://downloads.sourceforge.net/mingw/msysDTK-1.0.1.exe
+>> * http://strawberryperl.com/download/5.8.8/strawberry-perl-5.8.8.2.zip
+>> * https://github.com/bitcoin/bitcoin/archive/v0.1.5.zip
+>> * https://downloads.sourceforge.net/wxwindows/wxWidgets-2.8.11.zip
+>> * https://github.com/openssl/openssl/archive/OpenSSL_0_9_8h.zip
+>> * https://download.oracle.com/berkeley-db/db-4.7.25.NC.zip
+>> * https://downloads.sourceforge.net/boost/1.37.0/boost_1_37_0.zip
+>> *
+>> https://downloads.sourceforge.net/boost/boost-jam/boost-jam-3.1.17-1-ntx86.zip
+>>
+>>
+>> On Wed, Nov 11, 2020 at 9:06 AM Dan Bryant <dkbryant at gmail.com> wrote:
+>>
+>>> TLDR; How to build old OpenSSL releases in MSYS/MinGW v1.0.11
+>>>
+>>> In a similar vein to the Github Artic Code Vault, and the Nakamoto
+>>> Institute, I thought it would be educational to do a build of the first
+>>> three versions of Bitcoin (v0.1.0, v0.1.3, and v0.1.5) [ref1].  Don't
+>>> worry, I will keep these on a VLAN and not spam the IRC channel.
+>>>
+>>> Wanting to be as accurate as possible, I spun up some VMs to try to
+>>> recreate the vintage Oct 2009 toolchains that were used.  The original
+>>> Satoshi posts seem to imply that the builds could be done using Visual C++
+>>> version 6.0 or MinGW and MSYS (which were at v1.0.11).  Since it looks like
+>>> most versions of VC 6 have been purged from the internet, the only option
+>>> left is MinGW which is still up on sourceforge.  Most things seemed to
+>>> build OK, with the exception of OpenSSL, which looks to fail due to some
+>>> issues in mk1mf.pl [ref2]  Perhaps there was a bad version of perl in
+>>> MSYS v1.0.11, I'm not sure.
+>>>
+>>> So my question is..  Has anyone been here long enough to recall the
+>>> steps to build OpenSSL v0.9.8h in MSYS 1.0.11?  Or, does anyone know where
+>>> to find a non-sketchy copy of Visual C++ 6.0?
+>>>
+>>> My options so far seem to be.
+>>>
+>>> 1. Try to find out how Satoshi did the MinGW OpenSSL build back in 2009.
+>>> 2. Try to do the OpenSSL build through Cygwin which could
+>>> cross-complile to MinGW at the time
+>>> 3. Try to do the  OpenSSL build through Msys2 with later versions of
+>>> perl and libc
+>>> 4. Buy some sketchy version of VC 6 on ebay and try that
+>>> 5. Patch Bitcoin 0.1.0 to use OpenSSL v1.0.0 where they fixed the perl
+>>> bug
+>>> 6. Give up and use a precompiled OpenSSL release
+>>> 7. Give up and use the Linux build methods introduced in Bitcoin v0.1.6
+>>>
+>>> I realize this all sounds like a fool's folly, but it seems important
+>>> (at some level) to be able to reproduce these old builds.  But perhaps it's
+>>> just my OCD.
+>>>
+>>> Thoughts?
+>>>
+>>> For those interested.  The mk1mf.pl bug seems to be in parsing the list
+>>> of headers through either the var_add, clean_up_ws, or do_copy_rule subs.
+>>> I see both the headers and header directories being parsed, but the
+>>> directories are dropped when building the make rules causing make to assume
+>>> all headers are at root, failing the build.  Perhaps there is a version
+>>> sed, basename or dirname that is missing in MSYS, but I've failed to find
+>>> the dependency yet.
+>>>
+>>> * ref1: https://satoshi.nakamotoinstitute.org/code/
+>>> * ref1:
+>>> https://github.com/openssl/openssl/blob/OpenSSL_0_9_8h/util/mk1mf.pl
+>>>
+>>>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201121/40fc4057/attachment.html>
+
+From AdamISZ at protonmail.com  Mon Nov 23 00:40:56 2020
+From: AdamISZ at protonmail.com (AdamISZ)
+Date: Mon, 23 Nov 2020 00:40:56 +0000
+Subject: [bitcoin-dev] Bulletin boards without selective censorability for
+	bitcoin fungibility markets
+Message-ID: <S5bq_TLMgPY9S40UFwJULeLvExJ5iZBBJL36n389k87KUVWDCn4WIeG9OE99H-8R-d7WOIHutp0l9AozitRtwPPN2O98EmC6wKXPS0W1g5U=@protonmail.com>
+
+Canvassing opinions/critiques from those working on bitcoin and related protocols.
+
+See the attached gist for a write-up of an outline of an idea, which is conceived for joinmarket but can apply in other scenarios where there is market for liquidity and in which privacy is a very high priority (hence 'bitcoin fungibility markets' can certainly include coinswap along with coinjoin, but possibly other things):
+
+https://gist.github.com/AdamISZ/b52704905cdd914ec9dac9fc52b621d6
+
+Abstract reproduced below:
+
+Makers need a reasonable guarantee that their offers will not be censored, and therefore will be available to any taker requesting the joining service.
+
+This is today, in Joinmarket specifically, somewhat achieved through the use of redundancy. In particular, 2 or sometimes 3 independent IRC servers are used simultaneously, and the makers and takers use digitial signatures to ensure that spoofing other users is not possible. This model is limited however; not only because IRC servers are not ideal for this purpose (being principally designed for human text chat, not bot traffic), but also because at the least, we trust that the IRC servers are not colluding together to selectively censor individual participants. The risk of censorship of that type is ameliorated by the fact that makers connect (almost exclusively) over Tor, to the hidden service / onion of the IRC servers. Still, since these bots persist and use the same nick over multiple servers, and since their offering amounts, fees etc. may sometimes fingerprint them, selective censorship is possible, again, if there is collusion.
+
+In this document I present a sketch of an approach to make such selective censorship very difficult using cryptographic blinding as well as a proof-of-misbehavior approach; the former making selective censorship very difficult to achieve, and the latter strongly disincentivising it.
+
+Note that here "selective" is a very important word, but total censorship and random censorship should also be ineffective and disincentivised, for fairly obvious reasons, although I will outline them.
+
+If the desired effect is achieved, we can reasonably run Joinmarket or a similar system on a single bulletin board server, with the caveat that it will need to be sufficiently easy to stand up a new instance; this should be true as long as the code is open source and the resource requirements are not excessive.
+
+It should also be noted that the design here is of course not specific to CoinJoin, but would also work the same way for CoinSwap (so "bitcoin fungibility markets") and perhaps other similar bitcoin-native systems whenever the concept of a "liquidity maker" (henceforth "maker") applies, so perhaps second layer also (this has not been investigated).
+
+Regards,
+waxwing
+
+Sent with ProtonMail Secure Email.
+
+
+
+From AdamISZ at protonmail.com  Mon Nov 23 12:24:18 2020
+From: AdamISZ at protonmail.com (AdamISZ)
+Date: Mon, 23 Nov 2020 12:24:18 +0000
+Subject: [bitcoin-dev] Bulletin boards without selective censorability
+	for bitcoin fungibility markets
+In-Reply-To: <S5bq_TLMgPY9S40UFwJULeLvExJ5iZBBJL36n389k87KUVWDCn4WIeG9OE99H-8R-d7WOIHutp0l9AozitRtwPPN2O98EmC6wKXPS0W1g5U=@protonmail.com>
+References: <S5bq_TLMgPY9S40UFwJULeLvExJ5iZBBJL36n389k87KUVWDCn4WIeG9OE99H-8R-d7WOIHutp0l9AozitRtwPPN2O98EmC6wKXPS0W1g5U=@protonmail.com>
+Message-ID: <sTHQz03Yb85tmjxs3cwtzPXi8pYKR0jGYhIN0pJWV-h6FuMkevKS41kRnuXcNA9z1QN8T0KZlewLCpsExyJV7h-MlFuGJ41onn9T0QYaMBA=@protonmail.com>
+
+??????? Original Message ???????
+On Monday, 23 November 2020 00:40, AdamISZ via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Canvassing opinions/critiques from those working on bitcoin and related protocols.
+>
+> See the attached gist for a write-up of an outline of an idea, which is conceived for joinmarket but can apply in other scenarios where there is market for liquidity and in which privacy is a very high priority (hence 'bitcoin fungibility markets' can certainly include coinswap along with coinjoin, but possibly other things):
+>
+> https://gist.github.com/AdamISZ/b52704905cdd914ec9dac9fc52b621d6
+
+Greg Maxwell pointed out to me on IRC that this idea doesn't work: there is only a receipt on the commitment to the offer (message) from the maker, not on the plaintext version, hence there is nothing stopping the maker from falsely claiming censorship after not sending the plaintext.
+
+Reflecting on this a bit more, my intuition is that this problem is much more difficult than I had hoped; if there is a solution I suspect it involves much more sophisticated ideas. Many solutions just end up begging the question by presuming the existence of an uncensorable BB in order to create a new one; and/or use the blockchain for that function, but that is too slow and expensive, usually. I'd be happy to be proved wrong, though :)
+
+waxwing
+
+From rsomsen at gmail.com  Mon Nov 23 13:53:15 2020
+From: rsomsen at gmail.com (Ruben Somsen)
+Date: Mon, 23 Nov 2020 14:53:15 +0100
+Subject: [bitcoin-dev] Bulletin boards without selective censorability
+ for bitcoin fungibility markets
+In-Reply-To: <sTHQz03Yb85tmjxs3cwtzPXi8pYKR0jGYhIN0pJWV-h6FuMkevKS41kRnuXcNA9z1QN8T0KZlewLCpsExyJV7h-MlFuGJ41onn9T0QYaMBA=@protonmail.com>
+References: <S5bq_TLMgPY9S40UFwJULeLvExJ5iZBBJL36n389k87KUVWDCn4WIeG9OE99H-8R-d7WOIHutp0l9AozitRtwPPN2O98EmC6wKXPS0W1g5U=@protonmail.com>
+ <sTHQz03Yb85tmjxs3cwtzPXi8pYKR0jGYhIN0pJWV-h6FuMkevKS41kRnuXcNA9z1QN8T0KZlewLCpsExyJV7h-MlFuGJ41onn9T0QYaMBA=@protonmail.com>
+Message-ID: <CAPv7TjZxFr4LhpVSeP__Y7Sk3JB=uMypoayhOcps9VuORYDdHQ@mail.gmail.com>
+
+Hi Adam,
+
+That's a tricky issue you're trying to tackle.
+
+>and/or use the blockchain for that function, but that is too slow and
+expensive, usually
+
+While perhaps not the most easy/practical path to take, it IS possible to
+create a custom blockchain for this specific purpose to use as a
+censorship-resistant data layer via Blind Merged Mining:
+https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2019-December/017534.html
+
+Note that while it's not described in detail in my post, there is a
+(slightly suboptimal) way to do it without a soft fork.
+
+And here are more details about the perpetual one-way peg mechanism (needed
+to pay for fees without introducing speculation):
+https://medium.com/@RubenSomsen/21-million-bitcoins-to-rule-all-sidechains-the-perpetual-one-way-peg-96cb2f8ac302
+
+Cheers,
+Ruben
+
+On Mon, Nov 23, 2020 at 1:59 PM AdamISZ via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> ??????? Original Message ???????
+> On Monday, 23 November 2020 00:40, AdamISZ via bitcoin-dev <
+> bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+> > Canvassing opinions/critiques from those working on bitcoin and related
+> protocols.
+> >
+> > See the attached gist for a write-up of an outline of an idea, which is
+> conceived for joinmarket but can apply in other scenarios where there is
+> market for liquidity and in which privacy is a very high priority (hence
+> 'bitcoin fungibility markets' can certainly include coinswap along with
+> coinjoin, but possibly other things):
+> >
+> > https://gist.github.com/AdamISZ/b52704905cdd914ec9dac9fc52b621d6
+>
+> Greg Maxwell pointed out to me on IRC that this idea doesn't work: there
+> is only a receipt on the commitment to the offer (message) from the maker,
+> not on the plaintext version, hence there is nothing stopping the maker
+> from falsely claiming censorship after not sending the plaintext.
+>
+> Reflecting on this a bit more, my intuition is that this problem is much
+> more difficult than I had hoped; if there is a solution I suspect it
+> involves much more sophisticated ideas. Many solutions just end up begging
+> the question by presuming the existence of an uncensorable BB in order to
+> create a new one; and/or use the blockchain for that function, but that is
+> too slow and expensive, usually. I'd be happy to be proved wrong, though :)
+>
+> waxwing
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201123/32a9a5c5/attachment.html>
+
+From yanmaani at cock.li  Wed Nov 25 01:52:08 2020
+From: yanmaani at cock.li (yanmaani at cock.li)
+Date: Wed, 25 Nov 2020 01:52:08 +0000
+Subject: [bitcoin-dev] Bulletin boards without selective censorability
+ for bitcoin fungibility markets
+In-Reply-To: <sTHQz03Yb85tmjxs3cwtzPXi8pYKR0jGYhIN0pJWV-h6FuMkevKS41kRnuXcNA9z1QN8T0KZlewLCpsExyJV7h-MlFuGJ41onn9T0QYaMBA=@protonmail.com>
+References: <S5bq_TLMgPY9S40UFwJULeLvExJ5iZBBJL36n389k87KUVWDCn4WIeG9OE99H-8R-d7WOIHutp0l9AozitRtwPPN2O98EmC6wKXPS0W1g5U=@protonmail.com>
+ <sTHQz03Yb85tmjxs3cwtzPXi8pYKR0jGYhIN0pJWV-h6FuMkevKS41kRnuXcNA9z1QN8T0KZlewLCpsExyJV7h-MlFuGJ41onn9T0QYaMBA=@protonmail.com>
+Message-ID: <60346b02bca27cc14a950373490250ac@cock.li>
+
+On 2020-11-23 12:24, AdamISZ via bitcoin-dev wrote:
+> ??????? Original Message ???????
+> On Monday, 23 November 2020 00:40, AdamISZ via bitcoin-dev
+> <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> 
+>> Canvassing opinions/critiques from those working on bitcoin and 
+>> related protocols.
+>> 
+>> See the attached gist for a write-up of an outline of an idea, which 
+>> is conceived for joinmarket but can apply in other scenarios where 
+>> there is market for liquidity and in which privacy is a very high 
+>> priority (hence 'bitcoin fungibility markets' can certainly include 
+>> coinswap along with coinjoin, but possibly other things):
+>> 
+>> https://gist.github.com/AdamISZ/b52704905cdd914ec9dac9fc52b621d6
+> 
+> Greg Maxwell pointed out to me on IRC that this idea doesn't work:
+> there is only a receipt on the commitment to the offer (message) from
+> the maker, not on the plaintext version, hence there is nothing
+> stopping the maker from falsely claiming censorship after not sending
+> the plaintext.
+> 
+> Reflecting on this a bit more, my intuition is that this problem is
+> much more difficult than I had hoped; if there is a solution I suspect
+> it involves much more sophisticated ideas. Many solutions just end up
+> begging the question by presuming the existence of an uncensorable BB
+> in order to create a new one; and/or use the blockchain for that
+> function, but that is too slow and expensive, usually. I'd be happy to
+> be proved wrong, though :)
+> 
+> waxwing
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+Blockchains are bad for this, because you don't want for it to cost 
+money to use your bulletin board. However, the problem was solved more 
+than a decade ago. Look into FMS, which combines Usenet/mailing lists 
+with a web of trust for spam resistance.
+
+From dp at simplexum.com  Wed Nov 25 11:15:55 2020
+From: dp at simplexum.com (Dmitry Petukhov)
+Date: Wed, 25 Nov 2020 12:15:55 +0100
+Subject: [bitcoin-dev] Formal specification of Miniscript in Alloy
+Message-ID: <20201125121555.49565b3c@simplexum.com>
+
+I have created a formal specification of Miniscript [1] using
+the specification language of Alloy analyzer [2]
+
+Link: https://github.com/dgpv/miniscript-alloy-spec
+
+Possible uses for the spec:
+
+- Implementing Miniscript libraries, as additional reference that might
+  be easier to navigate than prose spec
+
+- Generating test cases for implementations, although currently this
+  will be a manual process due to the tools limitation (can be overcome
+  with GUI automation)
+
+- Checking the implementation against the spec, by writing a program
+  that would generate Alloy .als files from the data structures of the
+  implementation, and then checking these files in Alloy
+
+- Extending or amending Miniscript, if the need arise. Having
+  extenstions and changes checked (with bounds) against a spec should
+  help catch inconsistencies
+
+- Exploring the properties of Miniscript
+
+If you have an interest in Miniscript, please consider looking at the
+spec and share your ideas.
+
+The spec may contain mistakes, as it was not yet checked against any
+implementation, it was only checked for consistency using its own
+predicates, with the scope of up to 8 nodes.
+
+If you notice a mistake or inconsistency, please submit an issue on
+github (or communicate this in other ways)
+
+[1] http://bitcoin.sipa.be/miniscript/
+[2] https://alloytools.org/
+
+From clark at clarkmoody.com  Wed Nov 25 15:43:10 2020
+From: clark at clarkmoody.com (Clark Moody)
+Date: Wed, 25 Nov 2020 09:43:10 -0600
+Subject: [bitcoin-dev] Formal specification of Miniscript in Alloy
+In-Reply-To: <20201125121555.49565b3c@simplexum.com>
+References: <20201125121555.49565b3c@simplexum.com>
+Message-ID: <CAHGSxGvqAwWQS+R5x9zMYR0VjL598g2vL+erxFeoaseJvfpBfg@mail.gmail.com>
+
+Thanks for this! I can't comment on the correctness of your implementation,
+but I really appreciate the idea and effort.
+
+By chance, did you come across any other spec definitions in alternate
+formal grammars?
+
+
+-Clark
+
+
+On Wed, Nov 25, 2020 at 5:35 AM Dmitry Petukhov via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> I have created a formal specification of Miniscript [1] using
+> the specification language of Alloy analyzer [2]
+>
+> Link: https://github.com/dgpv/miniscript-alloy-spec
+>
+> Possible uses for the spec:
+>
+> - Implementing Miniscript libraries, as additional reference that might
+>   be easier to navigate than prose spec
+>
+> - Generating test cases for implementations, although currently this
+>   will be a manual process due to the tools limitation (can be overcome
+>   with GUI automation)
+>
+> - Checking the implementation against the spec, by writing a program
+>   that would generate Alloy .als files from the data structures of the
+>   implementation, and then checking these files in Alloy
+>
+> - Extending or amending Miniscript, if the need arise. Having
+>   extenstions and changes checked (with bounds) against a spec should
+>   help catch inconsistencies
+>
+> - Exploring the properties of Miniscript
+>
+> If you have an interest in Miniscript, please consider looking at the
+> spec and share your ideas.
+>
+> The spec may contain mistakes, as it was not yet checked against any
+> implementation, it was only checked for consistency using its own
+> predicates, with the scope of up to 8 nodes.
+>
+> If you notice a mistake or inconsistency, please submit an issue on
+> github (or communicate this in other ways)
+>
+> [1] http://bitcoin.sipa.be/miniscript/
+> [2] https://alloytools.org/
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201125/b23d248c/attachment.html>
+
+From dp at simplexum.com  Wed Nov 25 16:09:46 2020
+From: dp at simplexum.com (Dmitry Petukhov)
+Date: Wed, 25 Nov 2020 17:09:46 +0100
+Subject: [bitcoin-dev] Formal specification of Miniscript in Alloy
+In-Reply-To: <CAHGSxGvqAwWQS+R5x9zMYR0VjL598g2vL+erxFeoaseJvfpBfg@mail.gmail.com>
+References: <20201125121555.49565b3c@simplexum.com>
+ <CAHGSxGvqAwWQS+R5x9zMYR0VjL598g2vL+erxFeoaseJvfpBfg@mail.gmail.com>
+Message-ID: <20201125170946.7893f87a@simplexum.com>
+
+? Wed, 25 Nov 2020 09:43:10 -0600
+Clark Moody <clark at clarkmoody.com> wrote:
+
+> Thanks for this! I can't comment on the correctness of your
+> implementation, but I really appreciate the idea and effort.
+> 
+> By chance, did you come across any other spec definitions in alternate
+> formal grammars?
+
+As far as I know, this is the first formal spec for Miniscript.
+
+I also considered using the K framework [1] for the task (it would
+also give the parser out of the box), but at the time it did not have
+the reference documentation, only tutorials on their site. It seems that
+they have published the new site, with more documentation.
+
+I am satisfied with how Alloy spec turned out, though - in my opinion,
+the node definitions in the spec are very readable.
+
+[1] https://kframework.org/
+
+
+> On Wed, Nov 25, 2020 at 5:35 AM Dmitry Petukhov via bitcoin-dev <
+> bitcoin-dev at lists.linuxfoundation.org> wrote:
+> 
+> > I have created a formal specification of Miniscript [1] using
+> > the specification language of Alloy analyzer [2]
+> >
+> > Link: https://github.com/dgpv/miniscript-alloy-spec
+> >
+> > Possible uses for the spec:
+> >
+> > - Implementing Miniscript libraries, as additional reference that
+> > might be easier to navigate than prose spec
+> >
+> > - Generating test cases for implementations, although currently this
+> >   will be a manual process due to the tools limitation (can be
+> > overcome with GUI automation)
+> >
+> > - Checking the implementation against the spec, by writing a program
+> >   that would generate Alloy .als files from the data structures of
+> > the implementation, and then checking these files in Alloy
+> >
+> > - Extending or amending Miniscript, if the need arise. Having
+> >   extenstions and changes checked (with bounds) against a spec
+> > should help catch inconsistencies
+> >
+> > - Exploring the properties of Miniscript
+> >
+> > If you have an interest in Miniscript, please consider looking at
+> > the spec and share your ideas.
+> >
+> > The spec may contain mistakes, as it was not yet checked against any
+> > implementation, it was only checked for consistency using its own
+> > predicates, with the scope of up to 8 nodes.
+> >
+> > If you notice a mistake or inconsistency, please submit an issue on
+> > github (or communicate this in other ways)
+> >
+> > [1] http://bitcoin.sipa.be/miniscript/
+> > [2] https://alloytools.org/
+> > _______________________________________________
+> > bitcoin-dev mailing list
+> > bitcoin-dev at lists.linuxfoundation.org
+> > https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> >  
+
+
+From junderwood at bitcoinbank.co.jp  Thu Nov 26 23:24:32 2020
+From: junderwood at bitcoinbank.co.jp (Jonathan Underwood)
+Date: Fri, 27 Nov 2020 08:24:32 +0900
+Subject: [bitcoin-dev] Against proprietary and PoR fields in PSBT BIP174
+In-Reply-To: <CADfmNEkJfvefTaAg42PU5DWu1PLJhXxptVY69yVJNRCdx4fuBQ@mail.gmail.com>
+References: <CADfmNEk3nr33MMym1D_n8_DWgj39AWoOuTpFbBO0U6MZis_=vA@mail.gmail.com>
+ <CADfmNEkJfvefTaAg42PU5DWu1PLJhXxptVY69yVJNRCdx4fuBQ@mail.gmail.com>
+Message-ID: <CAMpN3m+BcbKE77jwgXnUN4GevaSS6R4ZEXe9kVrjiB_DNmu3uA@mail.gmail.com>
+
+It is very common to set aside one or more "version slots" for proprietary
+usage so that people adding their own features don't use version 7 only to
+have the official BIP add a REAL version 7 a couple months later.
+It makes perfect sense to just say "anyone adding their own stuff, format
+your versions like this and stay out of our way"
+As a BIP174 library, you don't have to add logic to "support" those
+versions, just treat them as unknown. The only people who will need to
+worry about the logic of parsing and encoding those versions are apps that
+utilize them.
+
+2020?11?17?(?) 8:41 Ferdinando M. Ametrano via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org>:
+
+> After having checked that the BIP174 test vectors do not cover the
+> *proprietary* and *proof-of-reserves* types, I went ahead and submitted a
+> PR to the bips repo for the removal of those fields from the PSBT
+> specifications
+>
+> https://github.com/bitcoin/bips/pull/1038
+>
+> --
+> *Ferdinando M. Ametrano*
+> www.ametrano.net/about
+>
+>
+> On Tue, Nov 17, 2020 at 12:01 AM Ferdinando M. Ametrano <
+> ferdinando at ametrano.net> wrote:
+>
+>> Hi all,
+>>
+>> While implementing PSBT support in the *btclib* library (
+>> https://github.com/btclib-org/btclib), I have failed to understand the
+>> rationale for the *proprietary* and *proof-of-reserves* types.
+>>
+>> First off, at face value they have nothing to do with the operations
+>> intrinsically required to finalize a valid transaction from PSBT
+>> manipulation.
+>>
+>> Moreover, whatever information content they can provide for non-standard
+>> PSBT manipulation, that content could stay in the *unknown* field
+>> without any loss of generality. How to structure and deal with unknown data
+>> would be the responsibility of proprietary software or users wanting to
+>> provide proof-of-reserve. As long as BIP174 clearly prescribes that
+>> unknown data must be kept during PSBT manipulation, that should be enough.
+>>
+>> Let me stress the above point: I have a project where we include
+>> proprietary information in the PSBT. Any PSBT software supporting unknown
+>> data gently keeps our proprietary information and our proprietary software
+>> retrieves that data from serialized PSBT with no problem. There is no need
+>> for a PSBT implementation to provide explicit support for *proprietary*
+>> and *proof-of-reserves* types.
+>>
+>> My last conclusion is reinforced by the evidence of all PSBT
+>> implementations I know of, including bitcoin core and HWI, not implementing
+>> proprietary and proof-of-reserve types. There is a high probability that
+>> part of BIP174 would be just ignored.
+>>
+>> Am I missing something?
+>>
+>> Thanks
+>> --
+>> *Ferdinando M. Ametrano*
+>> www.ametrano.net/about
+>>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+
+
+-- 
+-----------------
+Jonathan Underwood
+??????? ??????????????
+-----------------
+
+???????????????????????????????
+
+??: 0xCE5EA9476DE7D3E45EBC3FDAD998682F3590FEA3
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201127/e60d2a92/attachment.html>
+
+From zyev.egor at gmail.com  Fri Nov 27 17:12:29 2020
+From: zyev.egor at gmail.com (Egor Zuev)
+Date: Fri, 27 Nov 2020 20:12:29 +0300
+Subject: [bitcoin-dev] BIP proposal: Elliptic SSS scheme
+Message-ID: <CAFBkc6nosCtNfG=JobKHLQBccMqcB3yDmR3N8U=HJZs_rzAfzQ@mail.gmail.com>
+
+Hi everyone!
+
+Would like to propose the solution for sharing the private key / other
+sensitive information with a modified SSS scheme.
+
+The key features are:
+1) the secret restoration is not possible without corresponding signatures
+2) share[i] belongs to privateKey[i] only, which means it can't be signed
+with a different private key
+
+I hope this approach can help on the application level to share sensitive
+information or it can be used as m-of-n multi-signature (this is
+discussable). I've attached the pdf file with the concept description. Also
+here is the repo with a working example in node.js:
+https://github.com/ega-forever/esss
+
+Thanks in advance for your time.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201127/d56cfd65/attachment-0001.html>
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: musig-esss.v1.pdf
+Type: application/pdf
+Size: 207167 bytes
+Desc: not available
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20201127/d56cfd65/attachment-0001.pdf>
+
+From sebastian at gnet.me  Mon Nov 30 23:03:06 2020
+From: sebastian at gnet.me (Sebastian Geisler)
+Date: Mon, 30 Nov 2020 23:03:06 +0000
+Subject: [bitcoin-dev] Out-of-band transaction fees
+Message-ID: <9a068476-855e-0dd7-4c9c-264d5d8bf60a@gnet.me>
+
+Hi all,
+
+the possibility of out of band transaction fee payments is a well known
+fact. Yet it has been mostly discussed as an annoying inevitability that
+can be problematic if on-chain fees are to be used as a consensus
+parameter. The potential use cases have seen little interest though
+(please correct me if I'm wrong).
+
+One such use case is sending UTXOs "intact". Let's assume we get to a
+point where Bitcoin is primarily a settlement layer for L2 systems.
+These L2 systems might want to protect their privacy and keep UTXOs of a
+common sizes (e.g. 1 BTC, 10 BTC, ?). For certain settlement
+applications these can be transferred as a whole, but currently fee
+requirements force the system to add another input for fees which will
+introduce taint (because it's used repeatedly). If instead a fee could
+be paid out of band in a privacy preserving way the TXO chain would leak
+little about the intermediate holders.
+
+Taking this concept even further CoinJoin-like protocols could also be
+used to introduce further ambiguity without leaking that a certain
+entity took part in the CJ (which fee inputs/reused "toxic waste"
+inevitably do afaik). Such a mechanism would probably also make CJ
+transactions much smaller as _no_ fee inputs had to be provided
+(assuming the inputs already have the right size).
+
+Out-of-band transaction "accelerators" already exist and taking fee
+payment out-of-band can not be effectively prevented. So even though any
+such proposal will probably have slight centralizing effects I believe
+that having a standard for it is preferable to having every pool
+implement their own API making it harder for small pools to get into the
+market.
+
+Imo the central questions are:
+ * how to build such a out-of-band "transaction bounty" system
+ * how to standardized it
+ * how can the centralizing effects from it be mitigated
+
+Imo fees are small enough to not really care about counter party risk
+that much. It's more important that it is easy to run so that there is
+some choice for users and miners. In that sense I consider
+single-operator services providing both standardized user and miner APIs
+as well as an optional UI suitable. I would still take into account that
+this could change and might consider the needs of federated services in
+the protocol.
+
+Each such service would need to announce which means of payment it
+supports and allow users and miners to choose when paying/redeeming
+fees. Users should be able to submit transactions and either be
+presented with a single payment method dependent "invoice" or one per
+input (for the CoinJoin use case). As soon as all invoices are paid the
+bounty goes live and is visible to miners through an API.
+
+Miners that included a transaction need a way to authenticate when
+claiming the bounty. One possibility would be to optionally include a
+unique public key e.g. in the coinbase scriptsig after the height push
+(is this feasible?). This could be used to claim any bounties after 100,
+120, or even a user-defined confirmation threshold is met. If the key is
+unique for every block there won't be a problem with pool accountability
+which might become a risk down the road (so this should also be enforced
+at least in the bounty protocol to avoid lazy implementations leading to
+dangerous precedents).
+
+Any feedback is welcome :)
+
+tl;dr Out-of-band fee payment services are inevitable and useful, so we
+should at least standardize them and mitigate negative effects as much
+as possible.
+
+Best,
+Sebastian
+
+

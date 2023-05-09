@@ -1,0 +1,1991 @@
+From timo.hanke at web.de  Fri Apr  1 04:41:40 2016
+From: timo.hanke at web.de (Timo Hanke)
+Date: Thu, 31 Mar 2016 21:41:40 -0700
+Subject: [bitcoin-dev] AsicBoost
+Message-ID: <CAH6h1Lu81Ot0xVb+n05zrtb7PqMAukvP3525rZ8STaq2tcfWNw@mail.gmail.com>
+
+Hi.
+
+I'd like to announce a white paper that describes a very new and
+significant algorithmic improvement to the Bitcoin mining process which has
+never been discussed in public before. The white paper can be found here:
+
+http://www.math.rwth-aachen.de/~Timo.Hanke/AsicBoostWhitepaperrev5.pdf
+
+Regards,
+
+Timo
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160331/00d287f0/attachment.html>
+
+From pete at petertodd.org  Fri Apr  1 09:00:50 2016
+From: pete at petertodd.org (Peter Todd)
+Date: Fri, 1 Apr 2016 05:00:50 -0400
+Subject: [bitcoin-dev] AsicBoost
+In-Reply-To: <CAH6h1Lu81Ot0xVb+n05zrtb7PqMAukvP3525rZ8STaq2tcfWNw@mail.gmail.com>
+References: <CAH6h1Lu81Ot0xVb+n05zrtb7PqMAukvP3525rZ8STaq2tcfWNw@mail.gmail.com>
+Message-ID: <20160401090050.GA24677@savin.petertodd.org>
+
+On Thu, Mar 31, 2016 at 09:41:40PM -0700, Timo Hanke via bitcoin-dev wrote:
+> Hi.
+> 
+> I'd like to announce a white paper that describes a very new and
+> significant algorithmic improvement to the Bitcoin mining process which has
+> never been discussed in public before. The white paper can be found here:
+> 
+> http://www.math.rwth-aachen.de/~Timo.Hanke/AsicBoostWhitepaperrev5.pdf
+
+What steps are you going to take to make sure that this improvement is
+available to all ASIC designers/mfgs on a equal opportunity basis?
+
+The fact that you've chosen to patent this improvement could be a
+centralization concern depending on the licensing model used. For example, one
+could imagine a licensing model that gave one manufacture exclusive rights.
+
+-- 
+https://petertodd.org 'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 455 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160401/62b71047/attachment.sig>
+
+From jl2012 at xbt.hk  Fri Apr  1 17:19:53 2016
+From: jl2012 at xbt.hk (jl2012 at xbt.hk)
+Date: Sat, 2 Apr 2016 01:19:53 +0800
+Subject: [bitcoin-dev] BIP draft: Merkelized Abstract Syntax Tree
+Message-ID: <00cb01d18c3a$b6a8e990$23fabcb0$@xbt.hk>
+
+BIP draft: https://github.com/jl2012/bips/blob/mast/bip-mast.mediawiki
+Reference implementation:
+https://github.com/jl2012/bitcoin/commit/f335cab76eb95d4f7754a718df201216a49
+75d8c
+
+This BIP defines a new witness program type that uses a Merkle tree to
+encode mutually exclusive branches in a script. This enables complicated
+redemption conditions that are currently not possible, improves privacy by
+hiding unexecuted scripts, and allows inclusion of non-consensus enforced
+data with very low or no additional cost.
+
+The reference implementation is a small and simple patch on top of BIP141
+(segwit), however, I have no intention to push this before segwit is
+enforced. Instead, I hope the MAST will come with many new op codes,
+particularly Schnorr signature.
+
+
+From dev at jonasschnelli.ch  Fri Apr  1 21:09:47 2016
+From: dev at jonasschnelli.ch (Jonas Schnelli)
+Date: Fri, 1 Apr 2016 23:09:47 +0200
+Subject: [bitcoin-dev] p2p authentication and encryption BIPs
+In-Reply-To: <56F2B51C.8000105@jonasschnelli.ch>
+References: <56F2B51C.8000105@jonasschnelli.ch>
+Message-ID: <56FEE39B.3040401@jonasschnelli.ch>
+
+
+> I have just PRed a draft version of two BIPs I recently wrote.
+> https://github.com/bitcoin/bips/pull/362
+
+Hi.
+I just updated the PR above with another overhaul of the BIP.
+It's still under heavy review/work, nevertheless ? at this point ? any
+feedback is highly welcome.
+
+Changes since last update:
+-> Removed AES256-GCM as cipher suite
+-> Focusing on Chacha20-Poly1305 (implementation size ~300L)
+-> Two symmetric cipher keys must be calculated by HMAC_SHA512 from the
+ecdh secret
+-> A session-ID (both directions) must be calculated (HMAC_SHA256) for
+linking an identity authentication (ecdsa sig of the session-ID) with
+the encryption
+-> Re-Keying ('=hash(old_key)') can be announced by the responding peer
+(after x minutes and/or after x GB, local peer policy but not shorter
+then 10mins).
+-> AEAD tag is now the last element in the new message format
+
+It is very likely that the encrypted message format performs slightly
+better than the current message format (removing the SHA256 checksum).
+
+---
+</jonas>
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 819 bytes
+Desc: OpenPGP digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160401/39552c3c/attachment.sig>
+
+From mus at musalbas.com  Mon Apr  4 23:01:43 2016
+From: mus at musalbas.com (Mustafa Al-Bassam)
+Date: Tue, 5 Apr 2016 00:01:43 +0100
+Subject: [bitcoin-dev] AsicBoost
+In-Reply-To: <20160401090050.GA24677@savin.petertodd.org>
+References: <CAH6h1Lu81Ot0xVb+n05zrtb7PqMAukvP3525rZ8STaq2tcfWNw@mail.gmail.com>
+	<20160401090050.GA24677@savin.petertodd.org>
+Message-ID: <5702F257.6010700@musalbas.com>
+
+Alternatively scenario: it will cause a sudden increase of Bitcoin mines
+in countries where the algorithm is not patented, possibly causing a
+geographical decentralization of miners from countries that already have
+a lot of miners like China (if it is patented in China).
+
+On 01/04/16 10:00, Peter Todd via bitcoin-dev wrote:
+> On Thu, Mar 31, 2016 at 09:41:40PM -0700, Timo Hanke via bitcoin-dev wrote:
+>> Hi.
+>>
+>> I'd like to announce a white paper that describes a very new and
+>> significant algorithmic improvement to the Bitcoin mining process which has
+>> never been discussed in public before. The white paper can be found here:
+>>
+>> http://www.math.rwth-aachen.de/~Timo.Hanke/AsicBoostWhitepaperrev5.pdf
+> What steps are you going to take to make sure that this improvement is
+> available to all ASIC designers/mfgs on a equal opportunity basis?
+>
+> The fact that you've chosen to patent this improvement could be a
+> centralization concern depending on the licensing model used. For example, one
+> could imagine a licensing model that gave one manufacture exclusive rights.
+>
+>
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160405/41cbbc99/attachment.html>
+
+From marek at palatinus.cz  Wed Apr  6 11:57:31 2016
+From: marek at palatinus.cz (Marek Palatinus)
+Date: Wed, 6 Apr 2016 13:57:31 +0200
+Subject: [bitcoin-dev] AsicBoost
+In-Reply-To: <5702F257.6010700@musalbas.com>
+References: <CAH6h1Lu81Ot0xVb+n05zrtb7PqMAukvP3525rZ8STaq2tcfWNw@mail.gmail.com>
+	<20160401090050.GA24677@savin.petertodd.org>
+	<5702F257.6010700@musalbas.com>
+Message-ID: <CAJna-Hjx2e-ztyoieVi=MszXwW=Vdt+8NFyCMEdEH+jydoWKPw@mail.gmail.com>
+
+To my understanding it is purely software thing. It cannot be detected from
+outside if miner uses this improvement or not. So patenting it is worthless.
+
+slush
+
+On Tue, Apr 5, 2016 at 1:01 AM, Mustafa Al-Bassam via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Alternatively scenario: it will cause a sudden increase of Bitcoin mines
+> in countries where the algorithm is not patented, possibly causing a
+> geographical decentralization of miners from countries that already have a
+> lot of miners like China (if it is patented in China).
+>
+> On 01/04/16 10:00, Peter Todd via bitcoin-dev wrote:
+>
+> On Thu, Mar 31, 2016 at 09:41:40PM -0700, Timo Hanke via bitcoin-dev wrote:
+>
+> Hi.
+>
+> I'd like to announce a white paper that describes a very new and
+> significant algorithmic improvement to the Bitcoin mining process which has
+> never been discussed in public before. The white paper can be found here:
+> http://www.math.rwth-aachen.de/~Timo.Hanke/AsicBoostWhitepaperrev5.pdf
+>
+> What steps are you going to take to make sure that this improvement is
+> available to all ASIC designers/mfgs on a equal opportunity basis?
+>
+> The fact that you've chosen to patent this improvement could be a
+> centralization concern depending on the licensing model used. For example, one
+> could imagine a licensing model that gave one manufacture exclusive rights.
+>
+>
+>
+>
+> _______________________________________________
+> bitcoin-dev mailing listbitcoin-dev at lists.linuxfoundation.orghttps://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+>
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160406/06ef680b/attachment.html>
+
+From mus at musalbas.com  Wed Apr  6 12:09:33 2016
+From: mus at musalbas.com (Mustafa Al-Bassam)
+Date: Wed, 6 Apr 2016 13:09:33 +0100
+Subject: [bitcoin-dev] AsicBoost
+In-Reply-To: <CAJna-Hjx2e-ztyoieVi=MszXwW=Vdt+8NFyCMEdEH+jydoWKPw@mail.gmail.com>
+References: <CAH6h1Lu81Ot0xVb+n05zrtb7PqMAukvP3525rZ8STaq2tcfWNw@mail.gmail.com>
+	<20160401090050.GA24677@savin.petertodd.org>
+	<5702F257.6010700@musalbas.com>
+	<CAJna-Hjx2e-ztyoieVi=MszXwW=Vdt+8NFyCMEdEH+jydoWKPw@mail.gmail.com>
+Message-ID: <5704FC7D.6020508@musalbas.com>
+
+It will prevent companies from legally selling mining rigs with the
+improvement, which stems access to the improvement in patented
+countries. Or miners can export rigs with the improvement from companies
+that sell it in non-patented countries.
+
+It is not purely a software thing - it is intended to be used by
+modifying hardware. From the paper: "The performance gain is achieved
+through a high-?level optimization of the Bitcoin mining algorithm which
+allows for drastic reduction in gate count on the mining chip. AsicBoost
+is applicable to all types of mining hardware and chip designs."
+
+Ultimately though, I think you're right in that Bitcoin's mining and
+decentralized design combined with an international economy makes
+patenting mining algorithms effectively pointless.
+
+Mustafa
+
+On 06/04/16 12:57, Marek Palatinus wrote:
+> To my understanding it is purely software thing. It cannot be detected
+> from outside if miner uses this improvement or not. So patenting it is
+> worthless.
+>
+> slush
+>
+> On Tue, Apr 5, 2016 at 1:01 AM, Mustafa Al-Bassam via bitcoin-dev
+> <bitcoin-dev at lists.linuxfoundation.org
+> <mailto:bitcoin-dev at lists.linuxfoundation.org>> wrote:
+>
+>     Alternatively scenario: it will cause a sudden increase of Bitcoin
+>     mines in countries where the algorithm is not patented, possibly
+>     causing a geographical decentralization of miners from countries
+>     that already have a lot of miners like China (if it is patented in
+>     China).
+>
+>     On 01/04/16 10:00, Peter Todd via bitcoin-dev wrote:
+>>     On Thu, Mar 31, 2016 at 09:41:40PM -0700, Timo Hanke via bitcoin-dev wrote:
+>>>     Hi.
+>>>
+>>>     I'd like to announce a white paper that describes a very new and
+>>>     significant algorithmic improvement to the Bitcoin mining process which has
+>>>     never been discussed in public before. The white paper can be found here:
+>>>
+>>>     http://www.math.rwth-aachen.de/~Timo.Hanke/AsicBoostWhitepaperrev5.pdf
+>>>     <http://www.math.rwth-aachen.de/%7ETimo.Hanke/AsicBoostWhitepaperrev5.pdf>
+>>     What steps are you going to take to make sure that this improvement is
+>>     available to all ASIC designers/mfgs on a equal opportunity basis?
+>>
+>>     The fact that you've chosen to patent this improvement could be a
+>>     centralization concern depending on the licensing model used. For example, one
+>>     could imagine a licensing model that gave one manufacture exclusive rights.
+>>
+>>
+>>
+>>     _______________________________________________
+>>     bitcoin-dev mailing list
+>>     bitcoin-dev at lists.linuxfoundation.org
+>>     <mailto:bitcoin-dev at lists.linuxfoundation.org>
+>>     https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+>
+>     _______________________________________________
+>     bitcoin-dev mailing list
+>     bitcoin-dev at lists.linuxfoundation.org
+>     <mailto:bitcoin-dev at lists.linuxfoundation.org>
+>     https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+>
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160406/479b0423/attachment.html>
+
+From timo.hanke at web.de  Fri Apr  8 20:58:57 2016
+From: timo.hanke at web.de (Timo Hanke)
+Date: Fri, 8 Apr 2016 10:58:57 -1000
+Subject: [bitcoin-dev] AsicBoost
+In-Reply-To: <CAJna-Hjx2e-ztyoieVi=MszXwW=Vdt+8NFyCMEdEH+jydoWKPw@mail.gmail.com>
+References: <CAH6h1Lu81Ot0xVb+n05zrtb7PqMAukvP3525rZ8STaq2tcfWNw@mail.gmail.com>
+	<20160401090050.GA24677@savin.petertodd.org>
+	<5702F257.6010700@musalbas.com>
+	<CAJna-Hjx2e-ztyoieVi=MszXwW=Vdt+8NFyCMEdEH+jydoWKPw@mail.gmail.com>
+Message-ID: <CAH6h1LtZ3_zbiPS4id2yUwm=2M1_qtdaD5Uu2gbhxPGzwZnz1w@mail.gmail.com>
+
+Slush,
+
+You can actually detect the use of this improvement by looking at the I/O
+of the chip, the I/O of an on-board micro-controller or even at the system
+I/O because all the communication including the mining pool protocol is
+different.
+
+Timo
+
+On Wed, Apr 6, 2016 at 1:57 AM, Marek Palatinus <marek at palatinus.cz> wrote:
+
+> To my understanding it is purely software thing. It cannot be detected
+> from outside if miner uses this improvement or not. So patenting it is
+> worthless.
+>
+> slush
+>
+> On Tue, Apr 5, 2016 at 1:01 AM, Mustafa Al-Bassam via bitcoin-dev <
+> bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+>> Alternatively scenario: it will cause a sudden increase of Bitcoin mines
+>> in countries where the algorithm is not patented, possibly causing a
+>> geographical decentralization of miners from countries that already have a
+>> lot of miners like China (if it is patented in China).
+>>
+>> On 01/04/16 10:00, Peter Todd via bitcoin-dev wrote:
+>>
+>> On Thu, Mar 31, 2016 at 09:41:40PM -0700, Timo Hanke via bitcoin-dev wrote:
+>>
+>> Hi.
+>>
+>> I'd like to announce a white paper that describes a very new and
+>> significant algorithmic improvement to the Bitcoin mining process which has
+>> never been discussed in public before. The white paper can be found here:
+>> http://www.math.rwth-aachen.de/~Timo.Hanke/AsicBoostWhitepaperrev5.pdf
+>>
+>> What steps are you going to take to make sure that this improvement is
+>> available to all ASIC designers/mfgs on a equal opportunity basis?
+>>
+>> The fact that you've chosen to patent this improvement could be a
+>> centralization concern depending on the licensing model used. For example, one
+>> could imagine a licensing model that gave one manufacture exclusive rights.
+>>
+>>
+>>
+>>
+>> _______________________________________________
+>> bitcoin-dev mailing listbitcoin-dev at lists.linuxfoundation.orghttps://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>
+>>
+>>
+>> _______________________________________________
+>> bitcoin-dev mailing list
+>> bitcoin-dev at lists.linuxfoundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>
+>>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160408/f3c8386d/attachment.html>
+
+From forum at leeclagett.com  Sat Apr  9 19:40:38 2016
+From: forum at leeclagett.com (Lee Clagett)
+Date: Sat, 9 Apr 2016 15:40:38 -0400
+Subject: [bitcoin-dev] p2p authentication and encryption BIPs
+In-Reply-To: <56FEE39B.3040401@jonasschnelli.ch>
+References: <56F2B51C.8000105@jonasschnelli.ch>
+	<56FEE39B.3040401@jonasschnelli.ch>
+Message-ID: <20160409154038.4c04dd9b@laptop-m1330>
+
+On Fri, 1 Apr 2016 23:09:47 +0200
+Jonas Schnelli via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org>
+wrote:
+> > I have just PRed a draft version of two BIPs I recently wrote.
+> > https://github.com/bitcoin/bips/pull/362  
+> 
+> Hi.
+> I just updated the PR above with another overhaul of the BIP.
+> It's still under heavy review/work, nevertheless ? at this point ? any
+> feedback is highly welcome.
+> 
+> Changes since last update:
+> -> Removed AES256-GCM as cipher suite
+> -> Focusing on Chacha20-Poly1305 (implementation size ~300L)
+> -> Two symmetric cipher keys must be calculated by HMAC_SHA512 from
+> the ecdh secret
+> -> A session-ID (both directions) must be calculated (HMAC_SHA256)
+> for linking an identity authentication (ecdsa sig of the session-ID)
+> with the encryption
+> -> Re-Keying ('=hash(old_key)') can be announced by the responding
+> peer (after x minutes and/or after x GB, local peer policy but not
+> shorter then 10mins).
+> -> AEAD tag is now the last element in the new message format  
+> 
+> It is very likely that the encrypted message format performs slightly
+> better than the current message format (removing the SHA256 checksum).
+> 
+> ---
+> </jonas>
+> 
+
+
+The quotes below are from the BIPs and not the email chain ...
+
+> Rejecting the <code>auth</code> request will not reveal the
+> responding peers identity that could lead to fingerprinting the node,
+> however this BIP does not cover protection against fingerprinting the
+> requesting node from the perspective of the responding node.
+
+In many use cases the requesting node will want to make a connection to
+a peer with a specific identity. After encryption initialization, the
+requesting node could generate an ECDH secret from the long-term public
+key of the expected peer and its own session private-key to encrypt (no
+MAC) the signature with the same symmetric cipher agreed upon
+previously. The requesting node will not reveal its identity if the
+connection has been MitM'ed, while still being the first to provide
+authentication. And since this would be "inside" the session-key
+crypto, it still has forward-secrecy if the responding-peers longterm
+private-key is later compromised.
+
+*Key Revocation*
+This is probably too complicated, but an additional public key would
+allow for cold-storage key revocation. Spreading the knowledge of such
+an event is always painful, but it could be stored in the blockchain. I
+think this is likely too complicated, but having these long-term keys
+constantly in memory/disk is unfortunate.
+
+
+> Responding peers must ignore the requesting peer after a
+> unsuccessfully authentication initialization to avoid resource
+> attacks (banning would lead to fingerprinting of peers that support
+> authentication). 
+
+Once the responding peer has read the `auth` message, a TCP ACK can be
+sent. From the requesting peer perspective, a TCP ACK of the `auth`
+request indicates that it was read by the process or some
+intermediary buffer (TOE, proxy, etc) has successfully forwarded it to
+the next step. If the requesting peer waits RTT * some constant from
+the ACK and gets no response, then either: a failed `auth` occurred,
+`auth` is not supported, or the machine was suddenly overloaded. The
+requesting peer can then send another message; a response message
+indicates the responding peer does not support `auth`, and another no
+response wait period indicates an overloaded peer or an `auth` enabled
+peer. Initiating a new connection (no banning has occurred) indicates
+either `auth` is enabled or a load-balancer re-directed the new
+connection to another machine under less load. I think the latter case
+is going to be rare, so you should be able to identify with high
+probability nodes that support `auth` and what message types require
+`auth`. And if this is process repeated multiple times, it will increase
+the chances of a correct fingerprint.
+
+Should encryption enabled peers who do _not_ support `auth` ignore all
+subsequent messages after an `auth` attempt too? Fingerprinting on
+`auth` required message types would still be possible. I do not see a
+reliable way to prevent this from occurring.
+
+
+> To request encrypted communication, the requesting peer generates an
+> EC ephemeral-session-keypair and sends an <code>encinit</code>
+> message to the responding peer and waits for a <code>encack</code>
+> message. The responding node must do the same
+> <code>encinit</code>/<code>encack</code> interaction for the opposite
+> communication direction.
+
+Why are there two key exchanges? A single shared-secret could be used
+to generate keys for each direction. And it would reinforce the single
+symmetric cipher rule.
+
+
+> Possible symmetric key ciphers types
+> {|class="wikitable"
+> ! Number !! symmetric key ciphers type !! Comments
+> |-
+> | 0 || Chacha20-Poly1305 [3] || encrypted message length must be used
+> as AAD. |}
+>
+
+Chacha20-Poly1305 defined in an IETF draft [0] and RFC 7539 both
+include the ciphertext length in the authentication tag generation. Is
+this a unique authentication construction? Or one of the previously
+mentioned designs?
+
+*Symmetric Cipher Negotiation*
+Should the symmetric cipher choices be removed? I am mainly asking for
+the intended use-case. If the intent is to replace a weakened cipher
+then leave the cipher negotiation. If the intent is to give
+implementations multiple options, then I would remove this negotiation.
+
+
+> <code>K_1</code> must be used to only encrypt the payload size of the
+> encrypted message to avoid leaking information by revealing the
+> message size. 
+> 
+> <code>K_2</code> must be used in conjunction with poly1305 to build
+> an AEAD.
+
+Chacha20 is a stream cipher, so only a single encryption key is needed.
+The first 32 bytes of the keystream would be used for the Poly1305 key,
+the next 4 bytes would be used to encrypt the length field, and the
+remaining keystream would be used to encrypt the payload. Poly1305
+would then generate a tag over the length and payload. The receiver
+would generate the same keystream to decrypt the length which
+identifies the length of the message and the MAC offset, then
+authenticate the length and payload, then decypt with the remaining
+keystream.
+
+Is it safer to define two keys to prevent implementations from screwing
+this up? You have to split the decryption and authentication, so the
+basic modes of libsodium cannot be used for instance. If a custom tag
+generation scheme is being used, then the basic modes are already
+unusable ...
+
+*Failed Authentication*
+What happens on a failed MAC attempt? Connection closure is the
+easiest way to handle the situation.
+
+
+> After a successful <code>encinit</code>/<code>encack</code>
+> interaction from both sides, the messages format must use the
+> "encrypted messages structure". Non-encrypted messages from the
+> requesting peer must lead to a connection termination (can be
+> detected by the 4 byte network magic in the unencrypted message
+> structure).
+
+The magic bytes are at the same offset and size as the encrypted length
+field in the encrypted messages structure. So the magic bytes are not a
+reliable way to identify unencrypted messages, although the probability
+of collision is low.
+
+
+> {|class="wikitable"
+> ! Field Size !! Description !! Data type !! Comments
+> |-
+> | 4 || length || uint32_t || Length of ciphertext payload in number
+> of bytes
+> |-
+> | ? || ciphertext payload || ? || One or many ciphertext command &
+> message data
+> |-
+> | 8 || MAC tag || ? || MAC-tag truncated to 8 bytes
+> |}
+
+Why have a fixed MAC length? I think the MAC length should be inferred
+from the cipher + authentication mode. And the Poly1305 tag is 16 bytes.
+
+*Unauthenticated Buffering*
+Implementations are unlikely to (i.e. should not) process the payload
+until authentication succeeds. Since the length field is 4 bytes, this
+means an implementation may have to buffer up to 4 GiB of data _per
+connection_ before it can authenticate the length field. If the outter
+length field were reduced to 2 or 3 bytes, the unauthenticated
+buffering requirements drop to 64 KiB and 16 MiB respectively. Inner
+messages already have their own length, so they can span multiple
+encrypted blocks without other changes. This will increase the
+bandwidth requirements when the size of a single message exceeds 64 KiB
+or 16 MiB, since it will require multiple authentication tags for that
+message. I think an additional 16 bytes per 16 MiB seems like a good
+tradeoff.
+
+
+> A responding peer can inform the requesting peer over a re-keying
+> with a <code>encack</code> message containing 33byte of zeros to
+> indicate that all encrypted message following after this
+> <code>encack</code> message will be encrypted with ''the next
+> symmetric cipher key''.
+>
+> The new symmetric cipher key will be calculated by
+> <code>SHA256(SHA256(old_symetric_cipher_key))</code>.
+>
+> Re-Keying interval is a peer policy with a minimum timespan of 600
+> seconds.
+
+Should the int64_t message count be reset to 0 on a re-key? Or should
+the value reset to zero after 2^63-1? Hopefully the peer re-keys before
+that rollover, or keystream reusage will occur. Unlikely that many
+messages are sent on a single connection though. And presumably this
+only re-keys the senders side? Bi-directional re-keying would be racy.
+
+
+
+Lee
+
+[0]https://tools.ietf.org/html/draft-ietf-tls-chacha20-poly1305-04
+
+From laanwj at gmail.com  Mon Apr 11 07:37:06 2016
+From: laanwj at gmail.com (Wladimir J. van der Laan)
+Date: Mon, 11 Apr 2016 09:37:06 +0200
+Subject: [bitcoin-dev] Bitcoin Core 0.12.1 release candidate 1 available
+Message-ID: <20160411073706.GA10244@amethyst.visucore.com>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Binaries for bitcoin Core version 0.12.1rc1 are available from:
+
+    https://bitcoin.org/bin/bitcoin-core-0.12.1/test.rc2/
+
+Source code can be found on github under the signed tag
+
+    https://github.com/bitcoin/bitcoin/tree/v0.12.1rc1
+
+This is a release candidate for a new minor version release, including the
+BIP9, BIP68 and BIP112 softfork, various bugfixes and updated translations.
+
+Preliminary release notes for the release can be found here:
+
+    https://github.com/bitcoin/bitcoin/blob/0.12/doc/release-notes.md
+
+Release candidates are test versions for releases. When no critical problems
+are found, this release candidate will be tagged as 0.12.1.
+
+Please report bugs using the issue tracker at github:
+
+    https://github.com/bitcoin/bitcoin/issues
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBCgAGBQJXC1QSAAoJEHSBCwEjRsmmtk4H/1C74eLLVwzOhrrWNx34ANcz
+uiyIlkXnMmX+iHWaSC8XdcBOEc4/+YOgDK0KU+FRG6bNDengPKqf8mPDEvyXU/H+
+/ed2W9Q0DQ/jxyeKOOVlMWhKCZWQRisxhadB0LAiny2QLsBojTrJtziGIOYXp4Qt
+xI3GstbUr42da8kL8NoKxQt6na5FrGiuRAQeucwcoHi1QQodd7R7vA2b84N1ECrr
+KWbCfw6a9qHDmk2Vy+9CqGtESHuVW04B+79ui+Dgsh6frG9UH5G7WP4ziUcwm625
+CEEbi/cIrpzEOSo4S5ukFhYK6I3o67uxvV8Nc3ocI1UmC4d2BUvAMalBGMgjENg=
+=oPfq
+-----END PGP SIGNATURE-----
+
+From laanwj at gmail.com  Mon Apr 11 09:12:13 2016
+From: laanwj at gmail.com (Wladimir J. van der Laan)
+Date: Mon, 11 Apr 2016 11:12:13 +0200
+Subject: [bitcoin-dev] Bitcoin Core 0.12.1 release candidate 1 available
+In-Reply-To: <20160411073706.GA10244@amethyst.visucore.com>
+References: <20160411073706.GA10244@amethyst.visucore.com>
+Message-ID: <20160411091213.GA10644@amethyst.visucore.com>
+
+That's rc2, not rc1 (thanks btcdrak for noticing).
+rc1 was DOA - see meeting minutes from Thursday.
+Link for the tag:
+
+https://github.com/bitcoin/bitcoin/tree/v0.12.1rc2
+
+The other links and downloads are correct.
+
+Wladimir
+
+On Mon, Apr 11, 2016 at 09:37:06AM +0200, Wladimir J. van der Laan wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA512
+> 
+> Binaries for bitcoin Core version 0.12.1rc1 are available from:
+> 
+>     https://bitcoin.org/bin/bitcoin-core-0.12.1/test.rc2/
+> 
+> Source code can be found on github under the signed tag
+> 
+>     https://github.com/bitcoin/bitcoin/tree/v0.12.1rc1
+> 
+> This is a release candidate for a new minor version release, including the
+> BIP9, BIP68 and BIP112 softfork, various bugfixes and updated translations.
+> 
+> Preliminary release notes for the release can be found here:
+> 
+>     https://github.com/bitcoin/bitcoin/blob/0.12/doc/release-notes.md
+> 
+> Release candidates are test versions for releases. When no critical problems
+> are found, this release candidate will be tagged as 0.12.1.
+> 
+> Please report bugs using the issue tracker at github:
+> 
+>     https://github.com/bitcoin/bitcoin/issues
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1
+> 
+> iQEcBAEBCgAGBQJXC1QSAAoJEHSBCwEjRsmmtk4H/1C74eLLVwzOhrrWNx34ANcz
+> uiyIlkXnMmX+iHWaSC8XdcBOEc4/+YOgDK0KU+FRG6bNDengPKqf8mPDEvyXU/H+
+> /ed2W9Q0DQ/jxyeKOOVlMWhKCZWQRisxhadB0LAiny2QLsBojTrJtziGIOYXp4Qt
+> xI3GstbUr42da8kL8NoKxQt6na5FrGiuRAQeucwcoHi1QQodd7R7vA2b84N1ECrr
+> KWbCfw6a9qHDmk2Vy+9CqGtESHuVW04B+79ui+Dgsh6frG9UH5G7WP4ziUcwm625
+> CEEbi/cIrpzEOSo4S5ukFhYK6I3o67uxvV8Nc3ocI1UmC4d2BUvAMalBGMgjENg=
+> =oPfq
+> -----END PGP SIGNATURE-----
+
+From laanwj at gmail.com  Fri Apr 15 09:56:48 2016
+From: laanwj at gmail.com (Wladimir J. van der Laan)
+Date: Fri, 15 Apr 2016 11:56:48 +0200
+Subject: [bitcoin-dev] Bitcoin Core 0.12.1 released
+Message-ID: <20160415095648.GA13903@amethyst.visucore.com>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Bitcoin Core version 0.12.1 is now available from:
+
+  <https://bitcoin.org/bin/bitcoin-core-0.12.1/>
+
+Or through bittorrent:
+
+  magnet:?xt=urn:btih:25c4df2a822e840e972a50a31095632d87efadab&dn=bitcoin-core-0.12.1&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.publicbt.com%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.ccc.de%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&ws=https%3A%2F%2Fbitcoin.org%2Fbin%2F 
+
+This is a new minor version release, including the BIP9, BIP68 and BIP112
+softfork, various bugfixes and updated translations.
+
+Please report bugs using the issue tracker at github:
+
+  <https://github.com/bitcoin/bitcoin/issues>
+
+To receive security and update notifications, please subscribe to
+https://bitcoincore.org/en/list/announcements/join/.
+
+Upgrading and downgrading
+=========================
+
+How to Upgrade
+- --------------
+
+If you are running an older version, shut it down. Wait until it has completely
+shut down (which might take a few minutes for older versions), then run the
+installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
+bitcoind/bitcoin-qt (on Linux).
+
+Downgrade warning
+- -----------------
+
+### Downgrade to a version < 0.12.0
+
+Because release 0.12.0 and later will obfuscate the chainstate on every
+fresh sync or reindex, the chainstate is not backwards-compatible with
+pre-0.12 versions of Bitcoin Core or other software.
+
+If you want to downgrade after you have done a reindex with 0.12.0 or later,
+you will need to reindex when you first start Bitcoin Core version 0.11 or
+earlier.
+
+Notable changes
+===============
+
+First version bits BIP9 softfork deployment
+- -------------------------------------------
+
+This release includes a soft fork deployment to enforce [BIP68][],
+[BIP112][] and [BIP113][] using the [BIP9][] deployment mechanism.
+
+The deployment sets the block version number to 0x20000001 between
+midnight 1st May 2016 and midnight 1st May 2017 to signal readiness for 
+deployment. The version number consists of 0x20000000 to indicate version
+bits together with setting bit 0 to indicate support for this combined
+deployment, shown as "csv" in the `getblockchaininfo` RPC call.
+
+For more information about the soft forking change, please see
+<https://github.com/bitcoin/bitcoin/pull/7648>
+
+This specific backport pull-request can be viewed at
+<https://github.com/bitcoin/bitcoin/pull/7543>
+
+[BIP9]: https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki
+[BIP68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
+[BIP112]: https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki
+[BIP113]: https://github.com/bitcoin/bips/blob/master/bip-0113.mediawiki
+
+BIP68 soft fork to enforce sequence locks for relative locktime
+- ---------------------------------------------------------------
+
+[BIP68][] introduces relative lock-time consensus-enforced semantics of
+the sequence number field to enable a signed transaction input to remain
+invalid for a defined period of time after confirmation of its corresponding
+outpoint.
+
+For more information about the implementation, see
+<https://github.com/bitcoin/bitcoin/pull/7184>
+
+BIP112 soft fork to enforce OP_CHECKSEQUENCEVERIFY
+- --------------------------------------------------
+
+[BIP112][] redefines the existing OP_NOP3 as OP_CHECKSEQUENCEVERIFY (CSV)
+for a new opcode in the Bitcoin scripting system that in combination with
+[BIP68][] allows execution pathways of a script to be restricted based
+on the age of the output being spent.
+
+For more information about the implementation, see
+<https://github.com/bitcoin/bitcoin/pull/7524>
+
+BIP113 locktime enforcement soft fork
+- -------------------------------------
+
+Bitcoin Core 0.11.2 previously introduced mempool-only locktime
+enforcement using GetMedianTimePast(). This release seeks to
+consensus enforce the rule.
+
+Bitcoin transactions currently may specify a locktime indicating when
+they may be added to a valid block.  Current consensus rules require
+that blocks have a block header time greater than the locktime specified
+in any transaction in that block.
+
+Miners get to choose what time they use for their header time, with the
+consensus rule being that no node will accept a block whose time is more
+than two hours in the future.  This creates a incentive for miners to
+set their header times to future values in order to include locktimed
+transactions which weren't supposed to be included for up to two more
+hours.
+
+The consensus rules also specify that valid blocks may have a header
+time greater than that of the median of the 11 previous blocks.  This
+GetMedianTimePast() time has a key feature we generally associate with
+time: it can't go backwards.
+
+[BIP113][] specifies a soft fork enforced in this release that
+weakens this perverse incentive for individual miners to use a future
+time by requiring that valid blocks have a computed GetMedianTimePast()
+greater than the locktime specified in any transaction in that block.
+
+Mempool inclusion rules currently require transactions to be valid for
+immediate inclusion in a block in order to be accepted into the mempool.
+This release begins applying the BIP113 rule to received transactions,
+so transaction whose time is greater than the GetMedianTimePast() will
+no longer be accepted into the mempool.
+
+**Implication for miners:** you will begin rejecting transactions that
+would not be valid under BIP113, which will prevent you from producing
+invalid blocks when BIP113 is enforced on the network. Any
+transactions which are valid under the current rules but not yet valid
+under the BIP113 rules will either be mined by other miners or delayed
+until they are valid under BIP113. Note, however, that time-based
+locktime transactions are more or less unseen on the network currently.
+
+**Implication for users:** GetMedianTimePast() always trails behind the
+current time, so a transaction locktime set to the present time will be
+rejected by nodes running this release until the median time moves
+forward. To compensate, subtract one hour (3,600 seconds) from your
+locktimes to allow those transactions to be included in mempools at
+approximately the expected time.
+
+For more information about the implementation, see
+<https://github.com/bitcoin/bitcoin/pull/6566>
+
+Miscellaneous
+- -------------
+
+The p2p alert system is off by default. To turn on, use `-alert` with
+startup configuration.
+
+0.12.1 Change log
+=================
+
+Detailed release notes follow. This overview includes changes that affect
+behavior, not code moves, refactors and string updates. For convenience in locating
+the code changes and accompanying discussion, both the pull request and
+git merge commit are mentioned.
+
+### RPC and other APIs
+- - #7739 `7ffc2bd` Add abandoned status to listtransactions (jonasschnelli)
+
+### Block and transaction handling
+- - #7543 `834aaef` Backport BIP9, BIP68 and BIP112 with softfork (btcdrak)
+
+### P2P protocol and network code
+- - #7804 `90f1d24` Track block download times per individual block (sipa)
+- - #7832 `4c3a00d` Reduce block timeout to 10 minutes (laanwj)
+
+### Validation
+- - #7821 `4226aac` init: allow shutdown during 'Activating best chain...' (laanwj)
+- - #7835 `46898e7` Version 2 transactions remain non-standard until CSV activates (sdaftuar)
+
+### Build system
+- - #7487 `00d57b4` Workaround Travis-side CI issues (luke-jr)
+- - #7606 `a10da9a` No need to set -L and --location for curl (MarcoFalke)
+- - #7614 `ca8f160` Add curl to packages (now needed for depends) (luke-jr)
+- - #7776 `a784675` Remove unnecessary executables from gitian release (laanwj)
+
+### Wallet
+- - #7715 `19866c1` Fix calculation of balances and available coins. (morcos)
+
+### Miscellaneous
+- - #7617 `f04f4fd` Fix markdown syntax and line terminate LogPrint (MarcoFalke)
+- - #7747 `4d035bc` added depends cross compile info (accraze)
+- - #7741 `a0cea89` Mark p2p alert system as deprecated (btcdrak)
+- - #7780 `c5f94f6` Disable bad-chain alert (btcdrak)
+
+Credits
+=======
+
+Thanks to everyone who directly contributed to this release:
+
+- - accraze
+- - Alex Morcos
+- - BtcDrak
+- - Jonas Schnelli
+- - Luke Dashjr
+- - MarcoFalke
+- - Mark Friedenbach
+- - NicolasDorier
+- - Pieter Wuille
+- - Suhas Daftuar
+- - Wladimir J. van der Laan
+
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBCgAGBQJXELrMAAoJEHSBCwEjRsmm75EH/0iyqFxXuJDbfzMmBbMTkXD2
+/CXEeyMvs62F2ZeODE0SSqo9sXo4foiT9WI5Dq7BwAiF6jh/XE4QwBvc91BbPyGZ
+1nOGEab+oe37xEOkn8MyGbHfCutsUldyKltVQjA3y685MxlSgTjl/nX6Pbpbxped
+vZRog3KHRrpWAMrHdi6p/xgqX0ajxE6K1P16JMOx4W/gE9QgOPyy7+l/4WT6SyBj
+k/pOLqJc+yQIOa9szS4pjLUqaSOirhsjXfro9FYjHqiTWQwAdvuK4xXgo1GrGIW1
+PWs419uLmGl4bhg9jdY6v+PyPz4iUilRzoixVi8op1Rt9/AoNN1ViJ/LT15Hagw=
+=h4Wp
+-----END PGP SIGNATURE-----
+
+From runesvend at gmail.com  Sun Apr 17 14:03:47 2016
+From: runesvend at gmail.com (=?UTF-8?Q?Rune_Kj=C3=A6r_Svendsen?=)
+Date: Sun, 17 Apr 2016 16:03:47 +0200
+Subject: [bitcoin-dev] Simple Bitcoin Payment Channel Protocol v0.1 draft
+	(request for comments)
+Message-ID: <CAH2=CKxummve0yyCO6Tj9S3be6bLy0K4V1JatqAOVBCci5jobQ@mail.gmail.com>
+
+Dear list
+
+I've spent the past couple of months developing a simple protocol for
+working with payment channels. I've written up a specification of how
+it operates, in an attempt to standardize the operations of opening,
+paying and closing.
+
+This specification was derived from a mostly-working implementation
+which will be open sourced in a short while (after a clean-up). It's
+written in Haskell.
+
+I'm sharing the specification now because I think it has value in
+itself to have everything documented, especially since I've chosen to
+write the implementation in Haskell, and for people to point out any
+errors or basically anything I haven't thought of.
+
+Link:
+
+https://raw.githubusercontent.com/runeksvendsen/simple-bitcoin-payment-channel-protocol/master/simple-bitcoin-payment-channel-protocol-v0.1.txt
+
+
+
+
+Regards
+Rune
+
+From jl2012 at xbt.hk  Mon Apr 18 19:03:07 2016
+From: jl2012 at xbt.hk (jl2012 at xbt.hk)
+Date: Tue, 19 Apr 2016 03:03:07 +0800
+Subject: [bitcoin-dev] BIP CPRKV: Check private key verify
+In-Reply-To: <CAE-z3OWjqQ=UgNRXyxJiTzsW6Ze7Ytwz3kK2HYcC7eLy2jKnow@mail.gmail.com>
+References: <CAE-z3OUpaMLxF9dGttzLUd6tG+nO18FMo3LZqr7taASVmrEumg@mail.gmail.com>	<23e401d16552$996546d0$cc2fd470$@xbt.hk>	<CAE-z3OUqEXpwGiOdv_X=T_CmtP+wwrAJALQT=Bm42K=k4mMV3Q@mail.gmail.com>	<CAE8CtVkuWL7XSEi_CTbrO2Ze7Q9a+V_P6=6cqGMXMouFzCio+Q@mail.gmail.com>
+	<CAE-z3OWjqQ=UgNRXyxJiTzsW6Ze7Ytwz3kK2HYcC7eLy2jKnow@mail.gmail.com>
+Message-ID: <00aa01d199a4$f3a41c80$daec5580$@xbt.hk>
+
+I just realize that if we have OP_CAT, OP_CHECKPRIVATEKEYVERIFY (aka OP_CHECKPRIVPUBPAIR) is not needed (and is probably better for privacy)
+
+ 
+
+Bob has the prikey-x for pubkey-x. Alice and Bob will agree to a random secret nonce, k. They calculate r, in the same way as signing a transaction.
+
+ 
+
+The script is:
+
+ 
+
+SIZE <r-length + 1> ADD <0x30> SWAP CAT <0x02|r-length|r> CAT SWAP CAT <pubkey-x> CECHKSIGVERIFY <Bob pubkey hash> CHECKSIG
+
+ 
+
+To redeem, Bob has to provide:
+
+ 
+
+<Bob sig> <0x02|s-length|s|sighashtype>
+
+ 
+
+With k, s and sighash, Alice (and only Alice) can recover the prikey-x with the well-known k-reuse exploit
+
+( https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm )
+
+ 
+
+The script will be much cleaner if we remove the DER encoding in the next generation of CHECKSIG
+
+ 
+
+The benefit is prikey-x remains a secret among Alice and Bob. If they don?t mind exposing the prikey-x, they could use r = x coordinate of pubkey-x, which means k = prikey-x (https://bitcointalk.org/index.php?topic=291092.0) This would reduce the witness size a little bit as a DUP may be used
+
+ 
+
+From: bitcoin-dev-bounces at lists.linuxfoundation.org [mailto:bitcoin-dev-bounces at lists.linuxfoundation.org] On Behalf Of Tier Nolan via bitcoin-dev
+Sent: Monday, 29 February, 2016 19:53
+Cc: Bitcoin Dev <bitcoin-dev at lists.linuxfoundation.org>
+Subject: Re: [bitcoin-dev] BIP CPRKV: Check private key verify
+
+ 
+
+On Mon, Feb 29, 2016 at 10:58 AM, Mats Jerratsch <matsjj at gmail.com <mailto:matsjj at gmail.com> > wrote:
+
+This is actually very useful for LN too, see relevant discussion here
+
+http://lists.linuxfoundation.org/pipermail/bitcoin-dev/2015-November/011827.html
+
+ 
+
+Is there much demand for trying to code up a patch to the reference client?  I did a basic one, but it would need tests etc. added.
+
+I think that segregated witness is going to be using up any potential soft-fork slot for the time being anyway.
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160419/232ba8d8/attachment.html>
+
+From truthcoin at gmail.com  Wed Apr 20 15:56:57 2016
+From: truthcoin at gmail.com (Paul Sztorc)
+Date: Wed, 20 Apr 2016 11:56:57 -0400
+Subject: [bitcoin-dev] Sidechains pre-BIP Discussion
+Message-ID: <5717A6C9.1030702@gmail.com>
+
+Dear list,
+
+This message concerns pegged "sidechains", namely the Two Way Peg [1].
+Specifically, it is to introduce a new OP Code (perhaps called
+"OP_CheckVotesVerify"). This OP code can be deployed by soft fork, and
+has (as we all probably know) many benefits, including:
+
+1. ("Optional hard forks") Sidechains allow 'opt in' adoption of new
+features. As a result, Bitcoin (the bearer asset, not the software) will
+never need to worry about competing with an alternate system. This
+includes competitors such as Ripple or Ethereum (supposedly
+"innovative"), as well as BitcoinXT and Bitcoin Classic (supposedly
+"popular").
+
+2. ("Staging Upgrades") SCs allow complex updates to Bitcoin to be
+tested, in a realistic environment (where actual BTC are at risk, and
+utilizing actual network mining resources). If these updates fail, they
+can be revised; if they succeed, they can be incorporated into the
+mainchain.
+
+3. Directing "blockchain resources" to Bitcoin. This includes money,
+developer talent, public attention, etc.
+
+4. Less time spent debating controversial features. Instead, we return
+to a culture of "permissionless innovation".
+
+Again, as we all know, the concept has generally received high interest
+and favorable appraisal.
+
+--
+
+However, this feature has highly complex effects on the Bitcoin
+ecosystem, and so the details should command our full attention.
+
+First, the deployment of this OP Code involves new block validation
+rules ("Drivechain") which are described on my blog [2].
+
+In addition to that post, I intend to release short presentations:
+
+1. On the overall design justification.
+2. On "Enforcing Limits on Shared Resources". This explores the
+potential for SCs to have a detrimental effect on users of vanilla BTC,
+and how this proposal confronts these problems.
+3. On the governance of SCs-- aka the degree of 'coupling',
+inter-relatedness, and/or hierarchy --- and how Drivechain's design acts
+to maximize the total value of the "chain portfolio".
+
+My purpose, in emailing today, is to begin the conversation. The scope
+of the concept is simply too large, to draft a readable BIP without
+knowing what the actual points of interest are. Please express your
+reactions!
+
+Thank you for reading,
+Paul
+
+P.S. In assessing the proposal, you may find a recent technical paper
+[3] by Sergio Demian Lerner to be of interest.
+
+--
+
+[1]
+https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2014-March/004724.html
+[2] http://www.truthcoin.info/blog/drivechain/
+[3] http://www.rootstock.io/#resources   (
+https://uploads.strikinglycdn.com/files/27311e59-0832-49b5-ab0e-2b0a73899561/Drivechains_Sidechains_and_Hybrid_2-way_peg_Designs_R9.pdf
+)
+
+
+
+From hoenicke at gmail.com  Wed Apr 20 16:32:25 2016
+From: hoenicke at gmail.com (Jochen Hoenicke)
+Date: Wed, 20 Apr 2016 18:32:25 +0200
+Subject: [bitcoin-dev] Proposal to update BIP-32
+Message-ID: <5717AF19.1030102@gmail.com>
+
+Hello Bitcoin Developers,
+
+I would like to make a proposal to update BIP-32 in a small way.
+
+TL;DR: BIP-32 is hard to use right (due to its requirement to skip
+addresses).  This proposal suggests a modification such that the
+difficulty can be encapsulated in the library.
+
+#MOTIVATION:
+
+The current BIP-32 specifies that if for some node in the hierarchy
+the computed hash I_L is larger or equal to the prime or 0, then the
+node is invalid and should be skipped in the BIP-32 tree.  This has
+several unfortunate consequences:
+
+- All callers of CKDpriv or CKDpub have to check for errors and handle
+  them appropriately.  This shifts the burden to the application
+  developer instead of being able to handle it in the BIP-32 library.
+
+- It is not clear what to do if an intermediate node is
+  missing. E.g. for the default wallet layout, if m/i_H/0 is missing
+  should m/i_H/1 be used for external chain and m/i_H/2 for internal
+  chain?  This would make the wallet handling much more difficult.
+
+- It gets even worse with standards like BIP-44.  If m/44' is missing
+  should we use m/45' instead?  If m/44'/0' is missing should we use
+  m/44'/1' instead, using the same addresses as for testnet?
+  One could also restart with a different seed in this case, but this
+  wouldn't work if one later wants to support another BIP-43 proposal
+  and still keep the same wallet.
+
+I think the first point alone is reason enough to change this.  I am
+not aware of a BIP-32 application that handles errors like this
+correctly in all cases.  It is also very hard to test, since it is
+infeasible to brute-force a BIP-32 key and a path where the node does
+not exists.
+
+This problem can be avoided by repeating the hashing with slightly
+different input data until a valid private key is found.  This would
+be in the same spirit as RFC-6979.  This way, the library will always
+return a valid node for all paths.  Of course, in the case where the
+node is valid according to the current standard the behavior should be
+unchanged.
+
+I think the backward compatibility issues are minimal.  The chance
+that this affects anyone is less than 10^-30.  Even if it happens, it
+would only create some additional addresses (that are not seen if the
+user downgrades).  The main reason for suggesting a change is that we
+want a similar method for different curves where a collision is much
+more likely.
+
+#QUESTIONS:
+
+What is the procedure to update the BIP?  Is it still possible to
+change the existing BIP-32 even though it is marked as final?  Or
+should I make a new BIP for this that obsoletes BIP-32?
+
+What algorithm is preferred? (bike-shedding)  My suggestion:
+
+---
+
+Change the last step of the private -> private derivation functions to:
+
+ . In case parse(I_L) >= n or k_i = 0, the procedure is repeated
+   at step 2 with
+    I = HMAC-SHA512(Key = c_par, Data = 0x01 || I_R || ser32(i))
+
+---
+
+I think this suggestion is simple to implement (a bit harder to unit
+test) and the string to hash with HMAC-SHA512 always has the same
+length.  I use I_R, since I_L is obviously not very random if I_L >= n.
+There is a minimal chance that it will lead to an infinite loop if I_R
+is the same in two consecutive iterations, but that has only a chance
+of 1 in 2^512 (if the algorithm is used for different curves that make
+I_L >= n more likely, the chance is still less than 1 in 2^256).  In
+theory, this loop can be avoided by incrementing i in every iteration,
+but this would make an implementation error in the "hard to test" path
+of the program more likely.
+
+The other derivation functions should be updated in a similar matter.
+Also the derivation of the root node from the seed should be updated
+in a similar matter to avoid invalid seeds.
+
+If you followed until here, thanks for reading this long posting.
+
+  Jochen
+
+From marek at palatinus.cz  Thu Apr 21 12:08:26 2016
+From: marek at palatinus.cz (Marek Palatinus)
+Date: Thu, 21 Apr 2016 14:08:26 +0200
+Subject: [bitcoin-dev] Proposal to update BIP-32
+In-Reply-To: <5717AF19.1030102@gmail.com>
+References: <5717AF19.1030102@gmail.com>
+Message-ID: <CAJna-HiG5Nq_c0nZ28bTV4ZQKaU-zY1YiSEEaRK9ZvFO7LH-EA@mail.gmail.com>
+
+Sipa, you are probably the most competent to answer this. Could you please
+tell us your opinion? For me, this is straightforward, backward compatible
+fix and I like it a lot. Not sure about the process of changing "Final" BIP
+though.
+
+Slush
+
+On Wed, Apr 20, 2016 at 6:32 PM, Jochen Hoenicke via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Hello Bitcoin Developers,
+>
+> I would like to make a proposal to update BIP-32 in a small way.
+>
+> TL;DR: BIP-32 is hard to use right (due to its requirement to skip
+> addresses).  This proposal suggests a modification such that the
+> difficulty can be encapsulated in the library.
+>
+> #MOTIVATION:
+>
+> The current BIP-32 specifies that if for some node in the hierarchy
+> the computed hash I_L is larger or equal to the prime or 0, then the
+> node is invalid and should be skipped in the BIP-32 tree.  This has
+> several unfortunate consequences:
+>
+> - All callers of CKDpriv or CKDpub have to check for errors and handle
+>   them appropriately.  This shifts the burden to the application
+>   developer instead of being able to handle it in the BIP-32 library.
+>
+> - It is not clear what to do if an intermediate node is
+>   missing. E.g. for the default wallet layout, if m/i_H/0 is missing
+>   should m/i_H/1 be used for external chain and m/i_H/2 for internal
+>   chain?  This would make the wallet handling much more difficult.
+>
+> - It gets even worse with standards like BIP-44.  If m/44' is missing
+>   should we use m/45' instead?  If m/44'/0' is missing should we use
+>   m/44'/1' instead, using the same addresses as for testnet?
+>   One could also restart with a different seed in this case, but this
+>   wouldn't work if one later wants to support another BIP-43 proposal
+>   and still keep the same wallet.
+>
+> I think the first point alone is reason enough to change this.  I am
+> not aware of a BIP-32 application that handles errors like this
+> correctly in all cases.  It is also very hard to test, since it is
+> infeasible to brute-force a BIP-32 key and a path where the node does
+> not exists.
+>
+> This problem can be avoided by repeating the hashing with slightly
+> different input data until a valid private key is found.  This would
+> be in the same spirit as RFC-6979.  This way, the library will always
+> return a valid node for all paths.  Of course, in the case where the
+> node is valid according to the current standard the behavior should be
+> unchanged.
+>
+> I think the backward compatibility issues are minimal.  The chance
+> that this affects anyone is less than 10^-30.  Even if it happens, it
+> would only create some additional addresses (that are not seen if the
+> user downgrades).  The main reason for suggesting a change is that we
+> want a similar method for different curves where a collision is much
+> more likely.
+>
+> #QUESTIONS:
+>
+> What is the procedure to update the BIP?  Is it still possible to
+> change the existing BIP-32 even though it is marked as final?  Or
+> should I make a new BIP for this that obsoletes BIP-32?
+>
+> What algorithm is preferred? (bike-shedding)  My suggestion:
+>
+> ---
+>
+> Change the last step of the private -> private derivation functions to:
+>
+>  . In case parse(I_L) >= n or k_i = 0, the procedure is repeated
+>    at step 2 with
+>     I = HMAC-SHA512(Key = c_par, Data = 0x01 || I_R || ser32(i))
+>
+> ---
+>
+> I think this suggestion is simple to implement (a bit harder to unit
+> test) and the string to hash with HMAC-SHA512 always has the same
+> length.  I use I_R, since I_L is obviously not very random if I_L >= n.
+> There is a minimal chance that it will lead to an infinite loop if I_R
+> is the same in two consecutive iterations, but that has only a chance
+> of 1 in 2^512 (if the algorithm is used for different curves that make
+> I_L >= n more likely, the chance is still less than 1 in 2^256).  In
+> theory, this loop can be avoided by incrementing i in every iteration,
+> but this would make an implementation error in the "hard to test" path
+> of the program more likely.
+>
+> The other derivation functions should be updated in a similar matter.
+> Also the derivation of the root node from the seed should be updated
+> in a similar matter to avoid invalid seeds.
+>
+> If you followed until here, thanks for reading this long posting.
+>
+>   Jochen
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160421/1b0958b3/attachment.html>
+
+From elombrozo at gmail.com  Thu Apr 21 15:28:45 2016
+From: elombrozo at gmail.com (Eric Lombrozo)
+Date: Thu, 21 Apr 2016 08:28:45 -0700
+Subject: [bitcoin-dev] Proposal to update BIP-32
+In-Reply-To: <5717AF19.1030102@gmail.com>
+References: <5717AF19.1030102@gmail.com>
+Message-ID: <CF7E1C6B-F52F-4658-AB24-553AC3493A86@gmail.com>
+
+In practice the probability of this case triggering is on the order of 2^-128 or something astronomically tiny. I've been using BIP32 for a few years already as have many others...I don't think we've ever had to handle this case. Justifiably, many app developers feel like the additional complexity of properly handling this case is not worth the effort.
+
+Having said that, if the handling of this case is simple to implement and easy to isolate in the program flow, I am in favor of doing something along the lines of what you propose.
+
+- Eric
+
+On April 20, 2016 9:32:25 AM PDT, Jochen Hoenicke via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>Hello Bitcoin Developers,
+>
+>I would like to make a proposal to update BIP-32 in a small way.
+>
+>TL;DR: BIP-32 is hard to use right (due to its requirement to skip
+>addresses).  This proposal suggests a modification such that the
+>difficulty can be encapsulated in the library.
+>
+>#MOTIVATION:
+>
+>The current BIP-32 specifies that if for some node in the hierarchy
+>the computed hash I_L is larger or equal to the prime or 0, then the
+>node is invalid and should be skipped in the BIP-32 tree.  This has
+>several unfortunate consequences:
+>
+>- All callers of CKDpriv or CKDpub have to check for errors and handle
+>  them appropriately.  This shifts the burden to the application
+>  developer instead of being able to handle it in the BIP-32 library.
+>
+>- It is not clear what to do if an intermediate node is
+>  missing. E.g. for the default wallet layout, if m/i_H/0 is missing
+>  should m/i_H/1 be used for external chain and m/i_H/2 for internal
+>  chain?  This would make the wallet handling much more difficult.
+>
+>- It gets even worse with standards like BIP-44.  If m/44' is missing
+>  should we use m/45' instead?  If m/44'/0' is missing should we use
+>  m/44'/1' instead, using the same addresses as for testnet?
+>  One could also restart with a different seed in this case, but this
+>  wouldn't work if one later wants to support another BIP-43 proposal
+>  and still keep the same wallet.
+>
+>I think the first point alone is reason enough to change this.  I am
+>not aware of a BIP-32 application that handles errors like this
+>correctly in all cases.  It is also very hard to test, since it is
+>infeasible to brute-force a BIP-32 key and a path where the node does
+>not exists.
+>
+>This problem can be avoided by repeating the hashing with slightly
+>different input data until a valid private key is found.  This would
+>be in the same spirit as RFC-6979.  This way, the library will always
+>return a valid node for all paths.  Of course, in the case where the
+>node is valid according to the current standard the behavior should be
+>unchanged.
+>
+>I think the backward compatibility issues are minimal.  The chance
+>that this affects anyone is less than 10^-30.  Even if it happens, it
+>would only create some additional addresses (that are not seen if the
+>user downgrades).  The main reason for suggesting a change is that we
+>want a similar method for different curves where a collision is much
+>more likely.
+>
+>#QUESTIONS:
+>
+>What is the procedure to update the BIP?  Is it still possible to
+>change the existing BIP-32 even though it is marked as final?  Or
+>should I make a new BIP for this that obsoletes BIP-32?
+>
+>What algorithm is preferred? (bike-shedding)  My suggestion:
+>
+>---
+>
+>Change the last step of the private -> private derivation functions to:
+>
+> . In case parse(I_L) >= n or k_i = 0, the procedure is repeated
+>   at step 2 with
+>    I = HMAC-SHA512(Key = c_par, Data = 0x01 || I_R || ser32(i))
+>
+>---
+>
+>I think this suggestion is simple to implement (a bit harder to unit
+>test) and the string to hash with HMAC-SHA512 always has the same
+>length.  I use I_R, since I_L is obviously not very random if I_L >= n.
+>There is a minimal chance that it will lead to an infinite loop if I_R
+>is the same in two consecutive iterations, but that has only a chance
+>of 1 in 2^512 (if the algorithm is used for different curves that make
+>I_L >= n more likely, the chance is still less than 1 in 2^256).  In
+>theory, this loop can be avoided by incrementing i in every iteration,
+>but this would make an implementation error in the "hard to test" path
+>of the program more likely.
+>
+>The other derivation functions should be updated in a similar matter.
+>Also the derivation of the root node from the seed should be updated
+>in a similar matter to avoid invalid seeds.
+>
+>If you followed until here, thanks for reading this long posting.
+>
+>  Jochen
+>_______________________________________________
+>bitcoin-dev mailing list
+>bitcoin-dev at lists.linuxfoundation.org
+>https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160421/f6ea5a61/attachment.html>
+
+From stick at satoshilabs.com  Thu Apr 21 17:23:48 2016
+From: stick at satoshilabs.com (Pavol Rusnak)
+Date: Thu, 21 Apr 2016 19:23:48 +0200
+Subject: [bitcoin-dev] Proposal to update BIP-32
+In-Reply-To: <CF7E1C6B-F52F-4658-AB24-553AC3493A86@gmail.com>
+References: <5717AF19.1030102@gmail.com>
+	<CF7E1C6B-F52F-4658-AB24-553AC3493A86@gmail.com>
+Message-ID: <57190CA4.8020809@satoshilabs.com>
+
+On 21/04/16 17:28, Eric Lombrozo via bitcoin-dev wrote:
+> I don't think we've ever had to handle this case. 
+
+This is the main problem: we are not sure, because not a lot of software
+does this checks. Also even if you do check, it's hard to handle an
+exception (you can't always skip - what if the problematic node is m/44'?).
+
+One of the motivations is to fix BIP-32 so it can be used for
+non-secp256k1 curves as well. For NIST P-256 curve this chance is 2^-32.
+
+Jochen even managed to find an example[1]:
+
+m/28578'/33941 where m is derived from
+"000102030405060708090a0b0c0d0e0f" seed.
+
+[1]
+https://github.com/trezor/trezor-crypto/commit/16ff4387ae79429e629a5454708abf7385b3a9a3
+
+-- 
+Best Regards / S pozdravom,
+
+Pavol "stick" Rusnak
+SatoshiLabs.com
+
+From hoenicke at gmail.com  Fri Apr 22 09:14:38 2016
+From: hoenicke at gmail.com (Jochen Hoenicke)
+Date: Fri, 22 Apr 2016 11:14:38 +0200
+Subject: [bitcoin-dev] Proposal to update BIP-32
+In-Reply-To: <CF7E1C6B-F52F-4658-AB24-553AC3493A86@gmail.com>
+References: <5717AF19.1030102@gmail.com>
+	<CF7E1C6B-F52F-4658-AB24-553AC3493A86@gmail.com>
+Message-ID: <5719EB7E.5000203@gmail.com>
+
+Am 21.04.2016 um 17:28 schrieb Eric Lombrozo:
+> In practice the probability of this case triggering is on the order of
+> 2^-128 or something astronomically tiny. I've been using BIP32 for a few
+> years already as have many others...I don't think we've ever had to
+> handle this case. Justifiably, many app developers feel like the
+> additional complexity of properly handling this case is not worth the
+> effort.
+> 
+> Having said that, if the handling of this case is simple to implement
+> and easy to isolate in the program flow, I am in favor of doing
+> something along the lines of what you propose.
+> 
+
+Yes, the idea is to handle the problem in the library so that app
+developers don't have to handle the case of missing addresses or just
+ignore the problem.  It also doesn't add much complexity to the library
+as the current implementations already test for invalid keys.  The
+library would then just retry instead of returning an error (that most
+app developers would then ignore).
+
+  Jochen
+
+From jl2012 at xbt.hk  Sat Apr 23 08:59:32 2016
+From: jl2012 at xbt.hk (jl2012 at xbt.hk)
+Date: Sat, 23 Apr 2016 16:59:32 +0800
+Subject: [bitcoin-dev] Recent editing for the consensus BIPs of segregated
+	witness (141 and 143)
+Message-ID: <000001d19d3e$785f26d0$691d7470$@xbt.hk>
+
+In the past month, there are a number of revisions in BIP141 and 143. Except
+the use of BIP9 for deployment, none of these edits was a result of a change
+of consensus behavior of the reference implementation. Instead, the text
+were edited for clarifications or corrections to match the reference
+implementation. The consensus specification (except the use of BIP9) has not
+changed since early Feb 2016, if not earlier.
+
+ 
+
+History of BIP141 and revision proposals
+
+https://github.com/bitcoin/bips/commits/master/bip-0141.mediawiki
+
+https://github.com/bitcoin/bips/pull/365
+
+https://github.com/bitcoin/bips/pull/376
+
+ 
+
+History of BIP143
+
+https://github.com/bitcoin/bips/commits/master/bip-0143.mediawiki
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160423/dedfdc10/attachment.html>
+
+From jjlegoupil at gmail.com  Sun Apr 24 10:05:52 2016
+From: jjlegoupil at gmail.com (=?utf-8?Q?J=C3=A9r=C3=B4me_Legoupil?=)
+Date: Sun, 24 Apr 2016 12:05:52 +0200
+Subject: [bitcoin-dev] Private "Merkle" Vaults for the Bitcoin system
+In-Reply-To: <mailman.4068.1456528991.1673.bitcoin-dev@lists.linuxfoundation.org>
+References: <mailman.4068.1456528991.1673.bitcoin-dev@lists.linuxfoundation.org>
+Message-ID: <86B5737C-2B2A-45F3-998C-4CD6818AEE83@gmail.com>
+
+In Febuary, an email intitled "Bitcoin Vaults" was addressed to this mailing list linking to a paper on ?covenants? (see mail below) describing a way to apply recursive restrictions temporarily or permanently on bitcoins (for digital asset use-cases) and Bitcoin Vaults were offered as an application (thanks to the authors for sharing their work with the community, I personally found this paper insightful and inspiring). Unfortunately, this proposal isn?t fungibility friendly and could lead Bitcoin to undesirable outcomes.
+
+What follows is an attempt to design Vaults that preserve Bitcoin?s fungibility and keep their defensive attributes private from blockchain observers and from potential insider participants: the Vault?s defence is incrementally revealed when executed. If I am a war chief defending a castle, I?m certainly not going to show my defence strategy to the world and if it leaked to the enemy, it would greatly weaken my chances to succeed: greater privacy leads to greater security.
+ 
+Vaults enable important use-cases for Bitcoin as a store of value, in particular the tricky but critical use-case of successions (heritages).
+
+
+? General idea ? 
+
+This design restricts the bitcoins in a Vault to a private, predefined, finite (no patterns) and unforgeable set of authorized actions defined by the Vault creator at the setup.
+
+Definition: an authorized action (or action) is an authorized address the bitcoins inside a Vault can be sent to, with an authorized timelock.
+Action = <pubKeyHash> < timelock>
+
+The Vault can be defined as a set of parent/child authorized actions. This enables the Vault creator to construct a Merkle tree of his Vault. During the setup, the creator computes the hashs of every authorized action, and builds his Merkle tree from the bottom, up to the top Merkle root. The Vault creator must give the appropriate Merkle proofs (authorizations) to the Vault participants (if any) according to the authorizations he grants them, and when someone wants to move funds inside or out of the Vault, he needs to provide to the network (in addition of a valid signature) the Merkle proof that demonstrates that his action is authorized by the Vault. The network can verify that:    
+Hash [ Merkle_proof(Action) + Hash(Action) ] == Merkle_proof(Parent_Action)
+
+The Merkle tree must be destroyed once the setup is completed. Storing the tree anywhere is unnecessary and endangers the Vault's privacy.
+
+
+? Example ? 
+
+In this example, the Vault is composed of the actions A, B, C, D:
+
+A--->B--->C
+          \
+            `--->D
+
+If H is the hash function, the Merkle tree is:
+                                                                          Merkle_root  
+                                                                              /     \
+              H(H(H(H(D)+H(1)) + H(H(C)+H(1))) + H(B))       H(A)
+                                                 /     \                                                        
+H(H(H(D)+H(1)) + H(H(C)+H(1)))        H(B)                                 
+                     /     \                                   
+ H(H(D)+H(1))        H(H(C)+H(1))                
+           /                            \
+          1                             1
+
+Note: 1 are terminations to signal to the network that the coins are now allowed to exit the Vault. If the 1-terminations were not added, the bitcoins would be locked forever in the Vault because it would require to reverse H to spend them.
+
+With notations:
+                                                                                   Merkle_root  
+                                                                                        /     \
+                                                              Merkle_Proof(A)       H(A)
+                                                                        /     \                                                        
+Merkle_Proof(parent of C) = Merkle_Proof(B)        H(B)                                 
+                                      /     \                                   
+            Merkle_Proof(C)        H(H(C)+H(1))                
+                                                        \
+                                                         1
+
+? nSequence ?
+
+nSequence has different timelock meanings for the different time related OP codes:
+OP_CLTV: a tx spending the outputs of a [parent tx with nSequence] is invalid if current block number <= nSequence
+OP_CSV: a tx spending the outputs of a [parent tx with nSequence] is invalid if current block number <= block number of the parent tx + nSequence
+
+New meaning of nSequence for OP_VAULT:
+OP_VAULT: a tx with nSequence is invalid if current block number <= block number of the parent tx + nSequence
+
+?OP_VAULT? 
+
+This opcode checks if the tx timelock allows the tx to be included in a block and outputs a hash.
+
+OP_VAULT (nSequence, Merkle_proof(Action), pubKeyHash)
+{
+IF (current block number >= Max(block number of the parent outputs) + nSequence of current tx)
+     hAction=H(H(pubKeyHash)+H(nSequence));
+     h=H(Merkle_proof(Action)+hAction);
+     return h;
+
+ELSE
+     return H(0);                                    // the tx cannot be included in a block yet
+}
+
+
+?Vault transaction structures?
+
+Funding tx
+scriptSig=<sig> <pubKey>
+scriptPubKey=
+<3> OP_PICK OP_HASH160 OP_VAULT <Merkle_root> OP_EQUALVERIFY OP_HASH160 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
+
+Vault tx
+scriptSig=<sig> <pubKey> <nSequence> <Merkle_proof>
+scriptPubKey=
+<3> OP_PICK OP_HASH160 OP_VAULT <Merkle_proof> OP_EQUALVERIFY OP_HASH160 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
+
+Exit tx
+scriptSig=<sig>  <pubKey> <nSequence> <Merkle_proof>
+scriptPubKey=
+OP_DUP OP_HASH160 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
+
+Note: The exit tx can also use OP_VAULT if it is exiting the Vault while funding another Vault.
+
+
+?New consensus rules? (enforcement of OP_VAULT txs)
+
+IF
+// this new rule concerns only Vault txs...
+(parent tx VAULT_FLAG_ENABLE)
+AND
+ // ...that are not permitted to exit the Vault if the action is not terminated by 1 in the Merkle tree 
+(    
+H(<Merkle_proof> in tx?s scriptSig + H(H(H(pubKeyHash)+H(nSequence))) + H(1))) != <Merkle_proof> in parent tx?s scriptSig
+)
+AND
+{
+// the tx must be flagged as a Vault tx
+(tx VAULT_FLAG_DISABLE) 
+OR
+// the tx violates the Merkle tree data structure
+(<Merkle_proof> in tx?s scriptSig != <Merkle_proof> in tx?s scriptPubKey)
+}
+
+THEN the transaction is INVALID.
+
+?Privacy? 
+
+In this design, Vault txs are CoinJoin/CT compatible (joining with other Vault txs) and perhaps Vault users will be willing to way for days or weeks to achieve maximum privacy, as they are susceptible of holding significant value in these structures.
+
+?Use-cases? 
+
+"Smart successions" : a morbid yet critical use-case for Bitcoin as a store of value
+
+Bitcoin currently struggles in dealing with successions in a trustless manner. How does the Bitcoin system know when the succession should be executed ? What happens in case of conflict between the heirs ? It?s a tricky but important use-case.
+
+Bitcoin successions are dealt with by either sharing decrypted private keys with the heirs (trusting they won?t take the coins before due time or won?t have them stolen), renting a safe at the bank and making a testament (trusting the bank) or simply hiding the keys and hoping the heirs will find them when you disappear. None of these schemes are satisfying, especially when dealing with multiple heirs. This gap could likely hold back investors from investing a significant portion of their wealth in Bitcoin if they don?t have a trustless and secure mechanism that guarantees their succession will be executed according to their will.
+
+Funding addr
+    \
+      `->Transfert addr?0?>Alice addr                                 (1)
+               |          \
+               |            `-50000?>Multisig2/2?>Bob addr    
+               |                                             \                               (2)
+               |                                               `?>Carol addr
+               |
+                `-100000?>Multisig2/3?>Bob addr                
+                                                  \                                          (3) 
+                                                    `?>Carol addr             
+
+(1) Alice?s recovery address in case Bob and Carol were too impatient to spend the heritage.
+(2) Alice added a Multisig2/2 controlled by Bob and Carol. Alice gave Bob and Carol each, half of the Merkel proof to pull the funds into Multisig2/2: first Bob and Carol need to agree on the conditions of the succession and sign the exit transaction from the Multisig2/2, than they can share their Merkel proof halves and pull the funds.
+(3) Arbitration in case of disagreement (or if Bob or Carol is uncooperative, or disappeared): Alice added a Multisig2/3 involving an arbitrator in case Alice and Bob couldn?t find an agreement after 20?000 blocks or something. The arbitrator has no information on the succession until Bob or Carol asks for his assistance. Alice gave each Bob and Carol the full Merkel proof to pull the funds to Multisig2/3.
+
+We can imagine services assisting in the Vault setups and in the blockchain monitoring, enabling successions to occur entirely on-chain, in a trustless, private and peer-to-peer manner, outside of the current financial system. 
+
+Scorched earth policies if the Vault defender is entirely compromised
+The following defence strategy is inspired from the paper mentionned in the introduction :
+
+Funding addr
+    \
+      `->Transfert addr-1000->Spending addr
+                \
+                  `-0->Recovery addr1-100->Recovery addr2-1000->Recovery addr3
+                                                                         \
+                                                                           `-0->Hidden addr ??
+
+An attacker broadcasts the Transfer tx from the Funding address. The defender can stay patient and learn if the attacker knows the recovery key (& the corresponding Merkle proofs) and ajust his defence accordingly: if indeed the adversary can move funds (he knows the recovery key(s)) and approches to the Vault exit (he knows also the Merkle proofs), the defender can burn all funds into fees, denying the attacker.
+
+?Thanks for your attention?
+
+Please let me know if you think this idea is worth exploring deeper.
+
+Cheers,
+Jerome
+                                                                 
+
+
+> On 27 Feb 2016, at 00:23, bitcoin-dev-request at lists.linuxfoundation.org wrote:
+> 
+> Send bitcoin-dev mailing list submissions to
+> 	bitcoin-dev at lists.linuxfoundation.org
+> 
+> To subscribe or unsubscribe via the World Wide Web, visit
+> 	https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> or, via email, send a message with subject or body 'help' to
+> 	bitcoin-dev-request at lists.linuxfoundation.org
+> 
+> You can reach the person managing the list at
+> 	bitcoin-dev-owner at lists.linuxfoundation.org
+> 
+> When replying, please edit your Subject line so it is more specific
+> than "Re: Contents of bitcoin-dev digest..."
+> 
+> 
+> Today's Topics:
+> 
+>   1. Bitcoin Vaults. (Emin G?n Sirer)
+>   2. The first successful Zero-Knowledge Contingent Payment
+>      (Gregory Maxwell)
+>   3. Re: The first successful Zero-Knowledge Contingent	Payment
+>      (Sergio Demian Lerner)
+>   4. Fwd: The first successful Zero-Knowledge Contingent	Payment
+>      (Gregory Maxwell)
+> 
+> 
+> ----------------------------------------------------------------------
+> 
+> Message: 1
+> Date: Fri, 26 Feb 2016 11:05:20 -0500
+> From: Emin G?n Sirer <el33th4x0r at gmail.com>
+> To: Bitcoin Dev <bitcoin-dev at lists.linuxfoundation.org>
+> Cc: Malte M?ser <malte.moeser at uni-muenster.de>,	Ittay Eyal
+> 	<ittay.eyal at cornell.edu>
+> Subject: [bitcoin-dev] Bitcoin Vaults.
+> Message-ID:
+> 	<CAPkFh0vuLsoNQUEdH-kGqXYvFJt1tXLvt0eMEuFZGm7Pus-_2g at mail.gmail.com>
+> Content-Type: text/plain; charset="utf-8"
+> 
+> At the 3rd Bitcoin Workshop being held in conjunction with the Financial
+> Cryptography Conference in Barbados, my group will be presenting a new idea
+> for improving Bitcoin wallet security and deterring thefts today.
+> 
+> The write-up is here:
+> 
+> http://hackingdistributed.com/2016/02/26/how-to-implement-secure-bitcoin-vaults/
+> 
+> The paper with the nitty gritty details is here:
+>    http://fc16.ifca.ai/bitcoin/papers/MES16.pdf
+> 
+> The core idea:
+> 
+> Our paper describes a way to create vaults, special accounts whose keys can
+> be neutralized if they fall into the hands of attackers. Vaults are
+> Bitcoin?s decentralized version of you calling your bank to report a stolen
+> credit card -- it renders the attacker?s transactions null and void. And
+> here?s the interesting part: in so doing, vaults demotivate key theft in
+> the first place. An attacker who knows that he will not be able to get away
+> with theft is less likely to attack in the first place, compared to current
+> Bitcoin attackers who are guaranteed that their hacking efforts will be
+> handsomely rewarded.
+> 
+> Operationally, the idea is simple. You send your money to a vault address
+> that you yourself create. Every vault address has a vault key and a
+> recovery key. When spending money from the vault address with the
+> corresponding vault key, you must wait for a predefined amount of time
+> (called the unvaulting period) that you established at the time you created
+> the vault -- say, 24 hours. When all goes well, your vault funds are
+> unlocked after the unvaulting period and you can move them to a standard
+> address and subsequently spend them in the usual way. Now, in case Harry
+> the Hacker gets a hold of your vault key, you have 24 hours to revert any
+> transaction issued by Harry, using the recovery key. His theft,
+> essentially, gets undone, and the funds are diverted unilaterally to their
+> rightful owner. It?s like an ?undo? facility that the modern banking world
+> relies on, but for Bitcoin.
+> 
+> The technical trick relies on a single new opcode, CheckOutputVerify, that
+> checks the shape of a redeem transaction. Note that fungibility is not
+> affected, as the restrictions are at the discretion of the coin owner alone
+> and can only be placed by the coin owner ahead of time.
+> 
+> We suspect that this modest change could actually be a game-changer for
+> bitcoin security: clients and keys are notoriously hard to secure, and a
+> facility that allows you to possibly recover, and if not, permanently keep
+> the hacker from acquiring your funds, could greatly deter Bitcoin thefts.
+> 
+> As always, comments and suggestions are welcome.
+> - egs, Ittay Eyal and Malte Moeser.
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160424/403f4b0c/attachment-0001.html>
+
+From kefkius at maza.club  Tue Apr 26 23:00:48 2016
+From: kefkius at maza.club (Kefkius)
+Date: Tue, 26 Apr 2016 19:00:48 -0400
+Subject: [bitcoin-dev] BIP Draft: Multi-Currency Hierarchy For Use In
+ Multisignature Deterministic Wallets
+Message-ID: <571FF320.8010603@maza.club>
+
+I'm re-submitting this after a little under a year because, though it
+generated little discussion, I feel it is still necessary.
+
+The following can also be found at:
+https://github.com/Kefkius/bip-kefkius-multicoin-multisig/blob/master/README.md
+
+<pre>
+  BIP: bip-kefkius-multicoin-multisig
+  Title: Multi-Currency Hierarchy For Use In Multisignature
+Deterministic Wallets
+  Author: Tyler Willis <kefkius at maza.club>
+  Status: Draft
+  Type: Standards Track
+</pre>
+
+## Abstract ##
+
+This BIP defines a hierarchy based on BIP-0044 for deterministic wallets
+intended to facilitate multi-currency, multisignature wallet management.
+
+This BIP is an application of BIP-0043.
+
+## Motivation ##
+
+The hierarchy defined in BIP-0044 places a coin's type level above the
+level designating account number. This limits the possible
+implementations of multi-currency, multisignature wallets. The hierarchy
+defined here facilitates the creation of wallets intended to be both
+multi-currency and multisignature.
+
+## Specification ##
+
+### Path Levels ###
+
+<pre>
+m / purpose' / wallet' / coin_type / change / address_index
+</pre>
+
+#### Purpose ####
+
+Purpose is a constant tentatively set to
+`bip-kefkius-multicoin-multisig` as there is no BIP number assigned to
+this proposal. Hardened derivation is used here.
+
+#### Wallet ####
+
+This level is incremented for every wallet that one makes. Much like the
+account node in BIP-0044, this is intended to organize independent
+identities within the key space.
+Basically, each index in this level represents a group of cosigners.
+Hardened derivation is used here.
+
+#### Coin Type ####
+
+This is the BIP-0044 index of the coin being managed. Public derivation
+is used here.
+Public derivation is used so that cosigners need only know one of each
+other's public keys, rather than needing to distribute public keys for
+each coin.
+
+#### Change ####
+
+0 is used for public addresses and 1 is used for change addresses.
+Identical to BIP-0044 behavior. Public derivation is used here.
+
+#### Address Index ####
+
+The address index. This increases sequentially as it does in BIP-0044.
+Public derivation is used here.
+
+
+## Examples ##
+
+| wallet | coin      | change? | address | path                         |
+|:-------|:----------|:--------|:--------|:-----------------------------|
+| first  | Bitcoin   | no      | first   | m /
+bip-kefkius-multicoin-multisig' / 0' / 0  / 0 / 0   |
+| first  | Bitcoin   | no      | second  | m /
+bip-kefkius-multicoin-multisig' / 0' / 0  / 0 / 1   |
+| first  | Testnet   | no      | first   | m /
+bip-kefkius-multicoin-multisig' / 0' / 1  / 0 / 0   |
+| second | Bitcoin   | no      | first   | m /
+bip-kefkius-multicoin-multisig' / 1' / 0  / 0 / 0   |
+| second | Bitcoin   | yes     | first   | m /
+bip-kefkius-multicoin-multisig' / 1' / 0  / 1 / 0   |
+| third  | Testnet   | yes     | sixth   | m /
+bip-kefkius-multicoin-multisig' / 2' / 1  / 1 / 5   |
+
+From jl2012 at xbt.hk  Fri Apr 29 05:48:10 2016
+From: jl2012 at xbt.hk (Johnson Lau)
+Date: Fri, 29 Apr 2016 07:48:10 +0200
+Subject: [bitcoin-dev] BIP draft: Scripting System in Merkelized Abstract
+	Syntax Tree
+Message-ID: <D35A2482-CC78-4423-BD7B-EA3EEE1AC732@xbt.hk>
+
+https://github.com/jl2012/bips/blob/mastopcodes/bip-mastopcodes.mediawiki
+
+This BIP defines the scripting system in Merkelized Abstract Syntax Tree (BIP114). It re-enables some of the previously disabled opcodes, introduces new opcodes, and defines expandable opcodes for future extension.
+
+It will:
+	? re-enable CAT, SUBSTR, LEFT, RIGHT, INVERT, AND, OR, XOR, LSHIFT, and RSHIFT;
+	? introduce new opcodes: DUPTOALTSTACK, DUPFROMALTSTACK, SWAPSTACK, SWAPCAT, and RESIZE;
+	? define expandable opcodes for future softforks of stack manipulating opcodes: EXPAND1 to EXPAND32.
+
+
+This BIP is based on the BIP114 MAST: https://github.com/bitcoin/bips/blob/master/bip-0114.mediawiki
+
+Reference implementation, including the BIP9 logic and script tests, could be found at https://github.com/jl2012/bitcoin/tree/segwit_mast . This branch is rebased on top of the #7910 segwit PR. However, I have not tested the BIP9 activation.
+
+The implementation of the re-enabled opcode are mostly taken from the Elements Project.
+
+-------------
+
+This BIP does not describe changes in CHECKSIG (e.g. new hash type, Schnorr sig), which I think should be another BIP.
+
+I have also considered more radical changes. For example, make all comparison opcode to be ?VERIFY? type, and a script passes if and only if the stack is exactly empty after evaluation.
+
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 671 bytes
+Desc: Message signed with OpenPGP using GPGMail
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160429/dfca9def/attachment.sig>
+
+From jl2012 at xbt.hk  Fri Apr 29 07:25:28 2016
+From: jl2012 at xbt.hk (Johnson Lau)
+Date: Fri, 29 Apr 2016 09:25:28 +0200
+Subject: [bitcoin-dev] BIP144: use of 1<<3 service bit
+Message-ID: <42062299-A9AB-4143-AF73-6DDE02169748@xbt.hk>
+
+Please note that the BIP144 has just been revised to match the implementation in #7910. We will use the 1<<3 service bit (NODE_WITNESS) to signal the readiness for segwit.
+
+https://github.com/bitcoin/bips/commit/dde47fc973b015c6cc91a0ed28fb3aca57add5e6 <https://github.com/bitcoin/bips/commit/dde47fc973b015c6cc91a0ed28fb3aca57add5e6>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160429/908f845b/attachment.html>
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 671 bytes
+Desc: Message signed with OpenPGP using GPGMail
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160429/908f845b/attachment.sig>
+
+From kristovatlas.lists at gmail.com  Fri Apr 29 18:22:32 2016
+From: kristovatlas.lists at gmail.com (Kristov Atlas)
+Date: Fri, 29 Apr 2016 14:22:32 -0400
+Subject: [bitcoin-dev] segwit subsidy and multi-sender (coinjoin)
+	transactions
+Message-ID: <CAGH37S+5FAqHzOTE8H0E8HNb5cr1k06MqB2r3k92jqkc=eXWNg@mail.gmail.com>
+
+Has anyone thought about the effects of the 75% Segregated Witness subsidy
+on CoinJoin transactions and CoinJoin-like transactions? Better yet, has
+anyone collected data or come up with a methodology for the collection of
+data?
+
+>From this link: https://bitcoincore.org/en/2016/01/26/segwit-benefits/
+
+"Segwit improves the situation here by making signature data, which does
+not impact the UTXO set size, cost 75% less than data that does impact the
+UTXO set size. This is expected to encourage users to favour the use of
+transactions that minimise impact on the UTXO set in order to minimise
+fees, and to encourage developers to design smart contracts and new
+features in a way that will also minimise the impact on the UTXO set."
+
+My expectation from the above is that this will serve as a financial
+disincentive against CoinJoin transactions. However, if people have
+evidence otherwise, I'd like to hear it.
+
+I noticed jl2012 objected to this characterization here, but has not yet
+provided evidence:
+https://www.reddit.com/r/Bitcoin/comments/4gyhsj/what_are_the_impacts_of_segwits_75_fee_discount/d2lvxmw
+
+A sample of the 16 transaction id's posted in the JoinMarket thread on
+BitcoinTalk shows an average ratio of 1.38 or outputs to inputs:
+
+https://docs.google.com/spreadsheets/d/1p9jZYXxX1HDtKCxTy79Zj5PrQaF20mxbD7BAuz0KC8s/edit?usp=sharing
+
+As we know, a "traditional" CoinJoin transaction creates roughly 2x UTXOs
+for everyone 1 it consumes -- 1 spend and 1 change -- unless address reuse
+comes into play.
+
+Please refrain from bringing up Schnorr signatures in your reply, since
+they are not on any immediate roadmap.
+
+Thanks,
+Kristov
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160429/faf5665f/attachment.html>
+

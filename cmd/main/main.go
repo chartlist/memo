@@ -6,6 +6,7 @@
 package main
 
 import (
+	"github.com/0xb10c/memo/cmd/archive"
 	"os"
 	"runtime"
 
@@ -28,6 +29,7 @@ func setupAPP() *cli.App {
 		tools.SyncCommand,
 		api.APICommand,
 		daemon.DaemonCommand,
+		archive.ArchiveCommand,
 	}
 	app.Flags = []cli.Flag{
 		utils.FromFlag,

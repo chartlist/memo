@@ -1,0 +1,1096 @@
+From mike at plan99.net  Thu Jan 10 15:21:14 2013
+From: mike at plan99.net (Mike Hearn)
+Date: Thu, 10 Jan 2013 16:21:14 +0100
+Subject: [Bitcoin-development] Draft BIP for Bloom filtering
+In-Reply-To: <20121127211019.GA22701@vps7135.xlshosting.net>
+References: <CANEZrP0XALwBFJyZTzYd5xBp4MRrjv0s_y2tOXbO7UgjWF2HzA@mail.gmail.com>
+	<20121121151534.GA5540@vps7135.xlshosting.net>
+	<1353523117.1085.14.camel@localhost.localdomain>
+	<20121127211019.GA22701@vps7135.xlshosting.net>
+Message-ID: <CANEZrP0w052ebao-04H4Wduerm86o6RKBY=ObnJXBX22k--zMA@mail.gmail.com>
+
+Here's a quick update on where we're up to.
+
+Thanks to Matts excellent work, I was able to test his bitcoinj and
+bitcoin-qt work together today. There are a few minor tweaks needed,
+but I feel like we're maybe a week away from having all the code in a
+mergeable state. Here is the remaining work:
+
+- There are a couple of bugfixes needed on the bitcoinj side: the
+fallback to downloading full blocks is problematic and needs to be
+deleted, there's an API change we want
+
+- Adjust the default FP rate requested by BCJ to be 0.0001, this is
+appropriate for the latest blocks in the chain and yields 0-5 false
+positives per block
+
+- Introduce a new part to the filter protocol that allows clients to
+control auto-expansion. This turned out to be very volatile, we saw
+jumps from 0-3 FPs per block to 500 in the space of 1 block, perhaps
+if a SatoshiDice transaction got into the filter. A simple yes/no flag
+can suffice for now, but a better solution would be for the client to
+submit templates for output scripts that would trigger auto-adding the
+matched outpoint - autoexpansion is only needed in the case where the
+input script doesn't contain any predictable data. For pay-to-address
+and P2SH it does, so expansion doesn't help. Matt said he'd hopefully
+try to look at this soon.
+
+With auto-expansion disabled, the FP rate adjusted and a bugfix on the
+bcj side I was able to sync a wallet using a bloom filtered chain.
+
+Although it's tight, I think this work should go into 0.8 - it'll be
+much more compelling to advertise it this way, we can say "Upgrade to
+0.8 and help network performance for everyone". And in the case that
+we discover a showstopper problem, we just don't deploy the code that
+uses the new messages into clients.
+
+
+
+From rmeijer at xs4all.nl  Thu Jan 10 17:41:21 2013
+From: rmeijer at xs4all.nl (Rob Meijer)
+Date: Thu, 10 Jan 2013 18:41:21 +0100
+Subject: [Bitcoin-development] BitCoin and MinorFs/AppArmor
+In-Reply-To: <4aa4401704cc1e7a1665971b79684a83.squirrel@webmail.xs4all.nl>
+References: <4aa4401704cc1e7a1665971b79684a83.squirrel@webmail.xs4all.nl>
+Message-ID: <e1e8f72a8638b34aa5513dd2f2b05dab.squirrel@webmail.xs4all.nl>
+
+My efforts on MinorFs2 have been stalled for a large period of time
+(resulting from the fact that I was writing it in Python and Google
+pulling the plug on its codesearch server showed me that Python was a
+language that I hadn't sufficiently mastered. Recently, after almost a
+year of reluctance at starting from scratch, I finaly set myself to
+rewriting what I had done so far in C++ and to continue development.
+
+Yesterday I've also started at a library for making the usage of MinorFs
+by applications like Bitcoin more convenient. The idea is that LibMinorFs
+will become a simple to use library for making applications
+MinorFs2-aware.
+
+I would like to ask if the bitcoin developers would be open to using
+this library within bitcoin for making BitCoin MinorFs2 aware, allowing it
+to store things like the BitCoin purse in a private directory that is not
+available to other unrelated (potentially trojan) processes running under
+the same uid.
+
+The API is defined in the inc/minorfs/ directory and the usage shown in
+src/testmain.cpp
+
+https://github.com/pibara/LibMinorFs2
+
+Both the library and the filesystems are still far from being done, but I
+would like to know if you guys would be open to a pull-request that would
+incorporate a copy of this library into Bitcoin, making BitCoin use
+private storage when available, implemented using the above API.
+
+Please let me know what you think.
+
+Rob
+
+
+
+On Fri, August 26, 2011 08:48, Rob Meijer wrote:
+> A few years ago I wrote a least authority based set of filesystems named
+> MinorFs that worked closely together with AppArmor (suse/ubuntu) to give '
+> pseudo persistent processes' their own private but decomposable and
+> delegatable piece of filesystem storage:
+>
+> http://www.linuxjournal.com/magazine/minorfs
+> http://www.capibara.com/blog/2011/05/25/taming-mutable-state-for-file-systems/
+>
+> Currently there is only one perfect fit for MinorFs and that's the stack
+> AppArmor/MinorFs/E-language-persistent-application. There are some close
+> fits like running ssh without a passphrase (
+> http://minorfs.polacanthus.net/wiki/Ssh_private_keys_without_passphrase )
+> but these require lots of manual fiddling by the user to get working. The
+> ssh trick would probably work with bitcoin, but as you can see from the
+> link above, it would be rather cumbersome.
+>
+> I am trying to get specs together for rewriting MinorFs (in Python) in a
+> way that would make it easy and natural for application developers that
+> want their application to be able to protect user data (like bitcoin
+> wallets) from mallware running under the same uid as that user.
+>
+> Currently minorfs granularity is hard fixed to that of the 'pseudo
+> persistent process', and that granularity is determined as described in
+> the following link:
+>
+> http://minorfs.polacanthus.net/wiki/Pseudo_persistent_process
+>
+> When using pseudo persistent processes, you basically end up with
+> file-system storage that follows almost all of the modeling principles of
+> the object capability model. This is great when designing a least
+> authority program from scratch and writing it in the (object capability)
+> e-language using its persistence facilities.
+>
+> Given however that I don't expect bitcoin, openssh, chrome, firefox, or
+> any other application that would benefit from what MinorFs provides to be
+> rewritten in E, it seems like the next version of MinorFs should give up
+> on the purity of its least authority model, and take an approach that
+> better suits common development languages and practices.
+>
+> With bitcoin being a project that could benefit most from what MinorFs has
+> to offer, I would like to ask bitcoin developers to think about what
+> attributes from the current granularity level (pseudo persistent process)
+> should be kept, what attributes should be dropped, and what properties
+> should be added to arrive at an 'id' that is the best fit for granularity
+> of persistent private storage for bitcoin.
+>
+> I really want to accommodate bitcoin developer needs in this, so all input
+> that helps me help you guys to get the next MinorFs version to accommodate
+> your needs to a level that code to use MinorFs where available can be
+> added to bitcoin, would be extremely welcome.
+>
+> Let me know what you think,
+>
+> Rob
+>
+>
+> ------------------------------------------------------------------------------
+> EMC VNX: the world's simplest storage, starting under $10K
+> The only unified storage solution that offers unified management
+> Up to 160% more powerful than alternatives and 25% more efficient.
+> Guaranteed. http://p.sf.net/sfu/emc-vnx-dev2dev
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+
+
+
+
+From bitcoin-list at bluematt.me  Fri Jan 11 03:59:11 2013
+From: bitcoin-list at bluematt.me (Matt Corallo)
+Date: Thu, 10 Jan 2013 22:59:11 -0500
+Subject: [Bitcoin-development] Draft BIP for Bloom filtering
+In-Reply-To: <CANEZrP0w052ebao-04H4Wduerm86o6RKBY=ObnJXBX22k--zMA@mail.gmail.com>
+References: <CANEZrP0XALwBFJyZTzYd5xBp4MRrjv0s_y2tOXbO7UgjWF2HzA@mail.gmail.com>
+	<20121121151534.GA5540@vps7135.xlshosting.net>
+	<1353523117.1085.14.camel@localhost.localdomain>
+	<20121127211019.GA22701@vps7135.xlshosting.net>
+	<CANEZrP0w052ebao-04H4Wduerm86o6RKBY=ObnJXBX22k--zMA@mail.gmail.com>
+Message-ID: <1357876751.1740.4.camel@localhost.localdomain>
+
+On Thu, 2013-01-10 at 16:21 +0100, Mike Hearn wrote:
+> Here's a quick update on where we're up to.
+> 
+> Thanks to Matts excellent work, I was able to test his bitcoinj and
+> bitcoin-qt work together today. There are a few minor tweaks needed,
+> but I feel like we're maybe a week away from having all the code in a
+> mergeable state. Here is the remaining work:
+> 
+> - There are a couple of bugfixes needed on the bitcoinj side: the
+> fallback to downloading full blocks is problematic and needs to be
+> deleted, there's an API change we want
+First of the two is done.
+> 
+> - Adjust the default FP rate requested by BCJ to be 0.0001, this is
+> appropriate for the latest blocks in the chain and yields 0-5 false
+> positives per block
+Is a part of the larger API changes mentioned above.
+> 
+> - Introduce a new part to the filter protocol that allows clients to
+> control auto-expansion. This turned out to be very volatile, we saw
+> jumps from 0-3 FPs per block to 500 in the space of 1 block, perhaps
+> if a SatoshiDice transaction got into the filter. A simple yes/no flag
+> can suffice for now, but a better solution would be for the client to
+> submit templates for output scripts that would trigger auto-adding the
+> matched outpoint - autoexpansion is only needed in the case where the
+> input script doesn't contain any predictable data. For pay-to-address
+> and P2SH it does, so expansion doesn't help. Matt said he'd hopefully
+> try to look at this soon.
+The flags mentioned have been implemented, both to disable
+autoexpansion, enable it for all outputs, enable for only pay to pubkey
+outputs (the most likely use-case), or use a set of templates.  The
+matched templates part isn't properly tested and I would like comments
+on that part (see the last few commits at
+https://github.com/bitcoin/bitcoin/pull/1795).
+> 
+> With auto-expansion disabled, the FP rate adjusted and a bugfix on the
+> bcj side I was able to sync a wallet using a bloom filtered chain.
+> 
+> Although it's tight, I think this work should go into 0.8 - it'll be
+> much more compelling to advertise it this way, we can say "Upgrade to
+> 0.8 and help network performance for everyone". And in the case that
+> we discover a showstopper problem, we just don't deploy the code that
+> uses the new messages into clients.
+Ive been missing lately, when is 0.8 targeted for freeze?
+
+Matt
+
+
+
+
+From jgarzik at exmulti.com  Fri Jan 11 05:02:47 2013
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Fri, 11 Jan 2013 00:02:47 -0500
+Subject: [Bitcoin-development] Draft BIP for Bloom filtering
+In-Reply-To: <1357876751.1740.4.camel@localhost.localdomain>
+References: <CANEZrP0XALwBFJyZTzYd5xBp4MRrjv0s_y2tOXbO7UgjWF2HzA@mail.gmail.com>
+	<20121121151534.GA5540@vps7135.xlshosting.net>
+	<1353523117.1085.14.camel@localhost.localdomain>
+	<20121127211019.GA22701@vps7135.xlshosting.net>
+	<CANEZrP0w052ebao-04H4Wduerm86o6RKBY=ObnJXBX22k--zMA@mail.gmail.com>
+	<1357876751.1740.4.camel@localhost.localdomain>
+Message-ID: <CA+8xBpcB6kXWyRbeUknK6gkcrFMV6YtrDk0c938q1_32U6GtRw@mail.gmail.com>
+
+On Thu, Jan 10, 2013 at 10:59 PM, Matt Corallo <bitcoin-list at bluematt.me> wrote:
+> Ive been missing lately, when is 0.8 targeted for freeze?
+
+0.8rc1 will probably happen when the core ultraprune/leveldb stuff is stable.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From mike at plan99.net  Fri Jan 11 14:11:44 2013
+From: mike at plan99.net (Mike Hearn)
+Date: Fri, 11 Jan 2013 15:11:44 +0100
+Subject: [Bitcoin-development] Draft BIP for Bloom filtering
+In-Reply-To: <CA+8xBpcB6kXWyRbeUknK6gkcrFMV6YtrDk0c938q1_32U6GtRw@mail.gmail.com>
+References: <CANEZrP0XALwBFJyZTzYd5xBp4MRrjv0s_y2tOXbO7UgjWF2HzA@mail.gmail.com>
+	<20121121151534.GA5540@vps7135.xlshosting.net>
+	<1353523117.1085.14.camel@localhost.localdomain>
+	<20121127211019.GA22701@vps7135.xlshosting.net>
+	<CANEZrP0w052ebao-04H4Wduerm86o6RKBY=ObnJXBX22k--zMA@mail.gmail.com>
+	<1357876751.1740.4.camel@localhost.localdomain>
+	<CA+8xBpcB6kXWyRbeUknK6gkcrFMV6YtrDk0c938q1_32U6GtRw@mail.gmail.com>
+Message-ID: <CANEZrP2k30UsWFYSZ7Bh5Hm4LJ9vEAMEUgYSrYkcXcDTY2Z79Q@mail.gmail.com>
+
+I did some very rough initial performance tests.
+
+Syncing from a local peer gives me about 50 blocks per second in the
+later parts of the chain (post SD), which is about a 10-20x speedup
+over what I could do before. This is on a MacBook Pro. But at those
+points it's clearly bottlenecked by bitcoind which has saturated its
+CPU core. This makes sense - the filtering is much more server than
+client intensive because every transaction in every block has to be
+loaded and checked.
+
+I think filtering can be fairly well parallelized on the server side.
+So the current 10-20x speedup could potentially be larger if the
+server becomes more efficient at scanning and filtering blocks. It's
+still a very nice win for now, especially bandwidth wise. And if Matt
+makes the mempool command filtered it solves a common usability
+problem as well.
+
+Once we get this code in, merged and rolled out I think what we need
+for bloom v2 is clear:
+
+ - Multi-thread the filtering process in bitcoind so transactions can
+be checked in parallel. A 4-core server would then get 4x faster at
+filtering blocks and assuming it's not too busy doing other stuff we
+could maybe sync at more like 200 blocks per second, which is cool ...
+more than a days worth of history for each second of syncing.
+
+ - Make the client smarter so the FP rate is adapted during the sync
+process. An FP rate that makes sense post-SD results in no false
+positives pre-SD, more or less.
+
+ - Make the client shard its wallet keys over multiple peers, for
+better privacy.
+
+ - Make the client suck down filtered blocks in parallel from multiple
+peers, for better speed.
+
+As it seems the bottleneck for chain sync is now CPU time, the latter
+point may be the most important from a practical perspective.
+
+On Fri, Jan 11, 2013 at 6:02 AM, Jeff Garzik <jgarzik at exmulti.com> wrote:
+> On Thu, Jan 10, 2013 at 10:59 PM, Matt Corallo <bitcoin-list at bluematt.me> wrote:
+>> Ive been missing lately, when is 0.8 targeted for freeze?
+>
+> 0.8rc1 will probably happen when the core ultraprune/leveldb stuff is stable.
+>
+> --
+> Jeff Garzik
+> exMULTI, Inc.
+> jgarzik at exmulti.com
+
+
+
+From mike at plan99.net  Fri Jan 11 14:13:15 2013
+From: mike at plan99.net (Mike Hearn)
+Date: Fri, 11 Jan 2013 15:13:15 +0100
+Subject: [Bitcoin-development] Draft BIP for Bloom filtering
+In-Reply-To: <CANEZrP2k30UsWFYSZ7Bh5Hm4LJ9vEAMEUgYSrYkcXcDTY2Z79Q@mail.gmail.com>
+References: <CANEZrP0XALwBFJyZTzYd5xBp4MRrjv0s_y2tOXbO7UgjWF2HzA@mail.gmail.com>
+	<20121121151534.GA5540@vps7135.xlshosting.net>
+	<1353523117.1085.14.camel@localhost.localdomain>
+	<20121127211019.GA22701@vps7135.xlshosting.net>
+	<CANEZrP0w052ebao-04H4Wduerm86o6RKBY=ObnJXBX22k--zMA@mail.gmail.com>
+	<1357876751.1740.4.camel@localhost.localdomain>
+	<CA+8xBpcB6kXWyRbeUknK6gkcrFMV6YtrDk0c938q1_32U6GtRw@mail.gmail.com>
+	<CANEZrP2k30UsWFYSZ7Bh5Hm4LJ9vEAMEUgYSrYkcXcDTY2Z79Q@mail.gmail.com>
+Message-ID: <CANEZrP3KKGOPM7BzWAr1xGqh96iEzJ+Ki2hdUTe0Gvv51pJ23w@mail.gmail.com>
+
+Oh, one last stat - syncing the entire chain with a wallet containing
+two keys and a 0.0001 FP rate (one or two FPs every 5 blocks or so)
+resulted in a download of about 46mb of data.
+
+On Fri, Jan 11, 2013 at 3:11 PM, Mike Hearn <mike at plan99.net> wrote:
+> I did some very rough initial performance tests.
+>
+> Syncing from a local peer gives me about 50 blocks per second in the
+> later parts of the chain (post SD), which is about a 10-20x speedup
+> over what I could do before. This is on a MacBook Pro. But at those
+> points it's clearly bottlenecked by bitcoind which has saturated its
+> CPU core. This makes sense - the filtering is much more server than
+> client intensive because every transaction in every block has to be
+> loaded and checked.
+>
+> I think filtering can be fairly well parallelized on the server side.
+> So the current 10-20x speedup could potentially be larger if the
+> server becomes more efficient at scanning and filtering blocks. It's
+> still a very nice win for now, especially bandwidth wise. And if Matt
+> makes the mempool command filtered it solves a common usability
+> problem as well.
+>
+> Once we get this code in, merged and rolled out I think what we need
+> for bloom v2 is clear:
+>
+>  - Multi-thread the filtering process in bitcoind so transactions can
+> be checked in parallel. A 4-core server would then get 4x faster at
+> filtering blocks and assuming it's not too busy doing other stuff we
+> could maybe sync at more like 200 blocks per second, which is cool ...
+> more than a days worth of history for each second of syncing.
+>
+>  - Make the client smarter so the FP rate is adapted during the sync
+> process. An FP rate that makes sense post-SD results in no false
+> positives pre-SD, more or less.
+>
+>  - Make the client shard its wallet keys over multiple peers, for
+> better privacy.
+>
+>  - Make the client suck down filtered blocks in parallel from multiple
+> peers, for better speed.
+>
+> As it seems the bottleneck for chain sync is now CPU time, the latter
+> point may be the most important from a practical perspective.
+>
+> On Fri, Jan 11, 2013 at 6:02 AM, Jeff Garzik <jgarzik at exmulti.com> wrote:
+>> On Thu, Jan 10, 2013 at 10:59 PM, Matt Corallo <bitcoin-list at bluematt.me> wrote:
+>>> Ive been missing lately, when is 0.8 targeted for freeze?
+>>
+>> 0.8rc1 will probably happen when the core ultraprune/leveldb stuff is stable.
+>>
+>> --
+>> Jeff Garzik
+>> exMULTI, Inc.
+>> jgarzik at exmulti.com
+
+
+
+From pete at petertodd.org  Mon Jan 14 10:44:47 2013
+From: pete at petertodd.org (Peter Todd)
+Date: Mon, 14 Jan 2013 05:44:47 -0500
+Subject: [Bitcoin-development] Proposal: make the private key for testnet
+	genesis block public
+Message-ID: <20130114104447.GA15854@savin>
+
+As the title says.
+
+Basically on testnet we should give people the chance to test how their
+code handles attempts to spend the genesis block coinbase, as well as
+other tx's made to the genesis block address. After all, potentially
+Satoshi is still out there, still has that key, and still may cause
+exactly that situation himself.
+
+So Gavin, if you have the private key for testnet3's coinbase, I'm
+asking you to release it, and otherwise fix this for the eventual
+testnet4
+
+Of course, obviously you can test this case yourself with a private
+testnet, but it'd be good if people we forced to test this case against
+their will...
+
+-- 
+'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 490 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20130114/f1bde735/attachment.sig>
+
+From jgarzik at exmulti.com  Mon Jan 14 18:07:28 2013
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Mon, 14 Jan 2013 13:07:28 -0500
+Subject: [Bitcoin-development] Proposal: make the private key for
+ testnet genesis block public
+In-Reply-To: <20130114104447.GA15854@savin>
+References: <20130114104447.GA15854@savin>
+Message-ID: <CA+8xBpdV5SNDBU=y07qPcvPksWOQ35uHpsSopAVRQX-xU=o6-Q@mail.gmail.com>
+
+On Mon, Jan 14, 2013 at 5:44 AM, Peter Todd <pete at petertodd.org> wrote:
+> Basically on testnet we should give people the chance to test how their
+> code handles attempts to spend the genesis block coinbase, as well as
+> other tx's made to the genesis block address. After all, potentially
+> Satoshi is still out there, still has that key, and still may cause
+> exactly that situation himself.
+
+ACK
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From gavinandresen at gmail.com  Mon Jan 14 18:31:59 2013
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Mon, 14 Jan 2013 13:31:59 -0500
+Subject: [Bitcoin-development] Proposal: make the private key for
+ testnet genesis block public
+In-Reply-To: <CA+8xBpdV5SNDBU=y07qPcvPksWOQ35uHpsSopAVRQX-xU=o6-Q@mail.gmail.com>
+References: <20130114104447.GA15854@savin>
+	<CA+8xBpdV5SNDBU=y07qPcvPksWOQ35uHpsSopAVRQX-xU=o6-Q@mail.gmail.com>
+Message-ID: <CABsx9T3FpVq-m8P=ZbFmsJMni-4g0y4+hQ+hqy2gUKi84jw9DQ@mail.gmail.com>
+
+The testnet3 genesis block is identical to the main network genesis
+block, except it has a different timestamp and nonce.
+
+So its coinbase pays to the same public key as the main network. I
+don't have that private key.
+
+Good idea for testnet4, whenever that happens, though.
+
+-- 
+--
+Gavin Andresen
+
+
+
+From zgenjix at yahoo.com  Mon Jan 14 18:56:52 2013
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Mon, 14 Jan 2013 10:56:52 -0800 (PST)
+Subject: [Bitcoin-development] message dissemination
+Message-ID: <1358189812.39428.YahooMailNeo@web121706.mail.ne1.yahoo.com>
+
+cool paper: http://phys.org/news/2013-01-algorithm-message-dissemination-decentralized-networks.html#jCp
+
+
+
+
+From mike at plan99.net  Wed Jan 16 10:43:55 2013
+From: mike at plan99.net (Mike Hearn)
+Date: Wed, 16 Jan 2013 11:43:55 +0100
+Subject: [Bitcoin-development] Draft BIP for Bloom filtering
+In-Reply-To: <CANEZrP3KKGOPM7BzWAr1xGqh96iEzJ+Ki2hdUTe0Gvv51pJ23w@mail.gmail.com>
+References: <CANEZrP0XALwBFJyZTzYd5xBp4MRrjv0s_y2tOXbO7UgjWF2HzA@mail.gmail.com>
+	<20121121151534.GA5540@vps7135.xlshosting.net>
+	<1353523117.1085.14.camel@localhost.localdomain>
+	<20121127211019.GA22701@vps7135.xlshosting.net>
+	<CANEZrP0w052ebao-04H4Wduerm86o6RKBY=ObnJXBX22k--zMA@mail.gmail.com>
+	<1357876751.1740.4.camel@localhost.localdomain>
+	<CA+8xBpcB6kXWyRbeUknK6gkcrFMV6YtrDk0c938q1_32U6GtRw@mail.gmail.com>
+	<CANEZrP2k30UsWFYSZ7Bh5Hm4LJ9vEAMEUgYSrYkcXcDTY2Z79Q@mail.gmail.com>
+	<CANEZrP3KKGOPM7BzWAr1xGqh96iEzJ+Ki2hdUTe0Gvv51pJ23w@mail.gmail.com>
+Message-ID: <CANEZrP2q=Kvk8DRRjB7mtw7QF8xDTAFYPVRCDW60tJn4A67LYQ@mail.gmail.com>
+
+Matts latest code has been tested by Andreas and seems to work
+correctly. He had to extend the client a bit to refresh the filter
+every 25k blocks because even with the extra flag, eventually the
+filter degrades into uselessness, but it did still improve the
+situation quite a bit.
+
+Because it's unit tested, been reviewed by me several times, has an
+interoperable implementation that has also been tested by Andreas in a
+build of his smartphone app,  I'm going to ACK the current code and
+request that it be merged in to 0.8. What do you say Gavin?
+
+The next step after that would be profiling. It's a big performance
+improvement for SPV clients already, but not as much as I anticipated.
+I suspect there's a simple bottleneck or missed optimization
+somewhere. But that can obviously come post-0.8
+
+
+
+From bitcoin-list at bluematt.me  Wed Jan 16 15:00:47 2013
+From: bitcoin-list at bluematt.me (Matt Corallo)
+Date: Wed, 16 Jan 2013 10:00:47 -0500
+Subject: [Bitcoin-development] Draft BIP for Bloom filtering
+In-Reply-To: <CANEZrP2q=Kvk8DRRjB7mtw7QF8xDTAFYPVRCDW60tJn4A67LYQ@mail.gmail.com>
+References: <CANEZrP0XALwBFJyZTzYd5xBp4MRrjv0s_y2tOXbO7UgjWF2HzA@mail.gmail.com>
+	<20121121151534.GA5540@vps7135.xlshosting.net>
+	<1353523117.1085.14.camel@localhost.localdomain>
+	<20121127211019.GA22701@vps7135.xlshosting.net>
+	<CANEZrP0w052ebao-04H4Wduerm86o6RKBY=ObnJXBX22k--zMA@mail.gmail.com>
+	<1357876751.1740.4.camel@localhost.localdomain>
+	<CA+8xBpcB6kXWyRbeUknK6gkcrFMV6YtrDk0c938q1_32U6GtRw@mail.gmail.com>
+	<CANEZrP2k30UsWFYSZ7Bh5Hm4LJ9vEAMEUgYSrYkcXcDTY2Z79Q@mail.gmail.com>
+	<CANEZrP3KKGOPM7BzWAr1xGqh96iEzJ+Ki2hdUTe0Gvv51pJ23w@mail.gmail.com>
+	<CANEZrP2q=Kvk8DRRjB7mtw7QF8xDTAFYPVRCDW60tJn4A67LYQ@mail.gmail.com>
+Message-ID: <1358348447.1048.0.camel@localhost.localdomain>
+
+Actually, there is one more minor algorithmic change I would like to
+make to the way the hash function is computed really quick before it
+gets merged, I'll have that finished up by the end of today.
+
+Matt
+
+On Wed, 2013-01-16 at 11:43 +0100, Mike Hearn wrote:
+> Matts latest code has been tested by Andreas and seems to work
+> correctly. He had to extend the client a bit to refresh the filter
+> every 25k blocks because even with the extra flag, eventually the
+> filter degrades into uselessness, but it did still improve the
+> situation quite a bit.
+> 
+> Because it's unit tested, been reviewed by me several times, has an
+> interoperable implementation that has also been tested by Andreas in a
+> build of his smartphone app,  I'm going to ACK the current code and
+> request that it be merged in to 0.8. What do you say Gavin?
+> 
+> The next step after that would be profiling. It's a big performance
+> improvement for SPV clients already, but not as much as I anticipated.
+> I suspect there's a simple bottleneck or missed optimization
+> somewhere. But that can obviously come post-0.8
+
+
+
+
+
+From mike at plan99.net  Fri Jan 18 16:38:45 2013
+From: mike at plan99.net (Mike Hearn)
+Date: Fri, 18 Jan 2013 17:38:45 +0100
+Subject: [Bitcoin-development] Draft BIP for Bloom filtering
+In-Reply-To: <1358348447.1048.0.camel@localhost.localdomain>
+References: <CANEZrP0XALwBFJyZTzYd5xBp4MRrjv0s_y2tOXbO7UgjWF2HzA@mail.gmail.com>
+	<20121121151534.GA5540@vps7135.xlshosting.net>
+	<1353523117.1085.14.camel@localhost.localdomain>
+	<20121127211019.GA22701@vps7135.xlshosting.net>
+	<CANEZrP0w052ebao-04H4Wduerm86o6RKBY=ObnJXBX22k--zMA@mail.gmail.com>
+	<1357876751.1740.4.camel@localhost.localdomain>
+	<CA+8xBpcB6kXWyRbeUknK6gkcrFMV6YtrDk0c938q1_32U6GtRw@mail.gmail.com>
+	<CANEZrP2k30UsWFYSZ7Bh5Hm4LJ9vEAMEUgYSrYkcXcDTY2Z79Q@mail.gmail.com>
+	<CANEZrP3KKGOPM7BzWAr1xGqh96iEzJ+Ki2hdUTe0Gvv51pJ23w@mail.gmail.com>
+	<CANEZrP2q=Kvk8DRRjB7mtw7QF8xDTAFYPVRCDW60tJn4A67LYQ@mail.gmail.com>
+	<1358348447.1048.0.camel@localhost.localdomain>
+Message-ID: <CANEZrP3FMbCZzT0Lfajv7T=F=Sjv1pNW-f3JVyrZLH5tQxYfmw@mail.gmail.com>
+
+I'm thinking we should actually make the change we talked about before
+and have the filtered block sent before the transaction data.
+
+For one, it's not intuitive (API wise) that you'd get a callback
+saying "new pending tx" immediately before another callback saying "tx
+was confirmed", but that's what the current setup makes most natural.
+To fix it we'd have to notice that a tx message wasn't requested by
+us, buffer it, and wait for the corresponding filteredblock message.
+It seems cleaner to receive a filteredblock and then for any tx that
+matches it, attach it to the FilteredBlock object and wait until it is
+full up, then pass it to the wallet code all at once.
+
+Another issue is that to risk analyze unconfirmed transactions you
+really have to download all dependencies. That has to be triggered by
+seeing an unconfirmed transaction. It's dumb to start this process for
+a tx that is actually in the chain, so you need to have some notion of
+whether it came from a filtered block anyway. I only realized this
+today.
+
+I think when we discussed this before, the justification for having it
+work the current way was that it was simpler to integrate with the SPV
+client code if it was done this way around. But I don't think it's
+really simpler. There are enough odd side effects of doing it this
+way, that I feel it'd be better to tweak the protocol now whilst we
+have the chance.
+
+On Wed, Jan 16, 2013 at 4:00 PM, Matt Corallo <bitcoin-list at bluematt.me> wrote:
+> Actually, there is one more minor algorithmic change I would like to
+> make to the way the hash function is computed really quick before it
+> gets merged, I'll have that finished up by the end of today.
+>
+> Matt
+>
+> On Wed, 2013-01-16 at 11:43 +0100, Mike Hearn wrote:
+>> Matts latest code has been tested by Andreas and seems to work
+>> correctly. He had to extend the client a bit to refresh the filter
+>> every 25k blocks because even with the extra flag, eventually the
+>> filter degrades into uselessness, but it did still improve the
+>> situation quite a bit.
+>>
+>> Because it's unit tested, been reviewed by me several times, has an
+>> interoperable implementation that has also been tested by Andreas in a
+>> build of his smartphone app,  I'm going to ACK the current code and
+>> request that it be merged in to 0.8. What do you say Gavin?
+>>
+>> The next step after that would be profiling. It's a big performance
+>> improvement for SPV clients already, but not as much as I anticipated.
+>> I suspect there's a simple bottleneck or missed optimization
+>> somewhere. But that can obviously come post-0.8
+>
+>
+
+
+
+From andreas at schildbach.de  Sat Jan 19 09:51:04 2013
+From: andreas at schildbach.de (Andreas Schildbach)
+Date: Sat, 19 Jan 2013 10:51:04 +0100
+Subject: [Bitcoin-development] Draft BIP for Bloom filtering
+In-Reply-To: <CANEZrP3FMbCZzT0Lfajv7T=F=Sjv1pNW-f3JVyrZLH5tQxYfmw@mail.gmail.com>
+References: <CANEZrP0XALwBFJyZTzYd5xBp4MRrjv0s_y2tOXbO7UgjWF2HzA@mail.gmail.com>
+	<20121121151534.GA5540@vps7135.xlshosting.net>
+	<1353523117.1085.14.camel@localhost.localdomain>
+	<20121127211019.GA22701@vps7135.xlshosting.net>
+	<CANEZrP0w052ebao-04H4Wduerm86o6RKBY=ObnJXBX22k--zMA@mail.gmail.com>
+	<1357876751.1740.4.camel@localhost.localdomain>
+	<CA+8xBpcB6kXWyRbeUknK6gkcrFMV6YtrDk0c938q1_32U6GtRw@mail.gmail.com>
+	<CANEZrP2k30UsWFYSZ7Bh5Hm4LJ9vEAMEUgYSrYkcXcDTY2Z79Q@mail.gmail.com>
+	<CANEZrP3KKGOPM7BzWAr1xGqh96iEzJ+Ki2hdUTe0Gvv51pJ23w@mail.gmail.com>
+	<CANEZrP2q=Kvk8DRRjB7mtw7QF8xDTAFYPVRCDW60tJn4A67LYQ@mail.gmail.com>
+	<1358348447.1048.0.camel@localhost.localdomain>
+	<CANEZrP3FMbCZzT0Lfajv7T=F=Sjv1pNW-f3JVyrZLH5tQxYfmw@mail.gmail.com>
+Message-ID: <50FA6C88.1030102@schildbach.de>
+
+Matt, I saw your commit and immediately started using it for testing.
+Now I think the bitcoinj side needs some love because not one
+transaction is being confirmed (all just pending) when replaying the
+blockchain.
+
+
+On 01/18/2013 05:38 PM, Mike Hearn wrote:
+> I'm thinking we should actually make the change we talked about before
+> and have the filtered block sent before the transaction data.
+> 
+> For one, it's not intuitive (API wise) that you'd get a callback
+> saying "new pending tx" immediately before another callback saying "tx
+> was confirmed", but that's what the current setup makes most natural.
+> To fix it we'd have to notice that a tx message wasn't requested by
+> us, buffer it, and wait for the corresponding filteredblock message.
+> It seems cleaner to receive a filteredblock and then for any tx that
+> matches it, attach it to the FilteredBlock object and wait until it is
+> full up, then pass it to the wallet code all at once.
+> 
+> Another issue is that to risk analyze unconfirmed transactions you
+> really have to download all dependencies. That has to be triggered by
+> seeing an unconfirmed transaction. It's dumb to start this process for
+> a tx that is actually in the chain, so you need to have some notion of
+> whether it came from a filtered block anyway. I only realized this
+> today.
+> 
+> I think when we discussed this before, the justification for having it
+> work the current way was that it was simpler to integrate with the SPV
+> client code if it was done this way around. But I don't think it's
+> really simpler. There are enough odd side effects of doing it this
+> way, that I feel it'd be better to tweak the protocol now whilst we
+> have the chance.
+> 
+> On Wed, Jan 16, 2013 at 4:00 PM, Matt Corallo <bitcoin-list at bluematt.me> wrote:
+>> Actually, there is one more minor algorithmic change I would like to
+>> make to the way the hash function is computed really quick before it
+>> gets merged, I'll have that finished up by the end of today.
+>>
+>> Matt
+>>
+>> On Wed, 2013-01-16 at 11:43 +0100, Mike Hearn wrote:
+>>> Matts latest code has been tested by Andreas and seems to work
+>>> correctly. He had to extend the client a bit to refresh the filter
+>>> every 25k blocks because even with the extra flag, eventually the
+>>> filter degrades into uselessness, but it did still improve the
+>>> situation quite a bit.
+>>>
+>>> Because it's unit tested, been reviewed by me several times, has an
+>>> interoperable implementation that has also been tested by Andreas in a
+>>> build of his smartphone app,  I'm going to ACK the current code and
+>>> request that it be merged in to 0.8. What do you say Gavin?
+>>>
+>>> The next step after that would be profiling. It's a big performance
+>>> improvement for SPV clients already, but not as much as I anticipated.
+>>> I suspect there's a simple bottleneck or missed optimization
+>>> somewhere. But that can obviously come post-0.8
+>>
+>>
+> 
+> ------------------------------------------------------------------------------
+> Master HTML5, CSS3, ASP.NET, MVC, AJAX, Knockout.js, Web API and
+> much more. Get web development skills now with LearnDevNow -
+> 350+ hours of step-by-step video tutorials by Microsoft MVPs and experts.
+> SALE $99.99 this month only -- learn more at:
+> http://p.sf.net/sfu/learnmore_122812
+> 
+
+
+
+
+
+From pete at petertodd.org  Thu Jan 24 07:01:03 2013
+From: pete at petertodd.org (Peter Todd)
+Date: Thu, 24 Jan 2013 02:01:03 -0500
+Subject: [Bitcoin-development] Testnet DNS seed
+Message-ID: <20130124070103.GA30820@savin>
+
+I setup a testnet DNS seed using Pieter Wuille's bitcoin-seeder, with
+some simple modifications for testnet. It's at
+testnet-seed.bitcoin.petertodd.org I also created
+static-testnet-seed.bitcoin.petertodd.org which currently has a single A
+record pointing to a testnet node I'm running to bootstrap the seeder
+itself.
+
+Everything is running on a dedicated Amazon EC2 micro instance. Just
+IPv4 is supported right now as EC2 doesn't support IPv6; even tunnels
+are broken. I also haven't setup tor yet. I can do both if there is
+demand.
+
+I guess the next step is to create a new strTestNetDNSSeed in the
+satoshi client, although it'd be better if at least one more person had
+a testnet seed to include in the list. Probably best to leave IRC
+enabled too.
+
+Also, FWIW, it looks like the pnSeed list is way out of date...
+
+Pieter: Have you written any start/stop/monitoring scripts for the
+seeder? My mods are at git://github.com/petertodd/bitcoin-seeder.git in
+the "testnet" branch. I'll send you a pull request once it's had some
+testing.
+
+-- 
+'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 490 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20130124/66f666dd/attachment.sig>
+
+From jgarzik at exmulti.com  Sat Jan 26 02:23:28 2013
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Fri, 25 Jan 2013 21:23:28 -0500
+Subject: [Bitcoin-development] Testnet DNS seed
+In-Reply-To: <20130124070103.GA30820@savin>
+References: <20130124070103.GA30820@savin>
+Message-ID: <CA+8xBpdMV5qyZdXHsHoQFNLHzuxXKAFJd096Bv5RPnMX=CWgug@mail.gmail.com>
+
+On Thu, Jan 24, 2013 at 2:01 AM, Peter Todd <pete at petertodd.org> wrote:
+> Everything is running on a dedicated Amazon EC2 micro instance. Just
+> IPv4 is supported right now as EC2 doesn't support IPv6; even tunnels
+> are broken. I also haven't setup tor yet. I can do both if there is
+> demand.
+
+How long do you plan to run this?  Indefinitely [presuming there is
+interest and users]?
+
+> I guess the next step is to create a new strTestNetDNSSeed in the
+> satoshi client, although it'd be better if at least one more person had
+
+No objection
+
+> a testnet seed to include in the list. Probably best to leave IRC
+> enabled too.
+
+Yes, IRC must remain enabled
+
+
+> Also, FWIW, it looks like the pnSeed list is way out of date...
+
+Yes.  Usually nanotube does the update when poked.  That can happen,
+or something different.
+
+A nice alternative might be a simple script that transforms Pieter's
+seeds.txt into pnSeed[]
+
+
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From pete at petertodd.org  Sun Jan 27 10:27:52 2013
+From: pete at petertodd.org (Peter Todd)
+Date: Sun, 27 Jan 2013 05:27:52 -0500
+Subject: [Bitcoin-development] Testnet DNS seed
+In-Reply-To: <CA+8xBpdMV5qyZdXHsHoQFNLHzuxXKAFJd096Bv5RPnMX=CWgug@mail.gmail.com>
+References: <20130124070103.GA30820@savin>
+	<CA+8xBpdMV5qyZdXHsHoQFNLHzuxXKAFJd096Bv5RPnMX=CWgug@mail.gmail.com>
+Message-ID: <20130127102752.GA7134@savin>
+
+On Fri, Jan 25, 2013 at 09:23:28PM -0500, Jeff Garzik wrote:
+> On Thu, Jan 24, 2013 at 2:01 AM, Peter Todd <pete at petertodd.org> wrote:
+> > Everything is running on a dedicated Amazon EC2 micro instance. Just
+> > IPv4 is supported right now as EC2 doesn't support IPv6; even tunnels
+> > are broken. I also haven't setup tor yet. I can do both if there is
+> > demand.
+> 
+> How long do you plan to run this?  Indefinitely [presuming there is
+> interest and users]?
+
+Indefinitely. It's a pretty cheap thing to run, about $7.5/month. If
+anyone else wants I can give them a machine image copy easily too.
+
+> > Also, FWIW, it looks like the pnSeed list is way out of date...
+> 
+> Yes.  Usually nanotube does the update when poked.  That can happen,
+> or something different.
+> 
+> A nice alternative might be a simple script that transforms Pieter's
+> seeds.txt into pnSeed[]
+
+seed.txt? You mean the dumpfile produced by bitcoin-seeder? That has
+uptime info, although only a months worth if I understand it correctly.
+
+pnSeed probably should be filtered with SORB's dynamic ip list or
+similar too, and additionally add an expiry time. (1 year?)
+
+-- 
+'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 490 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20130127/8429c990/attachment.sig>
+
+From jgarzik at exmulti.com  Sun Jan 27 16:14:02 2013
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Sun, 27 Jan 2013 11:14:02 -0500
+Subject: [Bitcoin-development] Testnet DNS seed
+In-Reply-To: <20130127102752.GA7134@savin>
+References: <20130124070103.GA30820@savin>
+	<CA+8xBpdMV5qyZdXHsHoQFNLHzuxXKAFJd096Bv5RPnMX=CWgug@mail.gmail.com>
+	<20130127102752.GA7134@savin>
+Message-ID: <CA+8xBpe0cOiFsn9nOc84MJwMKmbJb9S5tOPzFSffD6iHWrQ91g@mail.gmail.com>
+
+On Sun, Jan 27, 2013 at 5:27 AM, Peter Todd <pete at petertodd.org> wrote:
+> On Fri, Jan 25, 2013 at 09:23:28PM -0500, Jeff Garzik wrote:
+>> On Thu, Jan 24, 2013 at 2:01 AM, Peter Todd <pete at petertodd.org> wrote:
+>> > Everything is running on a dedicated Amazon EC2 micro instance. Just
+>> > IPv4 is supported right now as EC2 doesn't support IPv6; even tunnels
+>> > are broken. I also haven't setup tor yet. I can do both if there is
+>> > demand.
+>>
+>> How long do you plan to run this?  Indefinitely [presuming there is
+>> interest and users]?
+>
+> Indefinitely. It's a pretty cheap thing to run, about $7.5/month. If
+> anyone else wants I can give them a machine image copy easily too.
+
+Cool.  ACK on adding your seed to the ref client.
+
+>> > Also, FWIW, it looks like the pnSeed list is way out of date...
+>>
+>> Yes.  Usually nanotube does the update when poked.  That can happen,
+>> or something different.
+>>
+>> A nice alternative might be a simple script that transforms Pieter's
+>> seeds.txt into pnSeed[]
+>
+> seed.txt? You mean the dumpfile produced by bitcoin-seeder? That has
+
+Correct.
+
+> uptime info, although only a months worth if I understand it correctly.
+>
+> pnSeed probably should be filtered with SORB's dynamic ip list or
+> similar too, and additionally add an expiry time. (1 year?)
+
+That's fine.  The main point was to create something scripted and
+repeatable.  Then pnSeed[] becomes easier to maintain _and_ easier to
+audit.  Right now it is a bit opaque with a list of hex constants.  A
+script or makefile rule could do
+
+     cd src
+     ../contrib/gen-seeds.py > seeds.h
+
+and seeds might look like
+
+  #ifndef __SEEDS_AUTOGEN_H__ etc.
+
+  unsigned int pnSeed[] = {
+    0xABCD1234, /* IP addr 12.34.56.78 */
+  };
+
+I think Satoshi liked them opaque and not easily searchable, so
+printing the readable IP address in a comment may not be desired.
+Anyway, that output would make updating the list more transparent and
+easy to maintain.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From pieter.wuille at gmail.com  Sun Jan 27 16:18:43 2013
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Sun, 27 Jan 2013 17:18:43 +0100
+Subject: [Bitcoin-development] Testnet DNS seed
+In-Reply-To: <20130127102752.GA7134@savin>
+References: <20130124070103.GA30820@savin>
+	<CA+8xBpdMV5qyZdXHsHoQFNLHzuxXKAFJd096Bv5RPnMX=CWgug@mail.gmail.com>
+	<20130127102752.GA7134@savin>
+Message-ID: <20130127161842.GA29784@vps7135.xlshosting.net>
+
+On Sun, Jan 27, 2013 at 05:27:52AM -0500, Peter Todd wrote:
+> seed.txt? You mean the dumpfile produced by bitcoin-seeder? That has
+> uptime info, although only a months worth if I understand it correctly.
+
+It has information about all non-banned IPs that were ever connected to
+succesfully. The connectability% is a decaying average, with a time 
+constant of up to a month, though.
+
+I have a script ready which combines one or more seeds.txt's data into a
+pnSeed[] array C source code, by the way. I'll add it to the repository.
+
+-- 
+Pieter
+
+
+
+From mike at plan99.net  Wed Jan 30 11:09:55 2013
+From: mike at plan99.net (Mike Hearn)
+Date: Wed, 30 Jan 2013 12:09:55 +0100
+Subject: [Bitcoin-development] Draft BIP for Bloom filtering
+In-Reply-To: <1358348447.1048.0.camel@localhost.localdomain>
+References: <CANEZrP0XALwBFJyZTzYd5xBp4MRrjv0s_y2tOXbO7UgjWF2HzA@mail.gmail.com>
+	<20121121151534.GA5540@vps7135.xlshosting.net>
+	<1353523117.1085.14.camel@localhost.localdomain>
+	<20121127211019.GA22701@vps7135.xlshosting.net>
+	<CANEZrP0w052ebao-04H4Wduerm86o6RKBY=ObnJXBX22k--zMA@mail.gmail.com>
+	<1357876751.1740.4.camel@localhost.localdomain>
+	<CA+8xBpcB6kXWyRbeUknK6gkcrFMV6YtrDk0c938q1_32U6GtRw@mail.gmail.com>
+	<CANEZrP2k30UsWFYSZ7Bh5Hm4LJ9vEAMEUgYSrYkcXcDTY2Z79Q@mail.gmail.com>
+	<CANEZrP3KKGOPM7BzWAr1xGqh96iEzJ+Ki2hdUTe0Gvv51pJ23w@mail.gmail.com>
+	<CANEZrP2q=Kvk8DRRjB7mtw7QF8xDTAFYPVRCDW60tJn4A67LYQ@mail.gmail.com>
+	<1358348447.1048.0.camel@localhost.localdomain>
+Message-ID: <CANEZrP0HPgNKaNUMbFQS4Hj+gBQ6c7gatoeUXEiRSCA0wBkenA@mail.gmail.com>
+
+Andreas has uploaded Android builds that use the new bloom filtering and
+peer selection code (also, dependency analysis of transactions).
+
+The performance gain is very cool. The app feels dramatically faster to
+start up and sync. Because the app syncs on charge when I opened it around
+lunchtime it had only 7 hours of data to sync (42 blocks) and it brought up
+6 peer connections, found a 0.7.99 node and synced all in <2 seconds. That
+was on wifi.
+
+The next lowest hanging perf fruit is almost certainly to optimize disk
+accesses. Flash on Android devices seems to be much slower than laptop
+flash storage, and current bitcoinj is very inefficient in how it writes
+(one write per block header!). This matters a lot when doing fast catchup
+for first time users.
+
+The BIP is now a little bit stale, but only slightly.
+
+
+On Wed, Jan 16, 2013 at 4:00 PM, Matt Corallo <bitcoin-list at bluematt.me>wrote:
+
+> Actually, there is one more minor algorithmic change I would like to
+> make to the way the hash function is computed really quick before it
+> gets merged, I'll have that finished up by the end of today.
+>
+> Matt
+>
+> On Wed, 2013-01-16 at 11:43 +0100, Mike Hearn wrote:
+> > Matts latest code has been tested by Andreas and seems to work
+> > correctly. He had to extend the client a bit to refresh the filter
+> > every 25k blocks because even with the extra flag, eventually the
+> > filter degrades into uselessness, but it did still improve the
+> > situation quite a bit.
+> >
+> > Because it's unit tested, been reviewed by me several times, has an
+> > interoperable implementation that has also been tested by Andreas in a
+> > build of his smartphone app,  I'm going to ACK the current code and
+> > request that it be merged in to 0.8. What do you say Gavin?
+> >
+> > The next step after that would be profiling. It's a big performance
+> > improvement for SPV clients already, but not as much as I anticipated.
+> > I suspect there's a simple bottleneck or missed optimization
+> > somewhere. But that can obviously come post-0.8
+>
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20130130/0408881f/attachment.html>
+
+From mike at plan99.net  Wed Jan 30 11:13:14 2013
+From: mike at plan99.net (Mike Hearn)
+Date: Wed, 30 Jan 2013 12:13:14 +0100
+Subject: [Bitcoin-development] Draft BIP for Bloom filtering
+In-Reply-To: <CANEZrP0HPgNKaNUMbFQS4Hj+gBQ6c7gatoeUXEiRSCA0wBkenA@mail.gmail.com>
+References: <CANEZrP0XALwBFJyZTzYd5xBp4MRrjv0s_y2tOXbO7UgjWF2HzA@mail.gmail.com>
+	<20121121151534.GA5540@vps7135.xlshosting.net>
+	<1353523117.1085.14.camel@localhost.localdomain>
+	<20121127211019.GA22701@vps7135.xlshosting.net>
+	<CANEZrP0w052ebao-04H4Wduerm86o6RKBY=ObnJXBX22k--zMA@mail.gmail.com>
+	<1357876751.1740.4.camel@localhost.localdomain>
+	<CA+8xBpcB6kXWyRbeUknK6gkcrFMV6YtrDk0c938q1_32U6GtRw@mail.gmail.com>
+	<CANEZrP2k30UsWFYSZ7Bh5Hm4LJ9vEAMEUgYSrYkcXcDTY2Z79Q@mail.gmail.com>
+	<CANEZrP3KKGOPM7BzWAr1xGqh96iEzJ+Ki2hdUTe0Gvv51pJ23w@mail.gmail.com>
+	<CANEZrP2q=Kvk8DRRjB7mtw7QF8xDTAFYPVRCDW60tJn4A67LYQ@mail.gmail.com>
+	<1358348447.1048.0.camel@localhost.localdomain>
+	<CANEZrP0HPgNKaNUMbFQS4Hj+gBQ6c7gatoeUXEiRSCA0wBkenA@mail.gmail.com>
+Message-ID: <CANEZrP1iV8K7_GQkRw6gNSXr+22MWmwuiu5651sK+QtupBSZtg@mail.gmail.com>
+
+Sorry, to clarify, these are test builds available here:
+
+
+https://code.google.com/p/bitcoin-wallet/downloads/detail?name=bitcoin-wallet-2.39_bitcoinj0.7.apk&can=2&q=
+
+It's not on the Play store yet. It probably makes sense to release after
+some more testing and after Bitcoin 0.8 comes out, as otherwise there's a
+risk that 0.7 snapshot nodes will get overloaded.
+
+
+On Wed, Jan 30, 2013 at 12:09 PM, Mike Hearn <mike at plan99.net> wrote:
+
+> Andreas has uploaded Android builds that use the new bloom filtering and
+> peer selection code (also, dependency analysis of transactions).
+>
+> The performance gain is very cool. The app feels dramatically faster to
+> start up and sync. Because the app syncs on charge when I opened it around
+> lunchtime it had only 7 hours of data to sync (42 blocks) and it brought up
+> 6 peer connections, found a 0.7.99 node and synced all in <2 seconds. That
+> was on wifi.
+>
+> The next lowest hanging perf fruit is almost certainly to optimize disk
+> accesses. Flash on Android devices seems to be much slower than laptop
+> flash storage, and current bitcoinj is very inefficient in how it writes
+> (one write per block header!). This matters a lot when doing fast catchup
+> for first time users.
+>
+> The BIP is now a little bit stale, but only slightly.
+>
+>
+> On Wed, Jan 16, 2013 at 4:00 PM, Matt Corallo <bitcoin-list at bluematt.me>wrote:
+>
+>> Actually, there is one more minor algorithmic change I would like to
+>> make to the way the hash function is computed really quick before it
+>> gets merged, I'll have that finished up by the end of today.
+>>
+>> Matt
+>>
+>> On Wed, 2013-01-16 at 11:43 +0100, Mike Hearn wrote:
+>> > Matts latest code has been tested by Andreas and seems to work
+>> > correctly. He had to extend the client a bit to refresh the filter
+>> > every 25k blocks because even with the extra flag, eventually the
+>> > filter degrades into uselessness, but it did still improve the
+>> > situation quite a bit.
+>> >
+>> > Because it's unit tested, been reviewed by me several times, has an
+>> > interoperable implementation that has also been tested by Andreas in a
+>> > build of his smartphone app,  I'm going to ACK the current code and
+>> > request that it be merged in to 0.8. What do you say Gavin?
+>> >
+>> > The next step after that would be profiling. It's a big performance
+>> > improvement for SPV clients already, but not as much as I anticipated.
+>> > I suspect there's a simple bottleneck or missed optimization
+>> > somewhere. But that can obviously come post-0.8
+>>
+>>
+>>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20130130/bb050d2a/attachment.html>
+

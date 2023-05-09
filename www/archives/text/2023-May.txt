@@ -1,0 +1,2713 @@
+From lloyd.fourn at gmail.com  Mon May  1 04:23:30 2023
+From: lloyd.fourn at gmail.com (Lloyd Fournier)
+Date: Mon, 1 May 2023 12:23:30 +0800
+Subject: [bitcoin-dev] On adaptor security (in protocols)
+In-Reply-To: <Vv-Zz519CQs1JkS8NgeHfI-KGaYelNTxKMikPxdeIRiELmPKlT80g_-BzDgBvpm9MMIr-BRrSyGePC-HFR18QU4uzC0rPJdMzO_hlkUhUaM=@protonmail.com>
+References: <Vv-Zz519CQs1JkS8NgeHfI-KGaYelNTxKMikPxdeIRiELmPKlT80g_-BzDgBvpm9MMIr-BRrSyGePC-HFR18QU4uzC0rPJdMzO_hlkUhUaM=@protonmail.com>
+Message-ID: <CAH5Bsr28mgcLjO43pJKmk7HYKqp9m2eJ0UcGfgOS+H4sFqcTYw@mail.gmail.com>
+
+Hi waxwing,
+
+I think your view of the uselessness of single signer adaptors is too
+pessimistic. The claim you make is that they "don't provide a way to
+create  enforcement that the publication of signature on a pre-defined
+message will reveal a secret'' and so are useless. I think this is wrong.
+If I hold a secret key for X and create a signature adaptor with some
+encryption key Y with message m and do not create any further signatures
+(adaptor or otherwise) on m, then any signature on m that is published
+necessarily reveals the secret on Y to me. This is very useful and has
+already been used for years by DLCs in production.
+
+I haven't read the proofs in detail but I am optimistic about your
+approach. One thing I was considering while reading is that you could make
+a general proof against all secure Schnorr signing scheme in the ROM by
+simply extending the ROM forwarding approach from Aumayer et al to all
+"tweak" operations on the elements that go into the Schnorr challenge hash
+i.e. the public key and the nonce. After all whether it's MuSig2, MuSig,
+FROST they all must call some RO. I think we can prove that if we apply any
+bijective map to the (X,R) tuple before they go into the challenge hash
+function then any Schnorr-like scheme that was secure before will be secure
+when bip32/TR tweaking (i.e. tweaking X) and adaptor tweaking (tweaking R)
+is applied to it. This would be cool because then we could prove all these
+variants secure for all schemes past and present in one go. I haven't got a
+concrete approach but the proofs I've looked at all seem to share this
+structure.
+
+Cheers,
+
+LL
+
+On Sun, 30 Apr 2023 at 00:20, AdamISZ via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Hi list,
+> I was motivated to look more carefully at the question of the security of
+> using signature adaptors after recently getting quite enthused about the
+> idea of using adaptors across N signing sessions to do a kind of multiparty
+> swap. But of course security analysis is also much more important for the
+> base case of 2 party swapping, which is of .. some considerable practical
+> importance :)
+>
+> There is work (referenced in Section 3 here) that's pretty substantial on
+> "how secure are adaptors" (think in terms of security reductions) already
+> from I guess the 2019-2021 period. But I wanted to get into scenarios of
+> multiple adaptors at once or multiple signing sessions at once with the
+> *same* adaptor (as mentioned above, probably this is the most important
+> scenario).
+>
+> To be clear this is the work of an amateur and is currently unreviewed -
+> hence (a) me posting it here and (b) putting the paper on github so people
+> can easily add specific corrections or comments if they like:
+>
+> https://github.com/AdamISZ/AdaptorSecurityDoc/blob/main/adaptorsecurity.pdf
+>
+> I'll note that I did the analysis only around MuSig, not MuSig2.
+>
+> The penultimate ("third case"), that as mentioned, of "multiple signing
+> sessions, same adaptor" proved to be the most interesting: in trying to
+> reduce this to ECDLP I found an issue around sequencing. It may just be
+> irrelevant but I'd be curious to hear what others think about that.
+>
+> If nothing else, I'd be very interested to hear what experts in the field
+> have to say about security reductions for this primitive in the case of
+> multiple concurrent signing sessions (which of course has been analyzed
+> very carefully already for base MuSig(2)).
+>
+> Cheers,
+> AdamISZ/waxwing
+>
+>
+>
+>
+> Sent with Proton Mail secure email.
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230501/5c70f1ea/attachment.html>
+
+From weiji.g at gmail.com  Mon May  1 12:46:30 2023
+From: weiji.g at gmail.com (Weiji Guo)
+Date: Mon, 1 May 2023 20:46:30 +0800
+Subject: [bitcoin-dev] proposal: new opcode OP_ZKP to enable ZKP-based
+ spending authorization
+In-Reply-To: <xNzSDtvj-BH4EW9eJMqn_yAiVUEiggnS3WIrvLml6gGAZ6CPADO9pbPV4B30txzSY9laEmX3ckXX8L2Hu18ZrWMUjMH23csL-YK-mDse6DY=@protonmail.com>
+References: <CA+ydi=LtskFh89TW75=CBwbdZzWR-ZjWS77TnrF4G+xUfm8z+Q@mail.gmail.com>
+ <xNzSDtvj-BH4EW9eJMqn_yAiVUEiggnS3WIrvLml6gGAZ6CPADO9pbPV4B30txzSY9laEmX3ckXX8L2Hu18ZrWMUjMH23csL-YK-mDse6DY=@protonmail.com>
+Message-ID: <CA+ydi=K7kePFPXbTP6S63SdddORnc6nVoHqR4gDVoeX3uY-S-Q@mail.gmail.com>
+
+Hi ZmnSCPxj,
+
+Thank you very much for your insights. You are definitely right about
+making the verification keys consensus-critical and about how the weight
+units. I totally agree that the weighting of ZKP the witness should be
+higher. We will carry out some benchmarking to recommend a reasonable
+weight when we start to develop a GitHub PR.
+
+Meanwhile, as we can potentially aggregate many proofs or recursively
+verify even more, the average cost might still be manageable.
+
+Regards,
+Weiji
+
+On Sun, Apr 30, 2023 at 10:16?AM ZmnSCPxj <ZmnSCPxj at protonmail.com> wrote:
+
+> Good morning Weiji,
+>
+> Have not completed reading, but this jumped out to me:
+>
+>
+>
+> > 3.  Dealing with system limitation: verification keys could be very long
+> and exceed the MAX_SCRIPT_ELEMENT_SIZE (520 bytes). They could be put into
+> configurations and only use their hash in the scriptPubKey. The
+> configuration information such as new verification keys could be propagated
+> through P2P messages (we might need a separate BIP for this);
+>
+> `scriptPubKey` is consensus-critical, and these new P2P messages would
+> have to be consensus-critical.
+>
+> As all nodes need to learn the new verification keys, we should consider
+> how much resources are spent on each node just to maintain and forever
+> remember verification keys.
+>
+> Currently our resource-tracking methodology is via the synthetic "weight
+> units" computation.
+> This reflects resources spent on acquiring block data, as well as
+> maintaining the UTXO database.
+> For instance, the "witness discount" where witness data (i.e. modern
+> equivalent of `scriptSig`) is charged 1/4 the weight units of other data,
+> exists because spending a UTXO reduces the resources spent in the UTXO
+> database, although still consumes resources in downloading block data
+> (hence only a discount, not free or negative/rebate).
+>
+> Similarly, any propagation of verification keys would need a similar
+> adjustment for weight units.
+>
+> As verification keys MUST be seen by all nodes before they can validate an
+> `OP_ZKP`, I would suggest that it is best included in block data (which
+> similarly needs to be seen by all nodes), together with some weight unit
+> adjustment for that data, depending on how much resources verification keys
+> would consume.
+> This is similar to how `scriptPubKey`s and amounts are included in block
+> data, as those data are kept in the UTXO database, which nodes must
+> maintain in order to validate the blockchain.
+>
+> If verification keys are permanent, they should probably be weighted
+> heavier than `scriptPubKey`s and amounts --- UTXOs can theoretically be
+> deleted later by spending the UTXO (which reduces UTXO database size),
+> while any data that must be permanently stored in a database must
+> correspondingly be weighted higher.
+>
+> Similarly, my understanding is that the CPU resources needed by validation
+> of generic ZKPs is higher than that required for validation of ECC
+> signatures.
+> Much of the current weight calculation assumes that witness data is
+> primarily ECC signatures, so if ZKP witnesses translate to higher resource
+> consumption, the weighting of ZKP witnesses should also be higher (i.e.
+> greater than the 1/4 witness-discounted weight of current witness data).
+>
+> Regards,
+> ZmnSCPxj
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230501/b08ce64e/attachment.html>
+
+From salvatore.ingala at gmail.com  Mon May  1 13:11:08 2023
+From: salvatore.ingala at gmail.com (Salvatore Ingala)
+Date: Mon, 1 May 2023 15:11:08 +0200
+Subject: [bitcoin-dev] Merkleize All The Things
+In-Reply-To: <CAD3i26AXZKDCH3odhCjpMwzOTGQKSFqH9S+5N9UXNTb7CJHONA@mail.gmail.com>
+References: <CAMhCMoH9uZPeAE_2tWH6rf0RndqV+ypjbNzazpFwFnLUpPsZ7g@mail.gmail.com>
+ <CALZpt+GVe0XTdWqV=LAcOj=nq+k2DEFqc+sKyxAujLDBR7bYbQ@mail.gmail.com>
+ <CAMhCMoEONv3jriBU3qwm0pt75iF_sgra1H2Z4rOF8u+e7hs_cw@mail.gmail.com>
+ <0f352f70-c93a-614f-e443-67d198ec2c26@protonmail.com>
+ <7f3674d1-c1ad-9a82-e30f-7cf24d697faf@protonmail.com>
+ <CAMhCMoGabEASO9CGc1hAMpYZn4nWH5D8XFs3eFcSSFAitSFUGA@mail.gmail.com>
+ <CAGpPWDZkUYW=Qb763TPzUa6yUf217nh0Bo+O9Qyf=WS2pUQUYA@mail.gmail.com>
+ <CAD3i26AXZKDCH3odhCjpMwzOTGQKSFqH9S+5N9UXNTb7CJHONA@mail.gmail.com>
+Message-ID: <CAMhCMoFgto3Bu5+yEoqn1Jf8fNd+EQK-t_H3TKR2=3RXe8FdcQ@mail.gmail.com>
+
+Hi Johan,
+
+Thanks for your message.
+
+I think games where all the possible futures can be enumerated are
+not ideal to showcase MATT, as one could just fully represent them
+with just CTV or COCV, and not use the "data embedding" at all.
+
+Perhaps rock-paper-scissors could be a better academic example. [1]
+
+I'm not sure this will fully address your question; however I think
+it's quite an instructive example, and I wanted to work it out for
+quite some time.
+
+It would be interesting to explore some contracts where the size
+of the embedded data is substantially larger, and that could be
+a natural next step to think about.
+
+
+### Rock paper scissors
+
+We want a protocol between Alice and Bob, where they bet 1 coin each:
+
+1. Alice chooses and publishes her move;
+2. Bob chooses his move, and the pot is adjudicated as per the rules.
+
+Of course, if implemented naively, this wouldn't be a very fun game:
+Bob would just wait to see Alice's move and play accordingly.
+
+That's easy to fix, though:
+
+1. Alice publishes a commitment to her move
+2. Bob publishes his move in clear
+3. Alice reveals her move, and the pot is adjudicated.
+
+We can encode Rock = 0, Paper = 1, Scissors = 2. Let m_A, m_B be
+Alice's and Bob's move, respectively. Then, it's easy to verify that:
+? m_B - m_A == 0 (mod 3) ==> it's a tie
+? m_B - m_A == 1 (mod 3) ==> Bob wins
+? m_B - m_A == 2 (mod 3) ==> Alice wins
+
+In order to create a hiding commitment for Alice, she can choose a
+256-bit random number r_A, and compute:
+
+  c_A = SHA256(m_A || r_A)
+
+With that in mind, the full protocol can go like this:
+
+1. Alice chooses her move m_A and a large random number r_A;
+   she posts c_A computed as above;
+2. Bob chooses m_B and publishes it;
+3. Alice publishes m_A and r_A, then the winner is adjudicated.
+
+
+### MATT playing RPS
+
+To implement this with CICV/COCV, we can use just 3 transactions: in
+fact, Alice can already compute c_A and share it with Bob before they
+both commit their coins into an encumbered UTXO. That also means that
+c_A can actually be hardcoded in the Scripts, rather than taking
+space in the UTXO's embedded data.
+
+Therefore, they both put one coin each, and they send to an output
+whose script is the state S0 described below.
+
+We assume that the keypath in the P2TR defined below is either a NUMS
+point, or perhaps a Musig2 aggregate key that can be used to settle
+the game collaboratively.
+
+Note that there are 3 possible payout options that are fully known
+when the game starts: either Alice takes all the money, or they split
+evenly, or Bob takes all the money.
+Similarly to the vault implementation [2], this seems to be another
+case where CTV fits very well, as it allows to very efficiently
+describe the three possible outcomes by their CTV hashes. Let them
+be <ctv-alice-wins>, <ctv-split>, <ctv-bob-wins>, respectively.
+
+Therefore, this avoids the need for 64-bit maths, and explicit amount
+introspection ? at least for these contracts.
+
+
+[State S0] (Start of the game, Alice moved; Bob's turn)
+Spending conditions:
+ - after <forfait-delay>, Alice takes the money    // (Bob forfaits)
+ - Bob posts m_B (0, 1 or 2); the next output is [S1] with data m_B
+
+The first script is:
+  // witness: []
+  <forfait-delay>
+  OP_CHECKSEQUENCEVERIFY
+  OP_DROP
+  <ctv-alice-wins>
+  OP_CHECKTEMPLATEVERIFY
+
+The second is
+  // witness: [<bob_sig> <m_B>]
+  OP_DUP 0 3 OP_WITHIN     // check that m_B is 0, 1 or 2
+
+  <internal_pubkey> OP_SWAP
+  <S1's taptree>
+  OP_CHECKOUTPUTCONTRACTVERIFY // check that the output is correct
+
+  <bob_pubkey>
+  OP_CHECKSIG
+
+
+[State S1] (Alice reveals m_A and adjudicates)
+ - after <forfait-timeout>, Bob takes the money    // (Alice forfaits)
+ - Alice posts correct m_A and r_A compatible with c_A;
+
+
+The first script is symmetric to Bob's forfait script above.
+
+The second condition can be split into three leaf scripts, one for
+each possible value of m_B - m_A (mod 3):
+
+  // witness: [<m_B> <m_A> <r_A>]
+
+  OP_OVER OP_DUP OP_TOALTSTACK  // save m_A
+  0 3 OP_WITHIN OP_VERIFY       // check that m_A is 0, 1 or 2
+
+  // check that SHA256(m_A || r_A) equals c_A
+  OP_2DUP
+  OP_CAT OP_SHA256
+  <c_A>
+  OP_EQUALVERIFY
+
+  OP_DUP
+  <internal_pubkey>, OP_SWAP
+  OP_CHECKINPUTCONTRACTVERIFY
+
+  OP_FROMALTSTACK
+  OP_SUB           // stack now contains m_B - m_A
+
+  OP_DUP           // if the result is negative, add 3
+  0 OP_LESSTHAN
+  OP_IF
+    3
+    OP_ADD
+  OP_ENDIF
+
+  {0, 1, 2}       // draw / Bob wins / Alice wins, respectively
+  OP_EQUALVERIFY
+
+  {<ctv-split>, <ctv-bob-wins>, <ctv-alice-wins>}  // respectively
+  OP_CHECKTEMPLATEVERIFY
+
+
+### Comments
+
+In general, we would have to worry about the possible
+malleability of the witness elements, when they are not signatures
+or preimages themselves. Here, in particular, it might seem that's
+an issue when <m_B> is provided while spending the state [S0].
+However, here the value of <m_B> is also committed to in the output
+thanks to COCV; therefore, Bob's signature prevents malleability
+also for m_B.
+
+In general, it seems to be the case in MATT contracts that one would
+want the signature of the authorized party performing a transition to
+some other state of the smart contract with contains embedded data;
+this makes the malleability issue less of a problem in practice than
+I initially thought.
+
+If the internal_pubkey is a musig-aggregated key of Alice and Bob,
+the game can be settled entirely offline after the first transaction.
+Simply, Bob communicates his move to Alice, Alice reveals her move to
+Bob, and they can settle the bet. The game would be played without
+any script being executed, therefore all transactions could look like
+any other P2TR, with the only possible fingerprinting being due to the
+input amounts.
+
+It should be possible to generalize the protocol so that many rounds
+can be played off-chain within the same UTXO, but I didn't try to
+figure out the details.
+
+Best,
+Salvatore Ingala
+
+
+[1] - https://en.wikipedia.org/wiki/Rock_paper_scissors
+[2] -
+https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2023-April/021588.html
+
+On Fri, 28 Apr 2023 at 10:48, Johan Tor?s Halseth <johanth at gmail.com> wrote:
+
+> Hi, Salvatore.
+>
+> I find this proposal very interesting. Especially since you seemingly
+> can achieve such powerful capabilities by such simple opcodes.
+>
+> I'm still trying to grok how this would look like on-chain (forget
+> about the off-chain part for now), if we were to play out such a
+> computation.
+>
+> Let's say you have a simple game like "one player tic-tac-toe" with
+> only two tiles: [ _ | _ ]. The player wins if he can get two in a row
+> (pretty easy game tbh).
+>
+> Could you give a complete example how you would encode one such state
+> transition (going from [ X, _ ] -> [ X, X ] for instance) in Bitcoin
+> script?
+>
+> Feel free to choose a different game or program if you prefer :)
+>
+> Thanks!
+> Johan
+>
+>
+>
+> On Tue, Dec 13, 2022 at 2:08?PM Billy Tetrud via bitcoin-dev
+> <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> >
+> > Re Verkle trees, that's a very interesting construction that would be
+> super useful as a tool for something like Utreexo. A potentially
+> substantial downside is that it seems the cryptography used to get those
+> nice properties of Verkle trees isn't quantum safe. While a lot of things
+> in Bitcoin seems to be going down the path of quantum-unsafe (I'm looking
+> at you, taproot), there are still a lot of people who think quantum safety
+> is important in a lot of contexts.
+> >
+> > On Thu, Dec 1, 2022 at 5:52 AM Salvatore Ingala via bitcoin-dev <
+> bitcoin-dev at lists.linuxfoundation.org> wrote:
+> >>
+> >> Hello Rijndael,
+> >>
+> >>
+> >>
+> >> On Wed, 30 Nov 2022 at 23:09, Rijndael <rot13maxi at protonmail.com>
+> wrote:
+> >>>
+> >>> Hello Salvatore,
+> >>>
+> >>> I found my answer re-reading your original post:
+> >>> > During the arbitration phase (say at the i-th leaf node of M_T), any
+> party can win the challenge by providing correct values for tr_i = (st_i,
+> op_i, st_{i + 1}). Crucially, only one party is able to provide correct
+> values, and Script can verify that indeed the state moves from st_i to
+> st_{i + 1} by executing op_i. The challenge is over.
+> >>
+> >> You are correct, the computation step encoded in a leaf needs to be
+> simple enough for Script to verify it.
+> >>
+> >> For the academic purpose of proving completeness (that is, any
+> computation can be successfully "proved" by the availability of the
+> corresponding fraud proof), one can imagine reducing the computation all
+> the way down to a circuit, where each step (leaf) is as simple as what can
+> be checked with {OP_NOT, OP_BOOLAND, OP_BOOLOR, OP_EQUAL}.
+> >>
+> >> In practice, you would want to utilize Script to its fullest, so for
+> example you wouldn't compile a SHA256 computation to something else ? you'd
+> rather use OP_SHA256 directly.
+> >>
+> >>>
+> >>> That raises leads to a different question: Alice initially posts a
+> commitment to an execution trace of `f(x) = y`, `x`, and `y`. Bob Disagrees
+> with `y` so starts the challenge protocol. Is there a commitment to `f`? In
+> other words, the dispute protocol (as I read it) finds the leftmost step in
+> Alice and Bob's execution traces that differ, and then rewards the coins to
+> the participant who's "after-value" is computed by the step's operation
+> applied to the "before value". But if the participants each present valid
+> steps but with different operations, who wins? In other words, Alice could
+> present [64, DECREMENT, 63] and Bob could present [64, INCREMENT, 65].
+> Those steps don't match, but both are valid. Is there something to ensure
+> that before the challenge protocol starts, that the execution trace that
+> Alice posts is for the right computation and not a different computation
+> that yields a favorable result for her (and for which she can generate a
+> valid merkle tree)?
+> >>
+> >>
+> >> The function f is already hard-coded in the contract itself, by means
+> of the tree of scripts ? that already commits to the possible futures.
+> Therefore, once you are at state S14, you know that you are verifying the
+> 6th step of the computation; and the operation in the 6th step of the
+> computation depends solely on f, not its inputs. In fact, you made me
+> realize that I could drop op_i from the i-th leaf commitment, and just
+> embed the information in the Script of that corresponding state.
+> >>
+> >> Note that the states S0 to S14 of the 256x game are not _all_ the
+> possible states, but only the ones that occurred in that execution of the
+> contract (corresponding to a path from the root to the leaf of the Merkle
+> tree of the computation trace), and therefore the ones that materialized in
+> a UTXO. Different choices made by the parties (by providing different data,
+> and therefore choosing different branches) would lead to a different leaf,
+> and therefore to different (but in a certain sense "symmetric") states.
+> >>
+> >> ========
+> >>
+> >> Since we are talking about the fact that f is committed to in the
+> contract, I'll take the chance to extend on this a bit with a fun
+> construction on top.
+> >> It is well-known in the academic literature of state channels that you
+> can create contracts where even the function ("program", or "contract") is
+> not decided when the channel is created.
+> >>
+> >> Since f is generic, we can choose f itself to be a universal Turing
+> machine. That is, we can imagine a function f(code, data) that executes a
+> program ("code") on the "data" given to it as input.
+> >> Since we can do fraud proofs on statements "f(code, data) == output",
+> we could build contracts where the "code" itself is chosen later.
+> >>
+> >> For example, one could build a universal state channel, where parties
+> can enter any contract among themselves (e.g.: start playing a chess game)
+> entirely inside the channel. The state of this universal channel would
+> contain all the states of the individual contracts that are currently open
+> in the channel, and even starting/closing contracts can happen entirely
+> off-chain.
+> >>
+> >> I believe these constructions are practical (the code of universal
+> Turing machines is not really complicated), so it might be worth exploring
+> further to figure out useful applications of this approach (supercharging
+> lightning?).
+> >>
+> >> We should probably start by implementing testnet rock-paper-scissors in
+> MATT, though :)
+> >>
+> >> Best,
+> >> Salvatore Ingala
+> >> _______________________________________________
+> >> bitcoin-dev mailing list
+> >> bitcoin-dev at lists.linuxfoundation.org
+> >> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> >
+> > _______________________________________________
+> > bitcoin-dev mailing list
+> > bitcoin-dev at lists.linuxfoundation.org
+> > https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230501/2f7ae5a8/attachment-0001.html>
+
+From b10c at b10c.me  Mon May  1 13:24:26 2023
+From: b10c at b10c.me (0xB10C)
+Date: Mon, 1 May 2023 15:24:26 +0200
+Subject: [bitcoin-dev] Proposal to Remove BIP35 P2P 'mempool' Message
+In-Reply-To: <u2v2u2tpzcuyi7mkwmt3wwco6f54v5ys5nk6fdrx4d5ucy4unx@vpaz4n65lyqu>
+References: <u2v2u2tpzcuyi7mkwmt3wwco6f54v5ys5nk6fdrx4d5ucy4unx@vpaz4n65lyqu>
+Message-ID: <629aedc0-a18c-5bfc-e2b5-2f08c3fc3212@b10c.me>
+
+Hi Will,
+
+I shared some numbers and feedback as comment [0] on your PR wanted to
+answer question 1. for completeness here too.
+
+> Its original intention was to be publicly callable, but it is now (in
+Bitcoin Core) gated behind stricter Net Permissions which make it
+accessible to trusted peers only.
+
+Bitcoin Core does only gate processing of mempool messages on
+NetPermissionFlags::Mempool when bloom filters are disabled [1]. While
+these are disabled by default, more than 20% (see PR comment) of nodes
+on the network have bloom filters enabled. These nodes all respond to
+mempool messages with INV messages.
+
+> 1. Are there any parties who still directly rely on the BIP35 P2P
+`mempool` message?
+
+I've been receiving on average about 20 mempool messages per hour to a
+well-connected NODE_BLOOM Bitcoin Core node. I've seen multiple messages
+from the user agent /BitcoinKit:0.1.0/, /bitcoinj:0.*.*/Bitcoin
+Wallet:*/, /WalletKit:0.1.0/, and /bread:2.1/. Similarly, the node
+responds to the clients with INVs up to the max number of 50k entries
+and with smaller (bloom) filtered INVs.
+
+
+0xB10C
+
+[0]: https://github.com/bitcoin/bitcoin/pull/27426#issuecomment-1529678174
+[1]:
+https://github.com/bitcoin/bitcoin/blob/d89aca1bdbe52406f000e3fa8dda12c46dca9bdd/src/net_processing.cpp#LL4603C52-L4603
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: OpenPGP_0x188CBB2648416AD5.asc
+Type: application/pgp-keys
+Size: 10796 bytes
+Desc: OpenPGP public key
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230501/7deb635c/attachment.bin>
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: OpenPGP_signature
+Type: application/pgp-signature
+Size: 833 bytes
+Desc: OpenPGP digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230501/7deb635c/attachment.sig>
+
+From michaelfolkson at protonmail.com  Mon May  1 14:18:29 2023
+From: michaelfolkson at protonmail.com (Michael Folkson)
+Date: Mon, 01 May 2023 14:18:29 +0000
+Subject: [bitcoin-dev] Vaults in the MATT framework
+In-Reply-To: <CAMhCMoHEa8vYqm7U9MKFC30_cbCoAJBgoGaP0SCvCXVTyA6TmQ@mail.gmail.com>
+References: <CAMhCMoHEa8vYqm7U9MKFC30_cbCoAJBgoGaP0SCvCXVTyA6TmQ@mail.gmail.com>
+Message-ID: <2ApImRS_OSlctWlRLsNykOYE9Z2nEfg8-IUooIluZG2MAVrY9F5oHYi5LBXN7q5QxB2_sLPIVgV-MOUBMEc451HTpPyPdrvog9jPjBpTZ5E=@protonmail.com>
+
+Hi Salvatore
+
+Can you clarify for me which bucket this proposal sits? We have APO, CTV, OP_VAULT etc that are proposals to add additional functionality to SegWit version 1, Tapleaf version 0 scripts. We have Simplicity that would need a new Tapleaf version (e.g. Tapleaf version 1). And then there are CISA like proposals that would need a new SegWit version (e.g. SegWit version 2). It looks to me like your proposal is in the first bucket (same as APO, CTV etc) as it is just introducing new opcode functionality to existing script with no deeper introspection needed but previous and current discussion of fraud proofs, MATT frameworks etc made me initially think it was going to require more than that.
+
+Thanks
+Michael
+
+--
+Michael Folkson
+Email: michaelfolkson at [protonmail.com](http://protonmail.com/)
+GPG: A2CF5D71603C92010659818D2A75D601B23FEE0F
+
+Learn about Bitcoin: https://www.youtube.com/@portofbitcoin
+
+------- Original Message -------
+On Monday, April 24th, 2023 at 20:37, Salvatore Ingala via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Hello list,
+>
+> TL;DR: the core opcodes of MATT can build vaults with a very similar design
+> to OP_VAULT. Code example here:
+>
+> https://github.com/bitcoin-inquisition/bitcoin/compare/24.0...bigspider:bitcoin-inquisition:matt-vault
+>
+> In my previous emails about the MATT proposal for smart contracts in
+> bitcoin [1], I mostly focused on proving its generality; that is, it
+> allows arbitrary smart contracts thanks to fraud proofs.
+>
+> While I still find this "completeness" result compelling, I spent more time
+> thinking about the framework itself; the construction is not very interesting
+> if it turns simple things into complicated ones. Luckily, this is not the case.
+> In particular, in this email we will not merkleize anything (other than taptrees).
+>
+> This post describes some progress into formalizing the semantics of the core
+> opcodes, and demonstrates how they could be used to create vaults that seem
+> comparable to the ones built with OP_VAULT [2], despite using general purpose
+> opcodes.
+>
+> An implementation and some minimal tests matching the content of this
+> e-mail can be found in the link above, using the bitcoin-inquisition as the
+> base branch.
+>
+> Note that the linked code is not well tested and is only intended for
+> exploratory and demonstrative purposes; therefore, bugs are likely at this
+> stage.
+>
+> ##########################
+> # PART 1: MATT's core
+> ##########################
+>
+> In this section, I will discuss plausible semantics for the core opcodes for MATT.
+>
+> The two core opcodes are defined below as OP_CHECKINPUTCONTRACTVERIFY and
+> OP_CHECKOUTPUTCONTRACTVERIFY.
+>
+> (the initial posts named them OP_CHECK{INPUT,OUTPUT}COVENANTVERIFY)
+>
+> They enhance Script with the following capabilities:
+> - decide the taptree of the output
+> - embed some (dynamically computed) data in the output
+> - access the embedded data in the current UTXO (if any)
+>
+> The opcodes below are incomplete, as they only control the output's Script and
+> not the amounts; more on that below.
+>
+> Other than that, the semantics should be quite close to the "right" one for
+> the MATT framework.
+>
+> ### The opcodes
+>
+> case OP_CHECKINPUTCONTRACTVERIFY:
+> {
+> // OP_CHECKINPUTCONTRACTVERIFY is only available in Tapscript
+> if (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0) return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+> // (x d -- )
+> if (stack.size() < 2)
+> return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+> valtype& x = stacktop(-2);
+> valtype& d = stacktop(-1);
+> if (x.size() != 32 || d.size() != 32)
+> return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+> const XOnlyPubKey nakedXOnlyKey{Span<const unsigned char>{x.data(), x.data() + 32}};
+> const uint256 data(d);
+> if (!execdata.m_internal_key.has_value())
+> return set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR); // TODO
+> // Verify that tweak(lift_x(x), d) equals the internal pubkey
+> if (!execdata.m_internal_key.value().CheckDoubleTweak(nakedXOnlyKey, &data, nullptr))
+> return set_error(serror, SCRIPT_ERR_WRONGCONTRACTDATA);
+> popstack(stack);
+> popstack(stack);
+> }
+> break;
+> case OP_CHECKOUTPUTCONTRACTVERIFY:
+> {
+> // OP_CHECKOUTPUTCONTRACTVERIFY is only available in Tapscript
+> if (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0) return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+> // (out_i x taptree d -- )
+> if (stack.size() < 4)
+> return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+> int out_i = CScriptNum(stacktop(-4), fRequireMinimal).getint();
+> valtype& x = stacktop(-3);
+> valtype& taptree = stacktop(-2);
+> valtype& d = stacktop(-1);
+> auto outps = checker.GetTxvOut();
+> // Return error if the evaluation context is unavailable
+> if (!outps)
+> return set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR); // TODO
+> if (x.size() != 32 || taptree.size() != 32 || (d.size() != 0 && d.size() != 32))
+> return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+> if (out_i < 0 || out_i >= (int)outps->size())
+> return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+> const XOnlyPubKey nakedXOnlyKey{Span<const unsigned char>{x.data(), x.data() + 32}};
+> const uint256 data(d);
+> const uint256 *data_ptr = (d.size() == 0 ? nullptr : &data);
+> const uint256 merkle_tree(taptree);
+> CScript scriptPubKey = outps->at(out_i).scriptPubKey;
+> if (scriptPubKey.size() != 1 + 1 + 32 || scriptPubKey[0] != OP_1 || scriptPubKey[1] != 32)
+> return set_error(serror, SCRIPT_ERR_WRONGCONTRACTDATA);
+> const XOnlyPubKey outputXOnlyKey{Span<const unsigned char>{scriptPubKey.data() + 2, scriptPubKey.data() + 34}};
+> // Verify that taptweak(tweak(lift_x(x), d), taptree) equals the internal pubkey
+> if (!outputXOnlyKey.CheckDoubleTweak(nakedXOnlyKey, data_ptr, &merkle_tree))
+> return set_error(serror, SCRIPT_ERR_WRONGCONTRACTDATA);
+> popstack(stack);
+> popstack(stack);
+> popstack(stack);
+> popstack(stack);
+> }
+> break;
+>
+> ### Commentary
+>
+> CheckDoubleTweak function (implemented in the branch) gets an x-only pubkey,
+> optionally some data, and optionally taptree's merkle root.
+> It verifies that the x-only pubkey being tested equals the given naked pubkey,
+> optionally tweaked with the embedded data, optionally tweaked with the tagged
+> hash of the merkle tree per BIP-0341 [3].
+> Making both the tweaks optional allows to simplify the code, and also to obtain
+> more compact scripts in some spending paths.
+>
+> In words:
+>
+> - OP_CHECKINPUTCONTRACTVERIFY: verify that the current input's internal key
+> contains some embedded data (which would typically be passed through the
+> witness stack)
+> - OP_CHECKOUTPUTCONTRACTVERIFY: verify that a given output is a certain P2TR
+> output script containing the desired embedded data.
+>
+> TBD if the tweaking used for the embedded data tweak should use a tagged hash;
+> omitted for simplicity in this demo implementation.
+>
+> ### Amount preservation
+>
+> In the code above and in the linked demo implementation, the opcodes only
+> operate on the scriptPubkey; a complete implementation would want to make sure
+> that amounts are correctly preserved.
+>
+> The most direct and general way to address this would be to allow direct
+> introspection on the output amounts. This has the complication that output
+> amounts require 64-bits arithmetics, as discussed in the context of other
+> proposals, for example: [4].
+>
+> One more limited approach that works well for many interesting contracts
+> is that of the deferred checks, implemented in OP_VAULT [2].
+> The idea is that all the amounts of the inputs that commit to the same output
+> script with OP_CHECKOUTPUTCONTRACTVERIFY are added together, and the script
+> interpreter requires that the amount of that output is not smaller than the
+> total amount of those inputs. This check is therefore transaction-wide rather
+> than being tested during the input's script evaluation.
+>
+> This behaviour is adequate for vaults and likely suitable for many other
+> applications; however, it's not the most general approach. I didn't try to
+> implement it yet, and defer the decision on the best approach to a later time.
+>
+> ### Extensions
+>
+> The opcodes above are not enough for the full generality of MATT: one would
+> need to add an opcode like OP_SHA256CAT to allow the data embedding to commit
+> to multiple pieces of data.
+> This is not used in today's post, therefore I left it out of these code examples.
+>
+> It would be easy to extend OP_CHECKOUTPUTCONTRACTVERIFY to also apply for
+> an arbitrary input (typically, different from the currently executed one); there
+> are likely use cases for that, allowing to define contracts with more complex
+> cross-input semantics, but I preferred to keep things simple.
+>
+> Of course, one could also entirely replace CICV/COCV with generic full
+> introspection on inputs/output's program, plus opcodes for elliptic curve math
+> and tagged hashes.
+>
+> ##########################
+> # PART 2: Vaults with MATT
+> ##########################
+>
+> In the rest of this post, I will document the first attempt at creating a vault
+> using the opcodes described.
+>
+> While not an attempt at cloning exactly the functionality of OP_VAULT [2],
+> it borrows heavily from the excellent work that was done there.
+>
+> In particular, it also inherits the choice of using OP_CTV as a primitive,
+> building on top of the bitcoin-inquisition's current branch that has already
+> merged OP_CTV. Reasonable vaults would be possible without CTV, but they
+> would be less efficient, particularly in the case of sending to many addresses
+> in a single unvaulting flow.
+>
+> ### Distilling OP_VAULT
+>
+> Abstracting from the implementation details, I mentally model a vault as a
+> simple state machine with 2 states: [V] and [U]:
+>
+> [V]: the initial vault UTXO(s);
+> [U]: the utxo produced by the "trigger transaction" during unvaulting.
+>
+> On the typical path: one or more [V] UTXOs are sent to the [U] state, and after
+> a timelock set on [U] expires, [U] is spent to one or several destinations.
+> Crucially, the destination outputs and amounts are already decided when [V] is
+> spent into [U].
+>
+> At any time before the funds are spent from [U], they can always be spent by
+> sending them to some specified recovery path.
+>
+> There are two key elements that are part of OP_VAULT's semantics, and could be
+> generalized:
+>
+> ? Forcing the script/amount of the next stepon
+> ? Storing some data for future Script's access (in the vault's case, a hash
+> that commits to the final withdrawal transaction).
+>
+> CICV/COCV generalize both to arbitrary scripts (taptrees) and state machines,
+> and to dynamical and witness-dependent data embedded in the pubkey of a P2TR
+> output.
+>
+> ### Vault parameters
+>
+> A contract that represents a vault has the following parameters (hardcoded in
+> the script when the vault is created):
+>
+> - alternate_pk: a key that can be used any time.
+> - spend_delay: the relative timelock before the withdrawal can be finalized;
+> - recover_pk: a pubkey for a P2TR output where funds can be sent at any time.
+>
+> The alternate_pk is a pubkey that can optionally be used as the key-path
+> spending condition for both states [V] and [U]. If such a spending condition is not
+> desired, it can be replaced with a NUMS point, making the key-path unspendable.
+>
+> The spend_delay is the number of blocks that must be mined before the final
+> withdrawal transaction
+>
+> In this example we also use an unvault_pk needed to authorize the unvaulting
+> process (that is, spend [V] into [U]); this could be replaced with any miniscript
+> or other conditions expressible in Script.
+>
+> ### P2TR structure for [V] (vault)
+>
+> internal key: alternate_pk
+>
+> Script 1: "trigger"
+> # witness: <out_i> <ctv-hash>
+> {
+> <alternate_pk>,
+> <merkle root of U's taptree>,
+> 2, OP_ROLL,
+> OP_CHECKOUTPUTCONTRACTVERIFY,
+>
+> <unvault_pk>
+> OP_CHECKSIG
+> }
+>
+> Script 2: "recover"
+> # witness: <out_i>
+> {
+> recover_pk,
+> OP_0, # no data tweak
+> OP_0, # no taptweak
+> OP_CHECKOUTPUTCONTRACTVERIFY,
+> OP_TRUE
+> }
+>
+> The "trigger" script requires in the witness an output index and the ctv-hash
+> that describes the withdrawal transaction.
+> COCV forces the output to contain the ctv-hash as embedded data.
+> That's followed by the unvaulting condition ? in this example, a simple
+> signature check.
+>
+> The "recover" script doesn't require any signature, and it simply forces
+> the output specified in the witness to be a P2TR output with recover_pk as its
+> pubkey.
+>
+> (Omitting the "recover" script in [V] would reduce the size of the witness by
+> 32 bytes in the expected case, and might be preferred for some users)
+>
+> ### P2TR structure for [U] (unvaulting state)
+>
+> internal key: alternate_pk (tweaked with ctv_hash)
+>
+> Script 1: "withdrawal"
+> # witness: <ctv_hash>
+> {
+> OP_DUP,
+>
+> # check that the top of the stack is the
+> # embedded data in the current input
+> <alternate_pk>, OP_SWAP,
+> OP_CHECKINPUTCONTRACTVERIFY,
+>
+> # Check timelock
+> <spend_delay>,
+> OP_CHECKSEQUENCEVERIFY,
+> OP_DROP,
+>
+> # Check that the transaction output is as expected
+> OP_CHECKTEMPLATEVERIFY
+> }
+>
+> Script 2: "recover"
+> # witness: <out_i>
+> {
+> <recover_pk>,
+> OP_0,
+> OP_0,
+> OP_CHECKOUTPUTCONTRACTVERIFY,
+> OP_TRUE
+> }
+>
+> The "withdrawal" finalizes the transaction, by checking that the timelock expired and
+> the outputs satisfy the CTV hash that was committed to in the previous transaction.
+>
+> The "recover" script is identical as before.
+>
+> ### Differences with OP_VAULT vaults
+>
+> Here I refer to the latest version of OP_VAULT at the time of writing. [5]
+> It is not a thorough analysis.
+>
+> Unlike the implementation based on OP_VAULT, the [V] utxos don't have an option
+> to add an additional output that is sent back to the same exact vault.
+> Supporting this use case seems to require a more general way of handling the
+> distribution of amounts than what I discussed in the section above: that would
+> in fact need to be generalized to the case of multiple
+> OP_CHECKOUTPUTCONTRACTVERIFY opcodes executed for the same input.
+>
+> By separating the ctv-hash (which is considered "data") from the scripts in the
+> taptree, one entirely avoids the need to dynamically create taptrees and
+> replace leaves in the covenant-encumbered UTXOs; in fact, the taptrees of [V]
+> and [U] are already set in stone when [V] utxos are created, and only the
+> "data" portion of [U]'s scriptPubKey is dynamically computed. In my opinion,
+> this makes it substantially easier to program "state machines" that control the
+> behavior of coins, of which vaults are a special case.
+>
+> I hope you'll find this interesting, and look forward to your comments.
+>
+> Salvatore Ingala
+>
+> [1] - https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2022-November/021223.html
+> [2] - https://github.com/bitcoin/bips/pull/1421
+> [3] - https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki
+> [4] - https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2021-September/019420.html
+> [5] - https://github.com/bitcoin/bips/blob/7112f308b356cdf0c51d917dbdc1b98e30621f80/bip-0345.mediawiki
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230501/6f94a2a7/attachment-0001.html>
+
+From antoine.riard at gmail.com  Mon May  1 17:47:46 2023
+From: antoine.riard at gmail.com (Antoine Riard)
+Date: Mon, 1 May 2023 18:47:46 +0100
+Subject: [bitcoin-dev] Civ Kit: A Peer-to-Peer Electronic Market System
+In-Reply-To: <CALZpt+G_wqAqXkenDwdojT4EhpweYwe2DiCYZRFfCbMLL8DbVA@mail.gmail.com>
+References: <CALZpt+G_wqAqXkenDwdojT4EhpweYwe2DiCYZRFfCbMLL8DbVA@mail.gmail.com>
+Message-ID: <CALZpt+Ga5nT5yy=DpjiU8ULgnas=5CWJYqrRPu5i2Tyq5tG=UA@mail.gmail.com>
+
+Hi all,
+
+One of the most relevant feedback I received on the paper publication
+was the lack of underscoring front-running resistance as a fundamental
+property wished for a peer-to-peer marketplace.
+
+It is expected the level of front-running resistance aimed by the
+market participants to be heavily functioned by the types of trades
+considered: fiat currencies, real goods, services. For some classes of
+goods, e.g commodities one cannot expect the same level of item
+liquidity due to cycle of production and exogenous factors like
+weather. Some types of trades marketplaces might be exposed to far
+less front-running risks and rather would have to deal with accurate
+risk modelling of the underlying goods. E.g attest there is a
+decentralized identifier or any other linkage proof of the physical
+good existence staying valid for the duration of offer lifetime.
+Offers conditions themselves might be far more verbose and precise
+special Bitcoin Script paths to morph the shipment risks.
+
+On the other hand, the types of trades like fiat currencies or bitcoin
+financial contracts (e.g discreet log contracts or submarine swaps),
+front-running risk by the bulletin board sounds a qualified concern.
+In traditional finance, front-running is defined as "entering into an
+equity trade, options or future contracts with advance knowledge of a
+block transaction that will influence the price of the underlying
+security to capitlize on the trade" [0]. In Bitcoin/Civkit parlance, a
+front-running could be a board on the discovery of a batch of market
+offers increasing liquidity for a fiat-2-btc pair, seizing the
+opportunity by forwarding a HTLC across a Lightning payment path to
+enter into the trade, before publishing the offer on its board.
+
+I think you have at least two security paradigms to mitigate
+front-running happening peer-to-peer marketplace. The first one is to
+duplicate the announcement of the offers to a number of concurrent
+board operated by independent identities and in parallel monitor the
+latency. Latency anomalies should be spotted on by watchtower-like
+infrastructure at the service of makers/takers and in case of repeated
+anomalies a maker should disqualify the misbehaving board from future
+announcements. As all statistical mitigation it is not perfect and
+open the way to some margin of exploitation by the boards, as the
+watchtower monitoring frequency can be guessed. Additionally, this
+latency monitoring paradigm sounds to be valid under the assumption
+that at least one board is "honest" and board might have a holistic
+interest to silently collude. Running or accessing monitoring
+infrastructure comes with a new liveliness requirement or additional
+cost for mobile clients.
+
+Another paradigm can be to run the bulletin boards as a federation e.g
+under Honey Badger BFT as used by Fedimint [1]. The incoming board
+offers become consensus items that must be announced to all the
+federations members onion gateway and which are not announced before a
+consensus proposal has been adopted. The e-cash tokens can be rather
+Bitcoin-paid credentials required by the board federation for
+publication. The federation members earn an income as a group to
+follow the consensus rules and be paid only when there is "consensus"
+publication. The federation could adopt some "DynFed" techniques to
+extend the federation set [2]. One can imagine a federation consisting
+of all the significant market participants, leveling the field for
+all.
+
+Is there another security paradigm direction to mitigate front-running
+and other asymmetries of information ? I can't immediately imagine
+more though I believe it stays an interesting open question.
+
+In fine, the Civkit proposes a flexible framework for peer-to-peer
+marketplace, where propagation latency monitoring and federation set
+and rules can be tweaked as "front-running resistance" parameters,
+adapting to the types of trades and market participants tolerance.
+Configuration of those parameters will at the end be function of
+real-world deployments. Somehow mass front-running on the board is a
+"champagne" issue  I'll be happy to have.
+
+Best,
+Antoine
+
+[0] https://www.finra.org/investors/insights/getting-speed-high-frequency-trading
+[1] https://fedimint.org/docs/CommonTerms/HBBFTConsensus
+[2] https://blockstream.com/assets/downloads/pdf/liquid-whitepaper.pdf
+
+
+Le jeu. 13 avr. 2023 ? 15:10, Antoine Riard <antoine.riard at gmail.com> a
+?crit :
+
+> Hi list,
+>
+> We have been working since a while with Nicholas Gregory (Commerce Block),
+> Ray Youssef (the Built With Bitcoin foundation) and few others on a new
+> peer-to-peer market system to enable censorship-resistant and
+> permissionless global trading in all parts of the world. While the design
+> aims in priority to serve on-ramp/off-ramp trading, it can be extended to
+> support any kind of trading: goods, services, bitcoin financial derivatives
+> like discreet log contracts.
+>
+> The design combines the Nostr architecture of simple relays announcing
+> trade orders to their clients with Lightning onion routing infrastructure,
+> therefore granting high-level of confidentiality to the market
+> participants. The market boards are Nostr relays with a Lightning gateway,
+> each operating autonomously and in competition. The market boards can be
+> runned as a federation however there is no "decentralized orderbook" logged
+> into the blockchain. The trades are escrowed under Bitcoin Script
+> contracts, relying on moderations and know your peer oracles for
+> adjudication.
+>
+> The scoring of trades, counterparties and services operators should be
+> enabled by the introduction of a Web-of-Stakes, assembled from previous
+> ideas [0]. From the Bitcoin UTXO set servicing as a trustless source of
+> truth, an economic weight can be assigned to each market entity. This
+> reputation paradigm could be composed with state-of-the-art Web-of-Trust
+> techniques like decentralized identifiers [1].
+>
+> A consistent incentive framework for service operators is proposed by the
+> intermediary of privacy-preserving credentials backed by Bitcoin payments,
+> following the lineaments of IETF's Privacy Pass [2]. Services operators
+> like market boards and oracles are incentivized to thrive for efficiency,
+> akin to routing hops on Lightning and miners on the base layer.
+>
+> The whitepaper goes deep in the architecture of the system [3] (Thanks to
+> the peer reviewers!).
+>
+> We'll gradually release code and modules, extensively building on top of
+> the Lightning Dev Kit [4] and Nostr libraries. All according to the best
+> Bitcoin open-source and decentralized standards established by Bitcoin Core
+> and we're looking forward to collaborating with everyone in the community
+> to standardize libraries and guarantee interoperability between clients
+> with long-term thinking.
+>
+> Feedback is very welcome!
+>
+> Cheers,
+> Nick, Ray and Antoine
+>
+> [0]
+> https://lists.linuxfoundation.org/pipermail/lightning-dev/2020-November/002884.html
+> [1] https://www.w3.org/TR/2022/REC-did-core-20220719/
+> [2] https://privacypass.github.io
+> [3] https://github.com/civkit/paper/blob/main/civ_kit_paper.pdf
+> [4] https://lightningdevkit.org
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230501/fb6966e8/attachment.html>
+
+From AdamISZ at protonmail.com  Mon May  1 18:37:27 2023
+From: AdamISZ at protonmail.com (AdamISZ)
+Date: Mon, 01 May 2023 18:37:27 +0000
+Subject: [bitcoin-dev] On adaptor security (in protocols)
+In-Reply-To: <CAH5Bsr28mgcLjO43pJKmk7HYKqp9m2eJ0UcGfgOS+H4sFqcTYw@mail.gmail.com>
+References: <Vv-Zz519CQs1JkS8NgeHfI-KGaYelNTxKMikPxdeIRiELmPKlT80g_-BzDgBvpm9MMIr-BRrSyGePC-HFR18QU4uzC0rPJdMzO_hlkUhUaM=@protonmail.com>
+ <CAH5Bsr28mgcLjO43pJKmk7HYKqp9m2eJ0UcGfgOS+H4sFqcTYw@mail.gmail.com>
+Message-ID: <LGjk2u_f-UzBsQzz3ZNHt4EeBrf33soxaQMXpmR5-10_zPBirPJhcNvHpNReC9JUAi806J9b4-4Gb1c7I8y77AT9KFwBC8yD2An0mh1mhUQ=@protonmail.com>
+
+Hi Lloyd,
+thanks for taking a look.
+
+> I think your view of the uselessness of single signer adaptors is too pessimistic. The claim you make is that they "don't provide a way to create enforcement that the publication of signature on a pre-defined message will reveal a secret'' and so are useless. I think this is wrong. If I hold a secret key for X and create a signature adaptor with some encryption key Y with message m and do not create any further signatures (adaptor or otherwise) on m, then any signature on m that is published necessarily reveals the secret on Y to me. This is very useful and has already been used for years by DLCs in production.
+
+I'm struggling with this one - say I hold privkey x for pubkey X. And I publish adaptor for a point Y (DL y) for message m, like: s' = k - y + H(R|X|m)x with k the nonce and R the nonce point.
+
+And to get the basics clear first, if I publish s = k + H(R|X|m)x then of course the secret y is revealed.
+
+What do you mean in saying "any signature on m that is published reveals y"? Clearly you don't mean any signature on any key (i.e. not the key X). But I also can't parse it if you mean "any signature on m using key X", because if I go ahead and publish s = k_2 + H(R_2|X|m)x, it has no algebraic relationship to the adaptor s' as defined above, right?
+
+I think the point of confusion is maybe about the DLC construct? I referenced that in Section 4.2, parenthetically, because it's analogous in one sense - in MuSig(2) you're fixing R via a negotiation, whereas in Dryja's construct you're fixing R "by definition". When I was talking about single key Schnorr, I was saying that's what's missing, and thereby making them useless.
+
+I think I must have missed some implicit concept in your argument otherwise?
+
+> I haven't read the proofs in detail but I am optimistic about your approach
+
+Appreciate it, but I fear the optimism is misplaced; as you can see from some notes I made in Issue 1, I think I had a pretty substantially invalid line of reasoning in those proof. Probably I need to revert to the forking lemma style arguments that you and Aumayr et al (and some others) took. I also am revisiting a clearer definition of what security threats need to be addressed. It all seems very nuanced.
+
+But hey, that's why I published it and asked for feedback - if nothing else it made *me* think more carefully :)
+
+> One thing I was considering while reading is that you could make a general proof against all secure Schnorr signing scheme in the ROM by simply extending the ROM forwarding approach from Aumayer et al to all "tweak" operations on the elements that go into the Schnorr challenge hash i.e. the public key and the nonce. After all whether it's MuSig2, MuSig, FROST they all must call some RO. I think we can prove that if we apply any bijective map to the (X,R) tuple before they go into the challenge hash function then any Schnorr-like scheme that was secure before will be secure when bip32/TR tweaking (i.e. tweaking X) and adaptor tweaking (tweaking R) is applied to it. This would be cool because then we could prove all these variants secure for all schemes past and present in one go. I haven't got a concrete approach but the proofs I've looked at all seem to share this structure.
+Appreciate these thoughts. In particular your point about "generalization of tweaking" is clearly important, I bet other people have thought about it before me. Btw are there any papers on tweaking in general? I'm suddenly reminded of Poelstra's paper on taproot itself, which istr was an entirely different approach.
+
+Sent with [Proton Mail](https://proton.me/) secure email.
+
+------- Original Message -------
+On Sunday, April 30th, 2023 at 22:23, Lloyd Fournier via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Hi waxwing,
+>
+> I think your view of the uselessness of single signer adaptors is too pessimistic. The claim you make is that they "don't provide a way to create enforcement that the publication of signature on a pre-defined message will reveal a secret'' and so are useless. I think this is wrong. If I hold a secret key for X and create a signature adaptor with some encryption key Y with message m and do not create any further signatures (adaptor or otherwise) on m, then any signature on m that is published necessarily reveals the secret on Y to me. This is very useful and has already been used for years by DLCs in production.
+>
+> I haven't read the proofs in detail but I am optimistic about your approach. One thing I was considering while reading is that you could make a general proof against all secure Schnorr signing scheme in the ROM by simply extending the ROM forwarding approach from Aumayer et al to all "tweak" operations on the elements that go into the Schnorr challenge hash i.e. the public key and the nonce. After all whether it's MuSig2, MuSig, FROST they all must call some RO. I think we can prove that if we apply any bijective map to the (X,R) tuple before they go into the challenge hash function then any Schnorr-like scheme that was secure before will be secure when bip32/TR tweaking (i.e. tweaking X) and adaptor tweaking (tweaking R) is applied to it. This would be cool because then we could prove all these variants secure for all schemes past and present in one go. I haven't got a concrete approach but the proofs I've looked at all seem to share this structure.
+>
+> Cheers,
+>
+> LL
+>
+> On Sun, 30 Apr 2023 at 00:20, AdamISZ via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+>> Hi list,
+>> I was motivated to look more carefully at the question of the security of using signature adaptors after recently getting quite enthused about the idea of using adaptors across N signing sessions to do a kind of multiparty swap. But of course security analysis is also much more important for the base case of 2 party swapping, which is of .. some considerable practical importance :)
+>>
+>> There is work (referenced in Section 3 here) that's pretty substantial on "how secure are adaptors" (think in terms of security reductions) already from I guess the 2019-2021 period. But I wanted to get into scenarios of multiple adaptors at once or multiple signing sessions at once with the *same* adaptor (as mentioned above, probably this is the most important scenario).
+>>
+>> To be clear this is the work of an amateur and is currently unreviewed - hence (a) me posting it here and (b) putting the paper on github so people can easily add specific corrections or comments if they like:
+>>
+>> https://github.com/AdamISZ/AdaptorSecurityDoc/blob/main/adaptorsecurity.pdf
+>>
+>> I'll note that I did the analysis only around MuSig, not MuSig2.
+>>
+>> The penultimate ("third case"), that as mentioned, of "multiple signing sessions, same adaptor" proved to be the most interesting: in trying to reduce this to ECDLP I found an issue around sequencing. It may just be irrelevant but I'd be curious to hear what others think about that.
+>>
+>> If nothing else, I'd be very interested to hear what experts in the field have to say about security reductions for this primitive in the case of multiple concurrent signing sessions (which of course has been analyzed very carefully already for base MuSig(2)).
+>>
+>> Cheers,
+>> AdamISZ/waxwing
+>>
+>> Sent with Proton Mail secure email.
+>> _______________________________________________
+>> bitcoin-dev mailing list
+>> bitcoin-dev at lists.linuxfoundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230501/bf1c368a/attachment-0001.html>
+
+From salvatore.ingala at gmail.com  Mon May  1 21:15:20 2023
+From: salvatore.ingala at gmail.com (Salvatore Ingala)
+Date: Mon, 1 May 2023 23:15:20 +0200
+Subject: [bitcoin-dev] Merkleize All The Things
+In-Reply-To: <CAMhCMoFgto3Bu5+yEoqn1Jf8fNd+EQK-t_H3TKR2=3RXe8FdcQ@mail.gmail.com>
+References: <CAMhCMoH9uZPeAE_2tWH6rf0RndqV+ypjbNzazpFwFnLUpPsZ7g@mail.gmail.com>
+ <CALZpt+GVe0XTdWqV=LAcOj=nq+k2DEFqc+sKyxAujLDBR7bYbQ@mail.gmail.com>
+ <CAMhCMoEONv3jriBU3qwm0pt75iF_sgra1H2Z4rOF8u+e7hs_cw@mail.gmail.com>
+ <0f352f70-c93a-614f-e443-67d198ec2c26@protonmail.com>
+ <7f3674d1-c1ad-9a82-e30f-7cf24d697faf@protonmail.com>
+ <CAMhCMoGabEASO9CGc1hAMpYZn4nWH5D8XFs3eFcSSFAitSFUGA@mail.gmail.com>
+ <CAGpPWDZkUYW=Qb763TPzUa6yUf217nh0Bo+O9Qyf=WS2pUQUYA@mail.gmail.com>
+ <CAD3i26AXZKDCH3odhCjpMwzOTGQKSFqH9S+5N9UXNTb7CJHONA@mail.gmail.com>
+ <CAMhCMoFgto3Bu5+yEoqn1Jf8fNd+EQK-t_H3TKR2=3RXe8FdcQ@mail.gmail.com>
+Message-ID: <CAMhCMoGdZsDO2eZYMf+G36gc5=-SB0HxHXbRSPx5OaCOjo5_Dw@mail.gmail.com>
+
+Hi all,
+
+I apologize for a couple of oversights in my last e-mail.
+
+The first is that m_B can't be committed as-is in the contract's
+embedded data, with the current semantics of OP_COCV, which
+only allows 32-byte values. A solution could be to store its
+hash SHA256(m_B), instead.
+
+(I didn't test the Scripts, so there could be other bugs ? hopefully the
+general idea is clear, anyway)
+
+On Mon, 1 May 2023 at 15:11, Salvatore Ingala <salvatore.ingala at gmail.com>
+wrote:
+
+> If the internal_pubkey is a musig-aggregated key of Alice and Bob,
+> the game can be settled entirely offline after the first transaction.
+> Simply, Bob communicates his move to Alice, Alice reveals her move to
+> Bob, and they can settle the bet. The game would be played without
+> any script being executed, therefore all transactions could look like
+> any other P2TR, with the only possible fingerprinting being due to the
+> input amounts.
+>
+
+This is incomplete: Alice can't trust Bob by revealing her move, as
+he could then cheat on-chain and play a different move.
+
+The fix should be straightforward, after adding the requirement that the
+internal pubkey of [S1] is a musig2 of both players.
+After Bob reveals his move (say, Rock), Alice will only agree to continue
+the game off-chain if Bob pre-signs transactions for the state [S1] (where
+m_B = Paper, and m_B = Scissors) that send all the money to Alice.
+This guarantees that a cheating Bob is punished.
+
+Best,
+Salvatore Ingala
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230501/a850251d/attachment.html>
+
+From thomashartman1 at gmail.com  Mon May  1 23:48:14 2023
+From: thomashartman1 at gmail.com (Thomas Hartman)
+Date: Mon, 1 May 2023 18:48:14 -0500
+Subject: [bitcoin-dev] Advances in Hashrate Derivatives Contracts
+Message-ID: <CAHAXnDU2LeqFA9v35mgAh9KfyOpV4NYA9B+rrfhjOURvR5pU7w@mail.gmail.com>
+
+Greetings!
+
+We are presenting a paper: ?Blockrate Binaries on Bitcoin mainnet.?
+This is a formalization of the previously known Powswap[1] protocol.
+These hashrate derivatives are off-chain contracts to make
+peer-to-peer binary contracts on the future rates of block discovery
+between two users.
+
+Link: https://github.com/blockrate-binaries/paper/blob/master/blockrate-binaries-paper.pdf
+    (also attached here)
+Sha256 of current version of paper:
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+We describe protocol steps in detail and the threat model, which
+largely overlaps with other protocols (e.g., eclipse, pinning, miner
+bribe). A unique characteristic of this protocol is contentions -- ie
+transaction confirmation racing --  in edge cases. We discuss issues
+around contention at the most basic level, leaving advanced
+mining-related game theory for future research.
+
+Deploying these contracts at scale would require novel infrastructure
+for counterparty discovery and selection, which we describe in the
+paper. Part of this infrastructure could be shared with Discreet Log
+Contracts or other protocols.
+
+Blockrate Binary Options could operate on top of Lightning payment
+channels, although the exact construction requires further protocol
+design, especially for the routed version. We briefly discuss this, as
+well as other potential advancements for these contracts.
+
+It is yet to be established whether Blockrate Binary options are
+useful financial tools for Bitcoin users. We believe that they may be
+useful to miners for hedging their operations; and to all Bitcoin
+users by making Bitcoin a more salable asset through bridging it to
+real-world energy flows and providing a decentralized price indicator
+and a means of derivative trading.
+
+We welcome protocol researchers to help us solve the remaining
+blockers. Most important are contention and lightning compatibility.
+We also invite experienced core and lightning software developers who
+can work out a beta implementation to start trying this out
+"recklessly" in the not too distant future.
+
+If there is interest, we will set up infrastructure for community
+forums and contributions soon.
+
+Thanks Gleb Naumenko and Antoine Riard for so much careful thought and
+work. And thanks to Nadav Kohen for review before publication.
+
+Private inquiries can be directed to myself at this email.
+
+1 Powswap was originally introduced by Jeremy Rubin. See powswap.com
+and Advent Day 24.
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: blockrate-binaries-paper.pdf
+Type: application/pdf
+Size: 482931 bytes
+Desc: not available
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230501/6d45ee2c/attachment-0001.pdf>
+
+From salvatore.ingala at gmail.com  Tue May  2 08:21:01 2023
+From: salvatore.ingala at gmail.com (Salvatore Ingala)
+Date: Tue, 2 May 2023 10:21:01 +0200
+Subject: [bitcoin-dev] Vaults in the MATT framework
+In-Reply-To: <2ApImRS_OSlctWlRLsNykOYE9Z2nEfg8-IUooIluZG2MAVrY9F5oHYi5LBXN7q5QxB2_sLPIVgV-MOUBMEc451HTpPyPdrvog9jPjBpTZ5E=@protonmail.com>
+References: <CAMhCMoHEa8vYqm7U9MKFC30_cbCoAJBgoGaP0SCvCXVTyA6TmQ@mail.gmail.com>
+ <2ApImRS_OSlctWlRLsNykOYE9Z2nEfg8-IUooIluZG2MAVrY9F5oHYi5LBXN7q5QxB2_sLPIVgV-MOUBMEc451HTpPyPdrvog9jPjBpTZ5E=@protonmail.com>
+Message-ID: <CAMhCMoFh+Of73RWZ7prRXQB2+_MpsUkf_e+XvTCoawJp6cA-xw@mail.gmail.com>
+
+Hi Michael,
+
+I can't make any claim of expertise on the field (especially on the
+other proposals that you mentioned), so this post necessarily includes
+my opinions ? and possibly my biases.
+
+The core functionality of MATT is quite simple, and could be adapted
+to any version of the scripting system: basically, COCV allows to
+"embed" some data in the next output, and decide its script; CICV
+allows "reading" this data.
+The design I proposed on taproot is surely not the only possible way,
+but it's the most simple/elegant I could come up with. Moreover, it
+doesn't seem very useful to spend time trying to get it to work on
+pre-taproot Script, due to the obvious advantages of those ideas when
+deployed on taproot (like having taptrees, and all the nice properties
+of Schnorr signatures).
+
+CICV/COCV can certainly be considered an additional form of
+introspection: you're checking that the script of an input/output
+equals a certain value, which is not possible in today's Script.
+I think that's generally true for all covenant proposals.
+
+Unlike some other proposals, MATT is not yet fully formalized, so I
+generally call "MATT" the combination of CICV+COCV, plus some other
+small set of opcodes that is yet to be defined exactly. I would say it
+fits in the same family as APO/OP_CTV/OP_VAULT, per your bucketization.
+
+The previous posts about MATT, fraud proofs, etc. are an exploration of
+the deeper things that are enabled by the MATT opcodes. The claim is
+that a set of changes that is (arguably) quite small and easy to analyze
+is enough to express general smart contracts ? thanks to fraud proofs.
+However, fraud proofs themselves are a quite advanced application of
+the new opcodes, and are not needed for most/all of the things that
+people are trying to build today with the other covenant proposals.
+
+
+Since you mention Simplicity: my current understanding is that its
+endeavour of replacing Script with a better language is orthogonal to
+the discussion about what features (e.g.: introspection, covenants)
+should be in the language.
+
+All the covenant proposals listed above are technically a lot smaller
+and easier to audit than both the SegWit and the Taproot soft forks,
+both in terms of code and conceptual complexity.
+
+Therefore, if we _do_ want the features that they enable, the required
+engineering for a soft-fork is relatively straightforward, and there is
+not much of a reason to wait for Simplicity. It will be trivial to "port"
+any
+constructions we might create today with covenants to Simplicity scripts.
+
+If we _do not_ want those features, then the decision would rather be
+guided by other considerations, like potential risks to bitcoin caused
+by the effect of those features on miners' incentives. These
+concerns are not answered by Simplicity, as far as I understand:
+you would then want to implement Simplicity _without_ those features.
+
+Best,
+Salvatore
+
+On Mon, 1 May 2023 at 16:18, Michael Folkson <michaelfolkson at protonmail.com>
+wrote:
+
+> Hi Salvatore
+>
+> Can you clarify for me which bucket this proposal sits? We have APO, CTV,
+> OP_VAULT etc that are proposals to add additional functionality to SegWit
+> version 1, Tapleaf version 0 scripts. We have Simplicity that would need a
+> new Tapleaf version (e.g. Tapleaf version 1). And then there are CISA like
+> proposals that would need a new SegWit version (e.g. SegWit version 2). It
+> looks to me like your proposal is in the first bucket (same as APO, CTV
+> etc) as it is just introducing new opcode functionality to existing script
+> with no deeper introspection needed but previous and current discussion of
+> fraud proofs, MATT frameworks etc made me initially think it was going to
+> require more than that.
+>
+> Thanks
+> Michael
+>
+> --
+> Michael Folkson
+> Email: michaelfolkson at protonmail.com
+> GPG: A2CF5D71603C92010659818D2A75D601B23FEE0F
+>
+> Learn about Bitcoin: https://www.youtube.com/@portofbitcoin
+>
+> ------- Original Message -------
+> On Monday, April 24th, 2023 at 20:37, Salvatore Ingala via bitcoin-dev <
+> bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+> Hello list,
+>
+> TL;DR: the core opcodes of MATT can build vaults with a very similar design
+> to OP_VAULT. Code example here:
+>
+>
+> https://github.com/bitcoin-inquisition/bitcoin/compare/24.0...bigspider:bitcoin-inquisition:matt-vault
+>
+>
+> In my previous emails about the MATT proposal for smart contracts in
+> bitcoin [1], I mostly focused on proving its generality; that is, it
+> allows arbitrary smart contracts thanks to fraud proofs.
+>
+> While I still find this "completeness" result compelling, I spent more time
+> thinking about the framework itself; the construction is not very
+> interesting
+> if it turns simple things into complicated ones. Luckily, this is not the
+> case.
+> In particular, in this email we will not merkleize anything (other than
+> taptrees).
+>
+> This post describes some progress into formalizing the semantics of the
+> core
+> opcodes, and demonstrates how they could be used to create vaults that seem
+> comparable to the ones built with OP_VAULT [2], despite using general
+> purpose
+> opcodes.
+>
+> An implementation and some minimal tests matching the content of this
+> e-mail can be found in the link above, using the bitcoin-inquisition as the
+> base branch.
+>
+> Note that the linked code is not well tested and is only intended for
+> exploratory and demonstrative purposes; therefore, bugs are likely at this
+> stage.
+>
+>
+> ##########################
+> # PART 1: MATT's core
+> ##########################
+>
+> In this section, I will discuss plausible semantics for the core opcodes
+> for MATT.
+>
+> The two core opcodes are defined below as OP_CHECKINPUTCONTRACTVERIFY and
+> OP_CHECKOUTPUTCONTRACTVERIFY.
+>
+> (the initial posts named them OP_CHECK{INPUT,OUTPUT}COVENANTVERIFY)
+>
+> They enhance Script with the following capabilities:
+> - decide the taptree of the output
+> - embed some (dynamically computed) data in the output
+> - access the embedded data in the current UTXO (if any)
+>
+> The opcodes below are incomplete, as they only control the output's Script
+> and
+> not the amounts; more on that below.
+>
+> Other than that, the semantics should be quite close to the "right" one for
+> the MATT framework.
+>
+>
+> ### The opcodes
+>
+> case OP_CHECKINPUTCONTRACTVERIFY:
+> {
+> // OP_CHECKINPUTCONTRACTVERIFY is only available in Tapscript
+> if (sigversion == SigVersion::BASE || sigversion ==
+> SigVersion::WITNESS_V0) return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+> // (x d -- )
+> if (stack.size() < 2)
+> return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+> valtype& x = stacktop(-2);
+> valtype& d = stacktop(-1);
+> if (x.size() != 32 || d.size() != 32)
+> return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+> const XOnlyPubKey nakedXOnlyKey{Span<const unsigned char>{x.data(),
+> x.data() + 32}};
+> const uint256 data(d);
+> if (!execdata.m_internal_key.has_value())
+> return set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR); // TODO
+> // Verify that tweak(lift_x(x), d) equals the internal pubkey
+> if (!execdata.m_internal_key.value().CheckDoubleTweak(nakedXOnlyKey,
+> &data, nullptr))
+> return set_error(serror, SCRIPT_ERR_WRONGCONTRACTDATA);
+> popstack(stack);
+> popstack(stack);
+> }
+> break;
+> case OP_CHECKOUTPUTCONTRACTVERIFY:
+> {
+> // OP_CHECKOUTPUTCONTRACTVERIFY is only available in Tapscript
+> if (sigversion == SigVersion::BASE || sigversion ==
+> SigVersion::WITNESS_V0) return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+> // (out_i x taptree d -- )
+> if (stack.size() < 4)
+> return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+> int out_i = CScriptNum(stacktop(-4), fRequireMinimal).getint();
+> valtype& x = stacktop(-3);
+> valtype& taptree = stacktop(-2);
+> valtype& d = stacktop(-1);
+> auto outps = checker.GetTxvOut();
+> // Return error if the evaluation context is unavailable
+> if (!outps)
+> return set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR); // TODO
+> if (x.size() != 32 || taptree.size() != 32 || (d.size() != 0 && d.size()
+> != 32))
+> return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+> if (out_i < 0 || out_i >= (int)outps->size())
+> return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+> const XOnlyPubKey nakedXOnlyKey{Span<const unsigned char>{x.data(),
+> x.data() + 32}};
+> const uint256 data(d);
+> const uint256 *data_ptr = (d.size() == 0 ? nullptr : &data);
+> const uint256 merkle_tree(taptree);
+> CScript scriptPubKey = outps->at(out_i).scriptPubKey;
+> if (scriptPubKey.size() != 1 + 1 + 32 || scriptPubKey[0] != OP_1 ||
+> scriptPubKey[1] != 32)
+> return set_error(serror, SCRIPT_ERR_WRONGCONTRACTDATA);
+> const XOnlyPubKey outputXOnlyKey{Span<const unsigned
+> char>{scriptPubKey.data() + 2, scriptPubKey.data() + 34}};
+> // Verify that taptweak(tweak(lift_x(x), d), taptree) equals the internal
+> pubkey
+> if (!outputXOnlyKey.CheckDoubleTweak(nakedXOnlyKey, data_ptr,
+> &merkle_tree))
+> return set_error(serror, SCRIPT_ERR_WRONGCONTRACTDATA);
+> popstack(stack);
+> popstack(stack);
+> popstack(stack);
+> popstack(stack);
+> }
+> break;
+>
+> ### Commentary
+>
+> CheckDoubleTweak function (implemented in the branch) gets an x-only
+> pubkey,
+> optionally some data, and optionally taptree's merkle root.
+> It verifies that the x-only pubkey being tested equals the given naked
+> pubkey,
+> optionally tweaked with the embedded data, optionally tweaked with the
+> tagged
+> hash of the merkle tree per BIP-0341 [3].
+> Making both the tweaks optional allows to simplify the code, and also to
+> obtain
+> more compact scripts in some spending paths.
+>
+> In words:
+>
+> - OP_CHECKINPUTCONTRACTVERIFY: verify that the current input's internal key
+> contains some embedded data (which would typically be passed through the
+> witness stack)
+> - OP_CHECKOUTPUTCONTRACTVERIFY: verify that a given output is a certain
+> P2TR
+> output script containing the desired embedded data.
+>
+> TBD if the tweaking used for the embedded data tweak should use a tagged
+> hash;
+> omitted for simplicity in this demo implementation.
+>
+> ### Amount preservation
+>
+> In the code above and in the linked demo implementation, the opcodes only
+> operate on the scriptPubkey; a complete implementation would want to make
+> sure
+> that amounts are correctly preserved.
+>
+> The most direct and general way to address this would be to allow direct
+> introspection on the output amounts. This has the complication that output
+> amounts require 64-bits arithmetics, as discussed in the context of other
+> proposals, for example: [4].
+>
+> One more limited approach that works well for many interesting contracts
+> is that of the deferred checks, implemented in OP_VAULT [2].
+> The idea is that all the amounts of the inputs that commit to the same
+> output
+> script with OP_CHECKOUTPUTCONTRACTVERIFY are added together, and the script
+> interpreter requires that the amount of that output is not smaller than the
+> total amount of those inputs. This check is therefore transaction-wide
+> rather
+> than being tested during the input's script evaluation.
+>
+> This behaviour is adequate for vaults and likely suitable for many other
+> applications; however, it's not the most general approach. I didn't try to
+> implement it yet, and defer the decision on the best approach to a later
+> time.
+>
+> ### Extensions
+>
+> The opcodes above are not enough for the full generality of MATT: one would
+> need to add an opcode like OP_SHA256CAT to allow the data embedding to
+> commit
+> to multiple pieces of data.
+> This is not used in today's post, therefore I left it out of these code
+> examples.
+>
+> It would be easy to extend OP_CHECKOUTPUTCONTRACTVERIFY to also apply for
+> an arbitrary input (typically, different from the currently executed one);
+> there
+> are likely use cases for that, allowing to define contracts with more
+> complex
+> cross-input semantics, but I preferred to keep things simple.
+>
+> Of course, one could also entirely replace CICV/COCV with generic full
+> introspection on inputs/output's program, plus opcodes for elliptic curve
+> math
+> and tagged hashes.
+>
+>
+> ##########################
+> # PART 2: Vaults with MATT
+> ##########################
+>
+> In the rest of this post, I will document the first attempt at creating a
+> vault
+> using the opcodes described.
+>
+> While not an attempt at cloning exactly the functionality of OP_VAULT [2],
+> it borrows heavily from the excellent work that was done there.
+>
+> In particular, it also inherits the choice of using OP_CTV as a primitive,
+> building on top of the bitcoin-inquisition's current branch that has
+> already
+> merged OP_CTV. Reasonable vaults would be possible without CTV, but they
+> would be less efficient, particularly in the case of sending to many
+> addresses
+> in a single unvaulting flow.
+>
+> ### Distilling OP_VAULT
+>
+> Abstracting from the implementation details, I mentally model a vault as a
+> simple state machine with 2 states: [V] and [U]:
+>
+> [V]: the initial vault UTXO(s);
+> [U]: the utxo produced by the "trigger transaction" during unvaulting.
+>
+> On the typical path: one or more [V] UTXOs are sent to the [U] state, and
+> after
+> a timelock set on [U] expires, [U] is spent to one or several destinations.
+> Crucially, the destination outputs and amounts are already decided when
+> [V] is
+> spent into [U].
+>
+> At any time before the funds are spent from [U], they can always be spent
+> by
+> sending them to some specified recovery path.
+>
+> There are two key elements that are part of OP_VAULT's semantics, and
+> could be
+> generalized:
+>
+> ? Forcing the script/amount of the next stepon
+> ? Storing some data for future Script's access (in the vault's case, a hash
+> that commits to the final withdrawal transaction).
+>
+> CICV/COCV generalize both to arbitrary scripts (taptrees) and state
+> machines,
+> and to dynamical and witness-dependent data embedded in the pubkey of a
+> P2TR
+> output.
+>
+> ### Vault parameters
+>
+> A contract that represents a vault has the following parameters (hardcoded
+> in
+> the script when the vault is created):
+>
+> - alternate_pk: a key that can be used any time.
+> - spend_delay: the relative timelock before the withdrawal can be
+> finalized;
+> - recover_pk: a pubkey for a P2TR output where funds can be sent at any
+> time.
+>
+> The alternate_pk is a pubkey that can optionally be used as the key-path
+> spending condition for both states [V] and [U]. If such a spending
+> condition is not
+> desired, it can be replaced with a NUMS point, making the key-path
+> unspendable.
+>
+> The spend_delay is the number of blocks that must be mined before the final
+> withdrawal transaction
+>
+> In this example we also use an unvault_pk needed to authorize the
+> unvaulting
+> process (that is, spend [V] into [U]); this could be replaced with any
+> miniscript
+> or other conditions expressible in Script.
+>
+> ### P2TR structure for [V] (vault)
+>
+> internal key: alternate_pk
+>
+> Script 1: "trigger"
+> # witness: <out_i> <ctv-hash>
+> {
+> <alternate_pk>,
+> <merkle root of U's taptree>,
+> 2, OP_ROLL,
+> OP_CHECKOUTPUTCONTRACTVERIFY,
+>
+> <unvault_pk>
+> OP_CHECKSIG
+> }
+>
+> Script 2: "recover"
+> # witness: <out_i>
+> {
+> recover_pk,
+> OP_0, # no data tweak
+> OP_0, # no taptweak
+> OP_CHECKOUTPUTCONTRACTVERIFY,
+> OP_TRUE
+> }
+>
+> The "trigger" script requires in the witness an output index and the
+> ctv-hash
+> that describes the withdrawal transaction.
+> COCV forces the output to contain the ctv-hash as embedded data.
+> That's followed by the unvaulting condition ? in this example, a simple
+> signature check.
+>
+> The "recover" script doesn't require any signature, and it simply forces
+> the output specified in the witness to be a P2TR output with recover_pk as
+> its
+> pubkey.
+>
+> (Omitting the "recover" script in [V] would reduce the size of the witness
+> by
+> 32 bytes in the expected case, and might be preferred for some users)
+>
+> ### P2TR structure for [U] (unvaulting state)
+>
+> internal key: alternate_pk (tweaked with ctv_hash)
+>
+> Script 1: "withdrawal"
+> # witness: <ctv_hash>
+> {
+> OP_DUP,
+>
+> # check that the top of the stack is the
+> # embedded data in the current input
+> <alternate_pk>, OP_SWAP,
+> OP_CHECKINPUTCONTRACTVERIFY,
+>
+> # Check timelock
+> <spend_delay>,
+> OP_CHECKSEQUENCEVERIFY,
+> OP_DROP,
+>
+> # Check that the transaction output is as expected
+> OP_CHECKTEMPLATEVERIFY
+> }
+>
+> Script 2: "recover"
+> # witness: <out_i>
+> {
+> <recover_pk>,
+> OP_0,
+> OP_0,
+> OP_CHECKOUTPUTCONTRACTVERIFY,
+> OP_TRUE
+> }
+>
+> The "withdrawal" finalizes the transaction, by checking that the timelock
+> expired and
+> the outputs satisfy the CTV hash that was committed to in the previous
+> transaction.
+>
+> The "recover" script is identical as before.
+>
+>
+> ### Differences with OP_VAULT vaults
+>
+> Here I refer to the latest version of OP_VAULT at the time of writing. [5]
+> It is not a thorough analysis.
+>
+> Unlike the implementation based on OP_VAULT, the [V] utxos don't have an
+> option
+> to add an additional output that is sent back to the same exact vault.
+> Supporting this use case seems to require a more general way of handling
+> the
+> distribution of amounts than what I discussed in the section above: that
+> would
+> in fact need to be generalized to the case of multiple
+> OP_CHECKOUTPUTCONTRACTVERIFY opcodes executed for the same input.
+>
+> By separating the ctv-hash (which is considered "data") from the scripts
+> in the
+> taptree, one entirely avoids the need to dynamically create taptrees and
+> replace leaves in the covenant-encumbered UTXOs; in fact, the taptrees of
+> [V]
+> and [U] are already set in stone when [V] utxos are created, and only the
+> "data" portion of [U]'s scriptPubKey is dynamically computed. In my
+> opinion,
+> this makes it substantially easier to program "state machines" that
+> control the
+> behavior of coins, of which vaults are a special case.
+>
+> I hope you'll find this interesting, and look forward to your comments.
+>
+> Salvatore Ingala
+>
+>
+> [1] -
+> https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2022-November/021223.html
+> [2] - https://github.com/bitcoin/bips/pull/1421
+> [3] - https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki
+> [4] -
+> https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2021-September/019420.html
+> [5] -
+> https://github.com/bitcoin/bips/blob/7112f308b356cdf0c51d917dbdc1b98e30621f80/bip-0345.mediawiki
+>
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230502/c7f0f38b/attachment-0001.html>
+
+From yurisvb at pm.me  Tue May  2 08:31:19 2023
+From: yurisvb at pm.me (yurisvb at pm.me)
+Date: Tue, 02 May 2023 08:31:19 +0000
+Subject: [bitcoin-dev] Formosa --- proposed improvement upon BIP39
+Message-ID: <jQqInjh7VTC5byefTzENidJjigvRqf5Y7UvbrWjKPJykvhdlLETeglGE3zoAiVAxUyAXU8uWHsHEjJ0MHqqPTy4prgaIhgMyIrD9c6ZUuE0=@pm.me>
+
+Dear colleagues,
+The following is a password format that improves upon BIP39 by allowing meaningful, themed sentences with a regular grammatical structure instead of semantically disconnected words, while keeping the same entropy/checksum and total bits/non-repeating leading digits ratios (of 32/1 and 11/4 respectively).
+
+https://github.com/Yuri-SVB/formosa
+
+Anecdotal experiments suggest that less than one hour of moderate concentration is enough for long term memorization of 128 + 4 bits (equivalent to the 12 words standard of BIP39) if a theme of interest is employed.
+
+I hereby offer it to your scrutiny as a Bitcoin Improvement Proposal. Please don't hesitate to ask whatever issue about the project there might be.
+
+Faithfully yours, Yuri S VB.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230502/a9b52f02/attachment.html>
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: publickey - yurisvb at pm.me - 0x535F445D.asc
+Type: application/pgp-keys
+Size: 1678 bytes
+Desc: not available
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230502/a9b52f02/attachment.bin>
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 509 bytes
+Desc: OpenPGP digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230502/a9b52f02/attachment.sig>
+
+From ZmnSCPxj at protonmail.com  Tue May  2 15:01:01 2023
+From: ZmnSCPxj at protonmail.com (ZmnSCPxj)
+Date: Tue, 02 May 2023 15:01:01 +0000
+Subject: [bitcoin-dev] proposal: new opcode OP_ZKP to enable ZKP-based
+	spending authorization
+In-Reply-To: <CA+ydi=K7kePFPXbTP6S63SdddORnc6nVoHqR4gDVoeX3uY-S-Q@mail.gmail.com>
+References: <CA+ydi=LtskFh89TW75=CBwbdZzWR-ZjWS77TnrF4G+xUfm8z+Q@mail.gmail.com>
+ <xNzSDtvj-BH4EW9eJMqn_yAiVUEiggnS3WIrvLml6gGAZ6CPADO9pbPV4B30txzSY9laEmX3ckXX8L2Hu18ZrWMUjMH23csL-YK-mDse6DY=@protonmail.com>
+ <CA+ydi=K7kePFPXbTP6S63SdddORnc6nVoHqR4gDVoeX3uY-S-Q@mail.gmail.com>
+Message-ID: <s3urNahBotY-aYGaQyY7wz2Sh8UXbqHX2PvZyRcyaMJF6MjUrabv0p_ytE3m1Cu9r79MY649RoulaBPuqGLrSD8qwOfCS-n-HymOEyih5yQ=@protonmail.com>
+
+
+Good morning Weiji,
+
+> Meanwhile, as we can potentially aggregate many proofs or recursively verify even more, the average cost might still be manageable.
+
+Are miners supposed to do this aggregation?
+
+If miners do this aggregation, then that implies that all fullnodes must also perform the **non**-aggregated validation as transactions flow from transaction creators to miners, and that is the cost (viz. the **non**-aggregated cost) that must be reflected in the weight.
+We should note that fullnodes are really miners with 0 hashpower, and any cost you impose on miners is a cost you impose on all fullnodes.
+
+If you want to aggregate, you might want to do that in a separate network that does ***not*** involve Bitcoin fullnodes, and possibly allow for some kind of extraction of fees to do aggregation, then have already-aggregated transactions in the Bitcoin mempool, so that fullnodes only need validate already-aggregated transactions.
+
+Remember, validation is run when a transaction enters the mempool, and is **not** re-run when an in-mempool transaction is seen in a block (`blocksonly` of course does not follow this as it has no mempool, but most fullnodes are not `blocksonly`).
+If you intend to aggregate transactions in the mempool, then at the worst case a fullnode will be validating every non-aggregated transaction, and that is what we want to limit by increasing the weight of heavy-validation transactions.
+
+Regards,
+ZmnSCPxj
+
+From AdamISZ at protonmail.com  Wed May  3 12:58:21 2023
+From: AdamISZ at protonmail.com (AdamISZ)
+Date: Wed, 03 May 2023 12:58:21 +0000
+Subject: [bitcoin-dev] On adaptor security (in protocols)
+In-Reply-To: <LGjk2u_f-UzBsQzz3ZNHt4EeBrf33soxaQMXpmR5-10_zPBirPJhcNvHpNReC9JUAi806J9b4-4Gb1c7I8y77AT9KFwBC8yD2An0mh1mhUQ=@protonmail.com>
+References: <Vv-Zz519CQs1JkS8NgeHfI-KGaYelNTxKMikPxdeIRiELmPKlT80g_-BzDgBvpm9MMIr-BRrSyGePC-HFR18QU4uzC0rPJdMzO_hlkUhUaM=@protonmail.com>
+ <CAH5Bsr28mgcLjO43pJKmk7HYKqp9m2eJ0UcGfgOS+H4sFqcTYw@mail.gmail.com>
+ <LGjk2u_f-UzBsQzz3ZNHt4EeBrf33soxaQMXpmR5-10_zPBirPJhcNvHpNReC9JUAi806J9b4-4Gb1c7I8y77AT9KFwBC8yD2An0mh1mhUQ=@protonmail.com>
+Message-ID: <YB9lBxPmZMLdJdBkNcfD9znuEh8JPcxNMmvKNF7pd0sKI5_xABks2VLsl-nqL_bU3omkjaV_DE_6dk3MvfoLovQtJ0fpGXnZMBQonkyd41M=@protonmail.com>
+
+Hi Lloyd and list,
+
+While on the road and re-downloading the papers, I realised there is a "new" paper published December 2022 by Wei Dai, Okamoto and Yamamoto on this same topic:
+
+https://eprint.iacr.org/2022/1687
+
+and, strikingly, it focuses on the exact same point I made here in Section 3 - namely that the aEUF-CMA definition of the Aumayr paper doesn't address the possibility of multiple-adaptors-on-the-same-message-at-once.
+
+A pretty big facepalm moment that I didn't bother to search carefully enough to find that!
+
+Also it's cool that such renowned cryptographers are turning their heads towards this subject :)
+
+It does have a nice illustration of why that definition (which as you know has been reused by other researchers) is insufficient, by making up a malicious version of the "preSign" (i.e. adaptor-sign) algorithm which leaks an arbitrary signature after two calls, while it still fits the definition of aEUF-CMA!
+
+The paper has a *lot* of meat in terms of security definitions (only had a brief chance to read parts of it, as I'm on the road, so this is high level vague perspective), but afaict it is not actually attempting to rewrite reductions(?), so perhaps more work is needed on that(?).
+
+Cheers,Adam
+
+Sent with [Proton Mail](https://proton.me/) secure email.
+
+------- Original Message -------
+On Monday, May 1st, 2023 at 12:37, AdamISZ via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Hi Lloyd,
+> thanks for taking a look.
+>
+>> I think your view of the uselessness of single signer adaptors is too pessimistic. The claim you make is that they "don't provide a way to create enforcement that the publication of signature on a pre-defined message will reveal a secret'' and so are useless. I think this is wrong. If I hold a secret key for X and create a signature adaptor with some encryption key Y with message m and do not create any further signatures (adaptor or otherwise) on m, then any signature on m that is published necessarily reveals the secret on Y to me. This is very useful and has already been used for years by DLCs in production.
+>
+> I'm struggling with this one - say I hold privkey x for pubkey X. And I publish adaptor for a point Y (DL y) for message m, like: s' = k - y + H(R|X|m)x with k the nonce and R the nonce point.
+>
+> And to get the basics clear first, if I publish s = k + H(R|X|m)x then of course the secret y is revealed.
+>
+> What do you mean in saying "any signature on m that is published reveals y"? Clearly you don't mean any signature on any key (i.e. not the key X). But I also can't parse it if you mean "any signature on m using key X", because if I go ahead and publish s = k_2 + H(R_2|X|m)x, it has no algebraic relationship to the adaptor s' as defined above, right?
+>
+> I think the point of confusion is maybe about the DLC construct? I referenced that in Section 4.2, parenthetically, because it's analogous in one sense - in MuSig(2) you're fixing R via a negotiation, whereas in Dryja's construct you're fixing R "by definition". When I was talking about single key Schnorr, I was saying that's what's missing, and thereby making them useless.
+>
+> I think I must have missed some implicit concept in your argument otherwise?
+>
+>> I haven't read the proofs in detail but I am optimistic about your approach
+>
+> Appreciate it, but I fear the optimism is misplaced; as you can see from some notes I made in Issue 1, I think I had a pretty substantially invalid line of reasoning in those proof. Probably I need to revert to the forking lemma style arguments that you and Aumayr et al (and some others) took. I also am revisiting a clearer definition of what security threats need to be addressed. It all seems very nuanced.
+>
+> But hey, that's why I published it and asked for feedback - if nothing else it made *me* think more carefully :)
+>
+>> One thing I was considering while reading is that you could make a general proof against all secure Schnorr signing scheme in the ROM by simply extending the ROM forwarding approach from Aumayer et al to all "tweak" operations on the elements that go into the Schnorr challenge hash i.e. the public key and the nonce. After all whether it's MuSig2, MuSig, FROST they all must call some RO. I think we can prove that if we apply any bijective map to the (X,R) tuple before they go into the challenge hash function then any Schnorr-like scheme that was secure before will be secure when bip32/TR tweaking (i.e. tweaking X) and adaptor tweaking (tweaking R) is applied to it. This would be cool because then we could prove all these variants secure for all schemes past and present in one go. I haven't got a concrete approach but the proofs I've looked at all seem to share this structure.
+> Appreciate these thoughts. In particular your point about "generalization of tweaking" is clearly important, I bet other people have thought about it before me. Btw are there any papers on tweaking in general? I'm suddenly reminded of Poelstra's paper on taproot itself, which istr was an entirely different approach.
+>
+> Sent with [Proton Mail](https://proton.me/) secure email.
+>
+> ------- Original Message -------
+> On Sunday, April 30th, 2023 at 22:23, Lloyd Fournier via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+>> Hi waxwing,
+>>
+>> I think your view of the uselessness of single signer adaptors is too pessimistic. The claim you make is that they "don't provide a way to create enforcement that the publication of signature on a pre-defined message will reveal a secret'' and so are useless. I think this is wrong. If I hold a secret key for X and create a signature adaptor with some encryption key Y with message m and do not create any further signatures (adaptor or otherwise) on m, then any signature on m that is published necessarily reveals the secret on Y to me. This is very useful and has already been used for years by DLCs in production.
+>>
+>> I haven't read the proofs in detail but I am optimistic about your approach. One thing I was considering while reading is that you could make a general proof against all secure Schnorr signing scheme in the ROM by simply extending the ROM forwarding approach from Aumayer et al to all "tweak" operations on the elements that go into the Schnorr challenge hash i.e. the public key and the nonce. After all whether it's MuSig2, MuSig, FROST they all must call some RO. I think we can prove that if we apply any bijective map to the (X,R) tuple before they go into the challenge hash function then any Schnorr-like scheme that was secure before will be secure when bip32/TR tweaking (i.e. tweaking X) and adaptor tweaking (tweaking R) is applied to it. This would be cool because then we could prove all these variants secure for all schemes past and present in one go. I haven't got a concrete approach but the proofs I've looked at all seem to share this structure.
+>>
+>> Cheers,
+>>
+>> LL
+>>
+>> On Sun, 30 Apr 2023 at 00:20, AdamISZ via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org> wrote:
+>>
+>>> Hi list,
+>>> I was motivated to look more carefully at the question of the security of using signature adaptors after recently getting quite enthused about the idea of using adaptors across N signing sessions to do a kind of multiparty swap. But of course security analysis is also much more important for the base case of 2 party swapping, which is of .. some considerable practical importance :)
+>>>
+>>> There is work (referenced in Section 3 here) that's pretty substantial on "how secure are adaptors" (think in terms of security reductions) already from I guess the 2019-2021 period. But I wanted to get into scenarios of multiple adaptors at once or multiple signing sessions at once with the *same* adaptor (as mentioned above, probably this is the most important scenario).
+>>>
+>>> To be clear this is the work of an amateur and is currently unreviewed - hence (a) me posting it here and (b) putting the paper on github so people can easily add specific corrections or comments if they like:
+>>>
+>>> https://github.com/AdamISZ/AdaptorSecurityDoc/blob/main/adaptorsecurity.pdf
+>>>
+>>> I'll note that I did the analysis only around MuSig, not MuSig2.
+>>>
+>>> The penultimate ("third case"), that as mentioned, of "multiple signing sessions, same adaptor" proved to be the most interesting: in trying to reduce this to ECDLP I found an issue around sequencing. It may just be irrelevant but I'd be curious to hear what others think about that.
+>>>
+>>> If nothing else, I'd be very interested to hear what experts in the field have to say about security reductions for this primitive in the case of multiple concurrent signing sessions (which of course has been analyzed very carefully already for base MuSig(2)).
+>>>
+>>> Cheers,
+>>> AdamISZ/waxwing
+>>>
+>>> Sent with Proton Mail secure email.
+>>> _______________________________________________
+>>> bitcoin-dev mailing list
+>>> bitcoin-dev at lists.linuxfoundation.org
+>>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230503/549203d7/attachment-0001.html>
+
+From fmerli1 at gmail.com  Wed May  3 15:48:46 2023
+From: fmerli1 at gmail.com (F M)
+Date: Wed, 3 May 2023 11:48:46 -0400
+Subject: [bitcoin-dev] A payout scheme for a non custodial mining pool
+Message-ID: <CAO1K=nmMBr9QJ8bCz+DZ=tfOdyA5phe3a7FhnBcbbUcM1M_YWQ@mail.gmail.com>
+
+https://docs.google.com/document/d/1qiOOSOT7epX658_nhjz-jj0DlnSRvytemOv_u_OtMcc/edit?usp=sharing
+
+
+Dear community,
+
+In the last months there have been several discussions about the topic of
+covenants and payment pools
+
+[0]. It has been difficult to approach these topics as it seems that there
+is no agreement in a precise
+
+definition on what is a covenant or what is a payment pool. This is
+probably due to the great generality
+
+of these two concepts. Perhaps, a good approach to study them is to look at
+some different use-cases
+
+and see which are the properties that appear more often and enclose them in
+a clear definition. About
+
+payment pools, that may be considered themself as a covenant, we
+specialized further, studying a payment
+
+pool?s scheme that may be used for the miners of a mining pool in order to
+share the ownership of the
+
+coinbase reward [1]. This would make the pool non-custodial.
+
+The main pools now are custodial, in the sense that they collect the
+rewards of mining, and use them
+
+subsequently to pay the miners. As there are few large pools that find
+almost all the blocks, custodial
+
+polls increase the level of centralization in a protocol born to be
+decentralized and consensus ruled.
+
+This is why we generally want non-custodial pools.
+
+The only non-custodial payment pool that appeared is P2Pool, active some
+years ago, that was also decentralized.
+
+In P2Pool, the miners were paid directly by an output of the coinbase
+transaction. This implies a very
+
+large coinbase, preventing the inclusion of more transactions in the block,
+and therefore collecting
+
+less fees and making the mining less profitable, compared to a custodial
+pool. This makes the P2Pool
+
+payout scheme inappropriate considering also that there is big effort in
+keeping blockchain light, with
+
+several off-chain protocols.
+
+Our scheme uses ANYPREVOUT signatures and it is based on the idea of
+payment trees. A payment tree is
+
+a tree of transactions that redistributes the funds to the payment pool
+participants, having their address
+
+to the leaves. The root contains the funds of the payment pool on n-of-n
+multisig. We allow payment trees
+
+for future payment pools, in which the input?s references of the
+transactions are left empty and the
+
+signatures are ANYPREVOUT.
+
+This makes it possible to safely create a payment pool, merge two payment
+pools and withdraw funds from
+
+a payment pool.
+
+Why do we use ANYPREVOUT? Most payment pool structures use precompiled
+transactions for allowing safe
+
+withdrawal. The signatures of these transactions clearly commits to the
+extranonce of the coinbase. So,
+
+if the payment pool is set for the co-ownership of the mining reward, there
+must be a set of precompiled
+
+transactions for every extranonce tried by every miner, that may not be
+feasible.
+
+The use of ANYPREVOUT allow the miners to collectively construct a payment
+tree that ?waits? the rewards,
+
+in the case that some miners finds a block. This payment tree is unique for
+all miners.
+
+We assume the pool to be centralized, even though our payment pool scheme
+perhaps can be generalized
+
+to decentralized pools. We compared the average space occupied on the
+blockchain and compared with the
+
+one of P2Pool. The results seem to be promising in this aspect, and are
+even better if the Pool is KYC.
+
+Clearly, this is just a very brief summary of our work, that is enclosed
+and labeled as an RFC. So, every
+
+remark or comment may be very appreciated.
+
+
+Authors:
+
+   -
+
+   Lorban (HRF), https://github.com/lorbax/, lorenzo.bonax at gmail.com
+   -
+
+   Fi3, https://github.com/fi3/
+   -
+
+   Rachel Rybarczyk (Galaxy Digital), https://github.com/rrybarczyk
+
+PS
+Please note that although the linked document bears some resemblance to a
+research paper, it is presented as an RFC. We chose to publish it as an RFC
+because it is not intended to be a comprehensive work.
+
+[0]
+https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2022-July/020763.html
+
+[1]
+https://docs.google.com/document/d/1qiOOSOT7epX658_nhjz-jj0DlnSRvytemOv_u_OtMcc/edit?usp=sharing
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230503/dcdb342b/attachment-0001.html>
+
+From johanth at gmail.com  Thu May  4 08:34:07 2023
+From: johanth at gmail.com (=?UTF-8?Q?Johan_Tor=C3=A5s_Halseth?=)
+Date: Thu, 4 May 2023 10:34:07 +0200
+Subject: [bitcoin-dev] Merkleize All The Things
+In-Reply-To: <CAMhCMoGdZsDO2eZYMf+G36gc5=-SB0HxHXbRSPx5OaCOjo5_Dw@mail.gmail.com>
+References: <CAMhCMoH9uZPeAE_2tWH6rf0RndqV+ypjbNzazpFwFnLUpPsZ7g@mail.gmail.com>
+ <CALZpt+GVe0XTdWqV=LAcOj=nq+k2DEFqc+sKyxAujLDBR7bYbQ@mail.gmail.com>
+ <CAMhCMoEONv3jriBU3qwm0pt75iF_sgra1H2Z4rOF8u+e7hs_cw@mail.gmail.com>
+ <0f352f70-c93a-614f-e443-67d198ec2c26@protonmail.com>
+ <7f3674d1-c1ad-9a82-e30f-7cf24d697faf@protonmail.com>
+ <CAMhCMoGabEASO9CGc1hAMpYZn4nWH5D8XFs3eFcSSFAitSFUGA@mail.gmail.com>
+ <CAGpPWDZkUYW=Qb763TPzUa6yUf217nh0Bo+O9Qyf=WS2pUQUYA@mail.gmail.com>
+ <CAD3i26AXZKDCH3odhCjpMwzOTGQKSFqH9S+5N9UXNTb7CJHONA@mail.gmail.com>
+ <CAMhCMoFgto3Bu5+yEoqn1Jf8fNd+EQK-t_H3TKR2=3RXe8FdcQ@mail.gmail.com>
+ <CAMhCMoGdZsDO2eZYMf+G36gc5=-SB0HxHXbRSPx5OaCOjo5_Dw@mail.gmail.com>
+Message-ID: <CAD3i26BoasDQGg1VOxaHJzoXXKnYKuBdXOq+wVZ=QhKbycobPA@mail.gmail.com>
+
+Thank you for the example.
+
+It sounds like we can generalize the description of the construct to:
+Access to (the hash of) embedded data of inputs and outputs, and the
+enforcement of output keys and (static) taptrees. In other words, as
+long as you can dynamically compute the output embedded data in
+Script, you can enforce more or less anything (since you can make the
+output script enforce presenting a witness "satisfying" the embedded
+data).
+
+Does that sound about right?
+
+For instance, I believe you could simulate coin pools pretty easily:
+Commit to the set of pubkeys and amounts owned by the participants in
+the pool, and an output taptree where each participant has their own
+spending path. Now, to exit the pool unilaterally, the participant
+must present a proof that their pubkey+amount is committed to in the
+input and an output where it is no longer committed.
+
+A question that arises is how one would efficiently (in Script) prove
+the inclusion/exclusion of the data in the commitment. One could
+naively hash all the data twice during script execution (once for the
+input, once for the output), but that is costly. It would be natural
+to show merkle tree inclusion/exclusion in script, but perhaps there
+are more efficient ways to prove it?
+
+- Johan
+
+
+On Tue, May 2, 2023 at 12:44?AM Salvatore Ingala via bitcoin-dev
+<bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+> Hi all,
+>
+> I apologize for a couple of oversights in my last e-mail.
+>
+> The first is that m_B can't be committed as-is in the contract's
+> embedded data, with the current semantics of OP_COCV, which
+> only allows 32-byte values. A solution could be to store its
+> hash SHA256(m_B), instead.
+>
+> (I didn't test the Scripts, so there could be other bugs ? hopefully the
+> general idea is clear, anyway)
+>
+> On Mon, 1 May 2023 at 15:11, Salvatore Ingala <salvatore.ingala at gmail.com> wrote:
+>>
+>> If the internal_pubkey is a musig-aggregated key of Alice and Bob,
+>> the game can be settled entirely offline after the first transaction.
+>> Simply, Bob communicates his move to Alice, Alice reveals her move to
+>> Bob, and they can settle the bet. The game would be played without
+>> any script being executed, therefore all transactions could look like
+>> any other P2TR, with the only possible fingerprinting being due to the
+>> input amounts.
+>
+>
+> This is incomplete: Alice can't trust Bob by revealing her move, as
+> he could then cheat on-chain and play a different move.
+>
+> The fix should be straightforward, after adding the requirement that the
+> internal pubkey of [S1] is a musig2 of both players.
+> After Bob reveals his move (say, Rock), Alice will only agree to continue
+> the game off-chain if Bob pre-signs transactions for the state [S1] (where
+> m_B = Paper, and m_B = Scissors) that send all the money to Alice.
+> This guarantees that a cheating Bob is punished.
+>
+> Best,
+> Salvatore Ingala
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+From weiji.g at gmail.com  Thu May  4 15:31:22 2023
+From: weiji.g at gmail.com (Weiji Guo)
+Date: Thu, 4 May 2023 23:31:22 +0800
+Subject: [bitcoin-dev] proposal: new opcode OP_ZKP to enable ZKP-based
+ spending authorization
+In-Reply-To: <s3urNahBotY-aYGaQyY7wz2Sh8UXbqHX2PvZyRcyaMJF6MjUrabv0p_ytE3m1Cu9r79MY649RoulaBPuqGLrSD8qwOfCS-n-HymOEyih5yQ=@protonmail.com>
+References: <CA+ydi=LtskFh89TW75=CBwbdZzWR-ZjWS77TnrF4G+xUfm8z+Q@mail.gmail.com>
+ <xNzSDtvj-BH4EW9eJMqn_yAiVUEiggnS3WIrvLml6gGAZ6CPADO9pbPV4B30txzSY9laEmX3ckXX8L2Hu18ZrWMUjMH23csL-YK-mDse6DY=@protonmail.com>
+ <CA+ydi=K7kePFPXbTP6S63SdddORnc6nVoHqR4gDVoeX3uY-S-Q@mail.gmail.com>
+ <s3urNahBotY-aYGaQyY7wz2Sh8UXbqHX2PvZyRcyaMJF6MjUrabv0p_ytE3m1Cu9r79MY649RoulaBPuqGLrSD8qwOfCS-n-HymOEyih5yQ=@protonmail.com>
+Message-ID: <CA+ydi=+6oSQ2oEeuBDQs7fzWL75h4CYb3k4_SS3VbFgxJwDGiA@mail.gmail.com>
+
+Hi ZmnSCPxj,
+
+I do mean to have specialized computing power vendors, which could happen
+to be miners, or not. Optiming ZKP computations is rather different from
+Bitcoin mining so I expect those vendors to be from more research-driven
+teams focused in cryptographic engineering.
+
+I am open to whether to put those transactions in mempool or not. I
+apologize for giving an inaccurate number earlier about the verification
+cost. I just ran gnark-bench on my Mac M2, it turns out the cost for
+Groth16 verification could be as fast as 1ms. For Plonk it is around 1.6ms.
+So it seems even a common fullnode could handle thousands of OP_ZKP
+transactions. In that case, the ZKP transactions could be put into mempool,
+and be open to be aggregated by some vendor. Fullnodes should verify these
+transactions as well. It does not seem a good idea to treat them with
+special rules as there is no guarantee that certain OP_ZKP transactions
+will be aggregated or recursively verified. Of course, the weighting should
+be well benchmarked and calculated. The cost for those *standalone* OP_ZKP
+transactions might be higher due to more data and/or higher weighting. This
+incentivizes vendors to develop aggregation / recursive verification
+services to drive down the fee requirements and profit from doing so (fee
+extraction). I also expect to see an open market where various vendors can
+compete against each other, so it makes sense to have these transactions
+openly visible to all participants.
+
+Meanwhile, some transactions are meant to be off-chain. For example, a
+would-be smart contract can aggregate many related transactions in a OP_ZKP
+transaction. Those aggregated transactions should *not* be transmitted
+within the Bitcoin network. They could even be *not* valid Bitcoin
+transactions. Usually the smart contract operator or its community could
+host such a service.
+
+Consider a potential situation in a few years: there are thousands of
+active smart contracts based on OP_ZKP, and each block contains a few
+hundred OP_ZKP transactions, each one of them aggregates / recursively
+verifies many transactions. The effective TPS of the Bitcoin network could
+far exceed the current value, reaching the range of thousands or even more.
+
+Hope this clarifies.
+Weiji
+
+On Tue, May 2, 2023 at 11:01?PM ZmnSCPxj <ZmnSCPxj at protonmail.com> wrote:
+
+>
+> Good morning Weiji,
+>
+> > Meanwhile, as we can potentially aggregate many proofs or recursively
+> verify even more, the average cost might still be manageable.
+>
+> Are miners supposed to do this aggregation?
+>
+> If miners do this aggregation, then that implies that all fullnodes must
+> also perform the **non**-aggregated validation as transactions flow from
+> transaction creators to miners, and that is the cost (viz. the
+> **non**-aggregated cost) that must be reflected in the weight.
+> We should note that fullnodes are really miners with 0 hashpower, and any
+> cost you impose on miners is a cost you impose on all fullnodes.
+>
+> If you want to aggregate, you might want to do that in a separate network
+> that does ***not*** involve Bitcoin fullnodes, and possibly allow for some
+> kind of extraction of fees to do aggregation, then have already-aggregated
+> transactions in the Bitcoin mempool, so that fullnodes only need validate
+> already-aggregated transactions.
+>
+> Remember, validation is run when a transaction enters the mempool, and is
+> **not** re-run when an in-mempool transaction is seen in a block
+> (`blocksonly` of course does not follow this as it has no mempool, but most
+> fullnodes are not `blocksonly`).
+> If you intend to aggregate transactions in the mempool, then at the worst
+> case a fullnode will be validating every non-aggregated transaction, and
+> that is what we want to limit by increasing the weight of heavy-validation
+> transactions.
+>
+> Regards,
+> ZmnSCPxj
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230504/ccc94da5/attachment.html>
+
+From ZmnSCPxj at protonmail.com  Thu May  4 17:13:09 2023
+From: ZmnSCPxj at protonmail.com (ZmnSCPxj)
+Date: Thu, 04 May 2023 17:13:09 +0000
+Subject: [bitcoin-dev] proposal: new opcode OP_ZKP to enable ZKP-based
+	spending authorization
+In-Reply-To: <CA+ydi=+6oSQ2oEeuBDQs7fzWL75h4CYb3k4_SS3VbFgxJwDGiA@mail.gmail.com>
+References: <CA+ydi=LtskFh89TW75=CBwbdZzWR-ZjWS77TnrF4G+xUfm8z+Q@mail.gmail.com>
+ <xNzSDtvj-BH4EW9eJMqn_yAiVUEiggnS3WIrvLml6gGAZ6CPADO9pbPV4B30txzSY9laEmX3ckXX8L2Hu18ZrWMUjMH23csL-YK-mDse6DY=@protonmail.com>
+ <CA+ydi=K7kePFPXbTP6S63SdddORnc6nVoHqR4gDVoeX3uY-S-Q@mail.gmail.com>
+ <s3urNahBotY-aYGaQyY7wz2Sh8UXbqHX2PvZyRcyaMJF6MjUrabv0p_ytE3m1Cu9r79MY649RoulaBPuqGLrSD8qwOfCS-n-HymOEyih5yQ=@protonmail.com>
+ <CA+ydi=+6oSQ2oEeuBDQs7fzWL75h4CYb3k4_SS3VbFgxJwDGiA@mail.gmail.com>
+Message-ID: <O8340coA0WBuYzHgkZ6ov7Yp3aqvnGeCeFKHh9bqZdkQTS3xtjEDlW4Hjhc7UgD1XltJyYDOFzDN4JthXq1pdCrMM8cYNfVBIOvLbR8tro8=@protonmail.com>
+
+Good morning Weiji,
+
+The issue here is that non-aggregated transaction are a potential attack vector.
+
+As the network is pseudonymous, an anonymous attacker can flood the fullnode mempool network with large numbers of non-aggregated transactions, then in cooperation with a miner confirm a single aggregated transaction with lower feerate than what it put in the several non-aggregated transactions.
+The attacker ends up paying lower for the single confirmed transaction, even though it cost the fullnode network a significant amount of CPU to process and validate all the non-aggregated transactions.
+
+Once the single aggregate transaction is confirmed, the fullnodes will remove the non-aggregated transactions from the mempool, clearing out their mempool limit.
+Then the attacker can once again flood the fullnode mempool network with more non-aggregated transactions, and again repeat with an aggregated transaction that pays below the total of the non-aggregated transactions, repeatedly increasing the load on the mempool.
+
+Thus, we should really make transactions that could appear in the mempool non-aggregatable with other transactions in the mempool.
+You should arrange for aggregation before the blockchain-level transaction hits the mempool.
+
+One can compare cross-input signature aggregation designs.
+Signature aggregation is only allowed within a single blockchain-level transaction, not across transactions, precisely so that a transaction that appears in the mempool cannot have its signatures aggregated with other transactions, and preventing the above attack.
+Anyone trying to take advantage of signature aggregation needs to cooperatively construct the blockchain-level transaction outside of the mempool with other cooperating actors, all of which perform the validation themselves before anything hits the mempool.
+
+Similarly I can imagine that cross-input ZKP aggregation would be acceptable, but not cross-transaction ZKP aggregation.
+(And if you want to push for ZKP aggregation, you should probably push for cross-input signature aggregation first, as you would probably need to solve similar problems in detail and I imagine signature aggregation is simpler than general ZKP aggregation.)
+
+Always expect that the blockchain and its supporting network is attackable.
+Do ***NOT*** focus on blocks --- focus on the load on the mempool (the block weight limit is a limit on the mempool load, not a limit on the block CPU load!).
+The mempool is a free service, we should take care not to make it abusable.
+On the other hand, blockspace is a paid service, so load on it is less important; it is already paid for.
+I strongly recommend **DISALLOWING** aggregation of ZKPs once a transaction is in a form that could potentially hit the mempool, and to require paid services for aggregation, outside of the unpaid, free mempool.
+
+Regards,
+ZmnSCPxj
+
+From ZmnSCPxj at protonmail.com  Sat May  6 02:51:33 2023
+From: ZmnSCPxj at protonmail.com (ZmnSCPxj)
+Date: Sat, 06 May 2023 02:51:33 +0000
+Subject: [bitcoin-dev] proposal: new opcode OP_ZKP to enable ZKP-based
+	spending authorization
+In-Reply-To: <CA+ydi=KMm6LW7W+NAUfRDESaJCg+smkiGS2WHKtYRWVGmM_0YA@mail.gmail.com>
+References: <CA+ydi=LtskFh89TW75=CBwbdZzWR-ZjWS77TnrF4G+xUfm8z+Q@mail.gmail.com>
+ <xNzSDtvj-BH4EW9eJMqn_yAiVUEiggnS3WIrvLml6gGAZ6CPADO9pbPV4B30txzSY9laEmX3ckXX8L2Hu18ZrWMUjMH23csL-YK-mDse6DY=@protonmail.com>
+ <CA+ydi=K7kePFPXbTP6S63SdddORnc6nVoHqR4gDVoeX3uY-S-Q@mail.gmail.com>
+ <s3urNahBotY-aYGaQyY7wz2Sh8UXbqHX2PvZyRcyaMJF6MjUrabv0p_ytE3m1Cu9r79MY649RoulaBPuqGLrSD8qwOfCS-n-HymOEyih5yQ=@protonmail.com>
+ <CA+ydi=+6oSQ2oEeuBDQs7fzWL75h4CYb3k4_SS3VbFgxJwDGiA@mail.gmail.com>
+ <O8340coA0WBuYzHgkZ6ov7Yp3aqvnGeCeFKHh9bqZdkQTS3xtjEDlW4Hjhc7UgD1XltJyYDOFzDN4JthXq1pdCrMM8cYNfVBIOvLbR8tro8=@protonmail.com>
+ <CA+ydi=KMm6LW7W+NAUfRDESaJCg+smkiGS2WHKtYRWVGmM_0YA@mail.gmail.com>
+Message-ID: <-ZXduH8kzOVdK_FBE0VvMtuKDAFSU0Z4joKeIqM7CFnHO9kymMHfVwGjlwEHLzAnFWXLd_jVtNrkdeQGVobYUqjwASXEQ2w8BHh5FtEMJzs=@protonmail.com>
+
+Good Morning Weiji,
+
+
+> Hi ZmnSCPxy,
+> > As the network is pseudonymous, an anonymous attacker can flood the fullnode mempool network with large numbers of non-aggregated transactions, then in cooperation with a miner confirm a single aggregated transaction with lower feerate than what it put in the several non-aggregated transactions.
+> 
+> Arguably this is hardly a feasible attack. Let's suppose the attacker creates 1000 such transactions, and attaches each transaction with a small amount of transaction fee X. The total fee will be 1000*X collectible by the aggregation vendor, who pays the miner a fee Y. We can reasonably assume that 1000*X is much larger than Y, yet X is much smaller than Y. Note that Y is already much larger than the regular fee for other transactions as the aggregated transaction should contain many inputs and many outputs, thus very large in size.
+> 
+> Now, the attacker will have to generate proofs for these 1000 transactions, which is non-trivial; and pay for 1000*X upfront. The aggregation vendor has to spend more computing power doing the aggregation (or recursive verification) and take (1000*X - Y) as profit. Miner gets Y.
+
+The entire point is that there has to be a separate, paid aggregator, in order to ensure that the free mempool service is not overloaded.
+Basically, keep the aggregation outside the mempool, not in the mempool.
+If aggregation is paid for, that is indeed sufficient to stop the attack, as you noted.
+
+Regards,
+ZmnSCPxj
+
+From lf-lists at mattcorallo.com  Sat May  6 05:58:55 2023
+From: lf-lists at mattcorallo.com (Matt Corallo)
+Date: Fri, 5 May 2023 22:58:55 -0700
+Subject: [bitcoin-dev] [Lightning-dev] A new Bitcoin implementation
+	integrated with Core Lightning
+In-Reply-To: <aka4qP9Cig-OhfMlQ9y1kghZWExjpno4cs47KIgYwv4aLYtiQB37eHbj2X2hiDuoK0D1gSeKWP97P0bRADbTg1CZRBIpHGZ5WFFYPWIJ87Y=@protonmail.com>
+References: <aka4qP9Cig-OhfMlQ9y1kghZWExjpno4cs47KIgYwv4aLYtiQB37eHbj2X2hiDuoK0D1gSeKWP97P0bRADbTg1CZRBIpHGZ5WFFYPWIJ87Y=@protonmail.com>
+Message-ID: <D6B5388F-DE78-4516-8A91-D33DE9B01395@mattcorallo.com>
+
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230505/2a696346/attachment.html>
+
+From salvatore.ingala at gmail.com  Fri May  5 21:18:16 2023
+From: salvatore.ingala at gmail.com (Salvatore Ingala)
+Date: Fri, 5 May 2023 23:18:16 +0200
+Subject: [bitcoin-dev] Merkleize All The Things
+In-Reply-To: <CAD3i26BoasDQGg1VOxaHJzoXXKnYKuBdXOq+wVZ=QhKbycobPA@mail.gmail.com>
+References: <CAMhCMoH9uZPeAE_2tWH6rf0RndqV+ypjbNzazpFwFnLUpPsZ7g@mail.gmail.com>
+ <CALZpt+GVe0XTdWqV=LAcOj=nq+k2DEFqc+sKyxAujLDBR7bYbQ@mail.gmail.com>
+ <CAMhCMoEONv3jriBU3qwm0pt75iF_sgra1H2Z4rOF8u+e7hs_cw@mail.gmail.com>
+ <0f352f70-c93a-614f-e443-67d198ec2c26@protonmail.com>
+ <7f3674d1-c1ad-9a82-e30f-7cf24d697faf@protonmail.com>
+ <CAMhCMoGabEASO9CGc1hAMpYZn4nWH5D8XFs3eFcSSFAitSFUGA@mail.gmail.com>
+ <CAGpPWDZkUYW=Qb763TPzUa6yUf217nh0Bo+O9Qyf=WS2pUQUYA@mail.gmail.com>
+ <CAD3i26AXZKDCH3odhCjpMwzOTGQKSFqH9S+5N9UXNTb7CJHONA@mail.gmail.com>
+ <CAMhCMoFgto3Bu5+yEoqn1Jf8fNd+EQK-t_H3TKR2=3RXe8FdcQ@mail.gmail.com>
+ <CAMhCMoGdZsDO2eZYMf+G36gc5=-SB0HxHXbRSPx5OaCOjo5_Dw@mail.gmail.com>
+ <CAD3i26BoasDQGg1VOxaHJzoXXKnYKuBdXOq+wVZ=QhKbycobPA@mail.gmail.com>
+Message-ID: <CAMhCMoH-MSfTeG6vnWPdG9bAxWXRatWQY8wUmOqM5mAyH=5n9Q@mail.gmail.com>
+
+On Thu, 4 May 2023 at 10:34, Johan Tor?s Halseth <johanth at gmail.com> wrote:
+>
+> It sounds like we can generalize the description of the construct to:
+> Access to (the hash of) embedded data of inputs and outputs, and the
+> enforcement of output keys and (static) taptrees. In other words, as
+> long as you can dynamically compute the output embedded data in
+> Script, you can enforce more or less anything (since you can make the
+> output script enforce presenting a witness "satisfying" the embedded
+> data).
+>
+> Does that sound about right?
+
+Yes. Fraud proofs allow us to extend beyond what Script can do (with the
+necessary tradeoffs), but there is plenty that can be done without them.
+
+
+> For instance, I believe you could simulate coin pools pretty easily:
+> Commit to the set of pubkeys and amounts owned by the participants in
+> the pool, and an output taptree where each participant has their own
+> spending path. Now, to exit the pool unilaterally, the participant
+> must present a proof that their pubkey+amount is committed to in the
+> input and an output where it is no longer committed.
+
+I don't think one would want to have a tapleaf for each participant:
+that would make you pay log n hashes just to reveal the tapleaf, and
+then you still need to pay log n hashes to access the embedded data.
+
+Instead, the "unilateral withdrawal Script" can be the same for all the
+participants. The witness would be the Merkle proof, plus perhaps some
+additional information to identify the leaf in the tree (depending on
+how the Merkle tree is implemented). In a complete Merkle tree for
+N = 2^n participants, the witness could contain the n hashes that allow
+to prove the value of the leaf, plus n bits to identify the path to the
+leaf (0/1 for 'left/right" child), since Script doesn't have enough
+opcodes to extract the bits from the leaf index.
+
+The data in the leaf can contain a commitment to all the information
+relevant for that participant (e.g.: their balance and pubkey, in a
+CoinPool construction).
+
+Then, the same witness can easily be reused to compute the new Merkle
+root after the data in the leaf is modified (for example, setting the
+amount to 0 for one participant).
+
+
+> A question that arises is how one would efficiently (in Script) prove
+> the inclusion/exclusion of the data in the commitment. One could
+> naively hash all the data twice during script execution (once for the
+> input, once for the output), but that is costly. It would be natural
+> to show merkle tree inclusion/exclusion in script, but perhaps there
+> are more efficient ways to prove it?
+
+A Merkle tree as described above commits to an entire vector that you
+can index positionally. That's quite versatile, and easier to handle
+than more complex constructions like accumulators with exclusion proofs.
+
+A Merkle proof for 2^7 = 128 participants requires about 8 hashes, so
+around 250 bytes in total of witness size; 2^10 = 1024 should bring that
+to the ballpark of 350 bytes.
+
+Best,
+Salvatore Ingala
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230505/ab517fd1/attachment-0001.html>
+
+From weiji.g at gmail.com  Fri May  5 23:06:51 2023
+From: weiji.g at gmail.com (Weiji Guo)
+Date: Sat, 6 May 2023 07:06:51 +0800
+Subject: [bitcoin-dev] proposal: new opcode OP_ZKP to enable ZKP-based
+ spending authorization
+In-Reply-To: <O8340coA0WBuYzHgkZ6ov7Yp3aqvnGeCeFKHh9bqZdkQTS3xtjEDlW4Hjhc7UgD1XltJyYDOFzDN4JthXq1pdCrMM8cYNfVBIOvLbR8tro8=@protonmail.com>
+References: <CA+ydi=LtskFh89TW75=CBwbdZzWR-ZjWS77TnrF4G+xUfm8z+Q@mail.gmail.com>
+ <xNzSDtvj-BH4EW9eJMqn_yAiVUEiggnS3WIrvLml6gGAZ6CPADO9pbPV4B30txzSY9laEmX3ckXX8L2Hu18ZrWMUjMH23csL-YK-mDse6DY=@protonmail.com>
+ <CA+ydi=K7kePFPXbTP6S63SdddORnc6nVoHqR4gDVoeX3uY-S-Q@mail.gmail.com>
+ <s3urNahBotY-aYGaQyY7wz2Sh8UXbqHX2PvZyRcyaMJF6MjUrabv0p_ytE3m1Cu9r79MY649RoulaBPuqGLrSD8qwOfCS-n-HymOEyih5yQ=@protonmail.com>
+ <CA+ydi=+6oSQ2oEeuBDQs7fzWL75h4CYb3k4_SS3VbFgxJwDGiA@mail.gmail.com>
+ <O8340coA0WBuYzHgkZ6ov7Yp3aqvnGeCeFKHh9bqZdkQTS3xtjEDlW4Hjhc7UgD1XltJyYDOFzDN4JthXq1pdCrMM8cYNfVBIOvLbR8tro8=@protonmail.com>
+Message-ID: <CA+ydi=KMm6LW7W+NAUfRDESaJCg+smkiGS2WHKtYRWVGmM_0YA@mail.gmail.com>
+
+Hi ZmnSCPxy,
+
+> As the network is pseudonymous, an anonymous attacker can flood the
+fullnode mempool network with large numbers of non-aggregated transactions,
+then in cooperation with a miner confirm a single aggregated transaction
+with lower feerate than what it put in the several non-aggregated
+transactions.
+
+Arguably this is hardly a feasible attack. Let's suppose the attacker
+creates 1000 such transactions, and attaches each transaction with a small
+amount of transaction fee X. The total fee will be 1000*X collectible by
+the aggregation vendor, who pays the miner a fee Y. We can reasonably
+assume that 1000*X is much larger than Y, yet X is much smaller than Y.
+Note that Y is already much larger than the regular fee for other
+transactions as the aggregated transaction should contain many inputs and
+many outputs, thus very large in size.
+
+Now, the attacker will have to generate proofs for these 1000 transactions,
+which is non-trivial; and pay for 1000*X upfront. The aggregation vendor
+has to spend more computing power doing the aggregation (or recursive
+verification) and take (1000*X - Y) as profit. Miner gets Y.
+
+Miners are unlikely to collude with the attacker. I don't think the vendor
+would, given profit of 1000*X - Y. Or the attacker could play the vendor,
+however, it is still not a trivial attack after spending lots of computing
+power generating all the proofs and aggregation/recursion, and paying at
+least Y, which is also non-trivial given the size.
+
+All that being said, let's focus on the OP_ZKP for now and leave
+aggregation or recursive verification for future discussion. I brought up
+the scalability issue just to stress that there is potential room for
+further improvements. The research and implementation might take much
+longer. As far as I know, CISA (cross input signature aggregation) is still
+experimental. Again, thank you very much for detailed analysis and replies.
+
+Regards,
+Weiji
+
+On Fri, May 5, 2023 at 1:13?AM ZmnSCPxj <ZmnSCPxj at protonmail.com> wrote:
+
+> Good morning Weiji,
+>
+> The issue here is that non-aggregated transaction are a potential attack
+> vector.
+>
+> As the network is pseudonymous, an anonymous attacker can flood the
+> fullnode mempool network with large numbers of non-aggregated transactions,
+> then in cooperation with a miner confirm a single aggregated transaction
+> with lower feerate than what it put in the several non-aggregated
+> transactions.
+> The attacker ends up paying lower for the single confirmed transaction,
+> even though it cost the fullnode network a significant amount of CPU to
+> process and validate all the non-aggregated transactions.
+>
+> Once the single aggregate transaction is confirmed, the fullnodes will
+> remove the non-aggregated transactions from the mempool, clearing out their
+> mempool limit.
+> Then the attacker can once again flood the fullnode mempool network with
+> more non-aggregated transactions, and again repeat with an aggregated
+> transaction that pays below the total of the non-aggregated transactions,
+> repeatedly increasing the load on the mempool.
+>
+> Thus, we should really make transactions that could appear in the mempool
+> non-aggregatable with other transactions in the mempool.
+> You should arrange for aggregation before the blockchain-level transaction
+> hits the mempool.
+>
+> One can compare cross-input signature aggregation designs.
+> Signature aggregation is only allowed within a single blockchain-level
+> transaction, not across transactions, precisely so that a transaction that
+> appears in the mempool cannot have its signatures aggregated with other
+> transactions, and preventing the above attack.
+> Anyone trying to take advantage of signature aggregation needs to
+> cooperatively construct the blockchain-level transaction outside of the
+> mempool with other cooperating actors, all of which perform the validation
+> themselves before anything hits the mempool.
+>
+> Similarly I can imagine that cross-input ZKP aggregation would be
+> acceptable, but not cross-transaction ZKP aggregation.
+> (And if you want to push for ZKP aggregation, you should probably push for
+> cross-input signature aggregation first, as you would probably need to
+> solve similar problems in detail and I imagine signature aggregation is
+> simpler than general ZKP aggregation.)
+>
+> Always expect that the blockchain and its supporting network is attackable.
+> Do ***NOT*** focus on blocks --- focus on the load on the mempool (the
+> block weight limit is a limit on the mempool load, not a limit on the block
+> CPU load!).
+> The mempool is a free service, we should take care not to make it abusable.
+> On the other hand, blockspace is a paid service, so load on it is less
+> important; it is already paid for.
+> I strongly recommend **DISALLOWING** aggregation of ZKPs once a
+> transaction is in a form that could potentially hit the mempool, and to
+> require paid services for aggregation, outside of the unpaid, free mempool.
+>
+> Regards,
+> ZmnSCPxj
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230506/68fe13b2/attachment.html>
+
+From michaelfolkson at protonmail.com  Sun May  7 07:03:02 2023
+From: michaelfolkson at protonmail.com (Michael Folkson)
+Date: Sun, 07 May 2023 07:03:02 +0000
+Subject: [bitcoin-dev] Bitcoin Core maintainers and communication on
+	merge decisions
+In-Reply-To: <uuq_VbxJp50_-m4ufKpEhJOknhZ0pvK8ioDabCkxtDjBYauO3gLKrj2O2tjS6YIFOnJLyaZg6-LENzom1DyQQ3TyMLIIaGz5IRrzrKB8gRs=@protonmail.com>
+References: <uuq_VbxJp50_-m4ufKpEhJOknhZ0pvK8ioDabCkxtDjBYauO3gLKrj2O2tjS6YIFOnJLyaZg6-LENzom1DyQQ3TyMLIIaGz5IRrzrKB8gRs=@protonmail.com>
+Message-ID: <qLlgx_AotByY1ZZHTCn3BBK7x1spKEYYd3UP4txYq-RceoclKdVAB1E5MJ4FTV7bWVP1Ilsdbmn43dkrOfqw84EUUQAvnkztN9FY1R5oDOA=@protonmail.com>
+
+There has been a proposed new maintainer on Bitcoin Core (ryanofsky). In the Core dev IRC meeting [0] yesterday it received multiple ACKs.
+
+The decision process for adding a new maintainer was according to the IRC meeting that the maintainers decided privately there was a need for a maintainer ?who understood our interfaces and modularization efforts well? and that ryanofsky was a ?good fit for that?. I don?t know whether this was decided in a private IRC channel or was decided at the recent in person Core Dev meeting. Regardless, many have had no input into the discussion on what kind of maintainer the project needs going forward and it seems the maintainers do not want to discuss that aspect of the decision.
+
+I posted a couple of questions in advance [1] of the meeting (I was unable to attend) that remained unanswered during the meeting. Essentially my concern is going forward current maintainers will decide which proposed new maintainers to add and which to block. If you aren?t anointed by the current maintainers you won?t get added as a maintainer and a half baked rationale will be provided to justify that decision. Longer term this will determine the pull requests that will ultimately get merged and which don't get merged because maintainers merge pull requests.
+
+One of the justifications for blocking Vasil Dimov as a new maintainer despite many initial ACKs from maintainers (including Andrew Chow) and long term contributors was according to Andrew [2]:
+
+?Maintainers inherently need to look at the things that everyone else has already looked at, if only to give it a final once over before merging (but hopefully, an actual review, not just looking it over).?
+
+I follow the Bitcoin Core repo pretty closely and I haven?t seen ryanofsky do this any more than Vasil does. This is not a criticism of ryanofsky, just as I wouldn?t use it as a criticism for Vasil. It would get pretty annoying if everyone who wasn?t a maintainer posted an ACK once many long term contributors had already ACKed to display supposed ?desired maintainer traits?. Especially if you are essentially just ACKing that others have done the work to review the PR and you just want to get your ACK on it to increase your ACK count without doing a fraction of what previous reviewers have done.
+
+?I also want to mention that the people who have become maintainers in the past have had this kind of maintainer attitude towards review prior to becoming a maintainer?
+
+Assuming ryanofsky hasn?t had this maintainer attitude in the past (again not a criticism from me at least) does this mean this was a reason to block Vasil but not a reason to block ryanofsky? That seems inconsistent to me. When you?re anointed you don?t need to meet requirements but when you?re blocked these requirements will be used to block your addition as a new maintainer?
+
+For what it is worth from a personal perspective I don?t see any reason for blocking ryanofsky as a maintainer especially if there is broad agreement amongst maintainers and long term contributors that we need a new maintainer who understands interfaces and modularization on the project. For that framing ryanofsky perfectly meets those requirements. But once again the (public) discussion element on the addition of maintainers is essentially a fa?ade, a framing for what the new maintainer needs to be has been decided in advance (in private) and an anointed individual who just so happens to align with that convenient framing will get added as a new maintainer.
+
+On a more positive note there does seem to be more energy and momentum for collaboration and open communication on the project since I discussed communication in a previous post [3]. Hopefully this will continue. It doesn?t address my concerns on maintainers and ultimately merge decisions but it definitely seems to me to be a step in a positive direction for the project.
+
+[0]: https://gnusha.org/bitcoin-core-dev/2023-05-04.log
+
+[1]: https://gnusha.org/bitcoin-core-dev/2023-05-01.log
+
+[2]: https://github.com/bitcoin/bitcoin/pull/25871#issuecomment-1382334059
+
+[3]:https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2023-April/021565.html
+
+--
+Michael Folkson
+Email: michaelfolkson at [protonmail.com](http://protonmail.com/)
+GPG: A2CF5D71603C92010659818D2A75D601B23FEE0F
+
+Learn about Bitcoin: https://www.youtube.com/@portofbitcoin
+
+------- Original Message -------
+On Tuesday, April 18th, 2023 at 13:40, Michael Folkson <michaelfolkson at protonmail.com> wrote:
+
+> Communication has been a challenge on Bitcoin Core for what I can tell the entire history of the project. Maintainers merge a pull request and provide no commentary on why they?ve merged it. Maintainers leave a pull request with many ACKs and few (if any) NACKs for months and provide no commentary on why they haven't merged it. I can only speculate on why and it probably depends on the individual maintainer. Sometimes it will be poor communication skills, sometimes it will be a desire to avoid accountability, sometimes it will be fear of unreasonable and spiteful legal action if they mistakenly merge a pull request that ends up containing a bug. But search through the pull requests on Bitcoin Core and you will rarely see a rationale for a merge decision. The difference between say previous maintainers like Wladimir and some of the current maintainers is that previous maintainers were extremely responsive on IRC. If you disagreed with a merge decision or thought it had been merged prematurely they would be happy to discuss it on IRC. In present times at least a subset of the current maintainers are not responsive on IRC and will refuse to discuss a merge decision. One farcical recent example [0] was the pull request to add Vasil Dimov as a maintainer where despite many ACKs from other maintainers and other long term contributors two maintainers (fanquake and Gloria) refused to discuss it on the pull request or on IRC. It took almost 5 months for Gloria to comment on the pull request despite many requests from me on the PR and on IRC. I even requested that they attend the weekly Core Dev IRC meeting to discuss it which they didn?t attend.
+>
+> A pull request to add a maintainer isn?t a normal pull request. Generally pull requests contain a lot more lines of code than a single line adding a trusted key. Not merging a pull request for a long period of time can be extremely frustrating for a pull request author especially when maintainers and long term contributors don?t comment on the pull request and the pull request is stuck in ?rebase hell?. Clearly it is the lesser evil when compared to merging a harmful or bug ridden pull request but poor non-existent communication is not the only way to prevent this. Indeed it creates as many problems as it solves.
+>
+> Another farcical recent(ish) example was the CTV pull request [1] that ultimately led to a contentious soft fork activation attempt that was called off at the last minute. If you look at the comments on the pull request there were 3 individuals (including myself) who NACKed the pull request and I think it is fair to say that none of us would be considered long term contributors to Bitcoin Core. I have criticised Jeremy Rubin multiple times for continuing to pursue a soft fork activation attempt when it was clear it was contentious [3] but if you look at the pull request comments it certainly isn?t clear it was. Maintainers and long term contributors (if they commented at all) were gently enthusiastic (Concept ACKing etc) without ACKing that it was ready to merge. A long term observer of the Core repo would have known that it wasn?t ready to merge or ready to attempt to activate (especially given it was a consensus change) but a casual observer would have only seen Concept ACKs and ACKs with 3 stray NACKs. Many of these casual observers inflated the numbers on the utxos.org site [4] signalling support for a soft fork activation attempt.
+>
+> I set out originally to write about the controls and processes around merges on the default signet (bitcoin-inquisition [5]) but it quickly became obvious to me that if communication around Core merges/non-merges is this weak you can hardly expect it to be any better on bitcoin-inquisition/default signet where there is no real monetary value at stake. I will probably write about bitcoin-inquisition/default signet in a future email as I do think the perception that it is ?the one and only? staging ground for consensus changes is dangerous [6] if the maintainer(s) on that project have the same inclinations as a subset of the Core maintainers.
+>
+> As I stated at the beginning there is an element to this which is not individual(s) specific and an adverse reaction to outright malicious actors external to any of these projects. I do not think any of the current maintainers on Core or bitcoin-inquisition are outright malicious even if a subset of them consistently frustrate me with their lack of transparency and accountability. But this issue isn't going away and I'm sure we'll hear more on this from others in the coming months. To me it is a straight choice of taking transparency and accountability much more seriously or failing that investing more heavily (time and resources) in consensus compatible forks of Core and treating Core like it is a proprietary "open source" project where merge decisions are not explained or justified in the open.
+>
+> [0]: https://github.com/bitcoin/bitcoin/pull/25871
+>
+> [1]: https://github.com/bitcoin/bitcoin/pull/21702
+>
+> [2]: https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2022-April/020386.html
+>
+> [3]: https://gist.github.com/michaelfolkson/352a503f4f9fc5de89af528d86a1b718
+>
+> [4]: https://utxos.org/signals/
+>
+> [5]: https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2022-September/020921.html
+>
+> [6]: https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2022-September/020948.html
+>
+> --
+> Michael Folkson
+> Email: michaelfolkson at [protonmail.com](http://protonmail.com/)
+> Keybase: michaelfolkson
+> PGP: 43ED C999 9F85 1D40 EAF4 9835 92D6 0159 214C FEE3
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20230507/5230485a/attachment-0001.html>
+
+From dave at dtrt.org  Sun May  7 17:35:52 2023
+From: dave at dtrt.org (David A. Harding)
+Date: Sun, 07 May 2023 07:35:52 -1000
+Subject: [bitcoin-dev] Bitcoin Core maintainers and communication on
+ merge decisions
+In-Reply-To: <qLlgx_AotByY1ZZHTCn3BBK7x1spKEYYd3UP4txYq-RceoclKdVAB1E5MJ4FTV7bWVP1Ilsdbmn43dkrOfqw84EUUQAvnkztN9FY1R5oDOA=@protonmail.com>
+References: <uuq_VbxJp50_-m4ufKpEhJOknhZ0pvK8ioDabCkxtDjBYauO3gLKrj2O2tjS6YIFOnJLyaZg6-LENzom1DyQQ3TyMLIIaGz5IRrzrKB8gRs=@protonmail.com>
+ <qLlgx_AotByY1ZZHTCn3BBK7x1spKEYYd3UP4txYq-RceoclKdVAB1E5MJ4FTV7bWVP1Ilsdbmn43dkrOfqw84EUUQAvnkztN9FY1R5oDOA=@protonmail.com>
+Message-ID: <f2912dbbad28db5139e8df13f52e082d@dtrt.org>
+
+On 2023-05-06 21:03, Michael Folkson via bitcoin-dev wrote:
+> Essentially my concern is going forward current maintainers will
+> decide which proposed new maintainers to add and which to block.
+
+This is how a large percentage of organizations are run.  The current 
+members of a board or other governance group choose who will become a 
+new board member.
+
+One alternative to self-perpetuating governance is membership voting, 
+but building and maintaining democratic institutions is hard and not a 
+good fit for many types of endeavors---the building of highly technical 
+software being one of those cases IMO.
+
+I think the questions we want to ask is whether the current set of 
+maintainers is capable of moving Bitcoin Core in the direction we want 
+and what we can do about it if we conclude that they are ill-suited (or 
+malicious).  For the first question, I think that's something everyone 
+needs to answer for themselves, as we may each have different visions 
+for the future of the project.  That said, I note that several 
+initiatives championed by the current maintainers in the IRC meeting you 
+mention received overwhelmingly positive support from a significant 
+number of current contributors, which seems like a healthy sign to me.
+
+For the second question, I think AJ Towns already answered that quite 
+well (though he was talking about a different project): 
+https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2023-April/021578.html
+
+Finally, I don't think this matter warranted a post to this mailing 
+list.  Discussion about internal project decisions, such as who should 
+have merge access and what maintainers should communicate in PRs, belong 
+in communication channels dedicated to that project.
+
+-Dave
+

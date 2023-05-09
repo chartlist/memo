@@ -1,0 +1,134 @@
+<!DOCTYPE html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="theme-color" content="#ffffff"/>
+    <meta name="description" content="The Bitcoin Transaction Monitor provides deeper insights about the usage of the Bitcoin network by showing transactions by time and feerate.">
+    <meta name="author" content="0xB10C">
+    <meta property="og:title" content="Bitcoin Transaction Monitor - mempool.observer" />
+    <meta property="og:description" content="The Bitcoin Transaction Monitor provides deeper insights about the usage of the Bitcoin network by showing transactions by time and feerate." />
+    <meta property="og:image" content="/img/twitter-card.png" />
+    <!--  <meta property="og:url" content="https://mempool.observer/monitor" /> -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@mempoolobserver" />
+    <meta name="twitter:creator" content="@0xb10c" />
+    <title>Bitcoin Archives Search</title>
+
+    <link href="/css/3rd-party/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/main.css" rel="stylesheet">
+    <link href="/css/monitor.css" rel="stylesheet">
+    <link href="/css/tri-state-switch.css" rel="stylesheet">
+</head>
+
+<body>
+<header>
+    <nav class="navbar navbar-expand-md navbar-bg fixed-top shadow-sm">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+                    aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span>&#9776;</span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/#current-mempool">Current<span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#historical-mempool">Historical</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#past-blocks">Blocks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#transaction-stats">SegWit and RBF</a>
+                    </li>
+                    <li class="nav-item" >
+                        <span class="nav" style="border-left: 1px solid #0000002f; height: 85%;margin: 0.3rem;"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/monitor">Transaction Monitor</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://openchart.org/explorer">Bitcoin Explorer</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/archives" target="_blank">Archives Search</a>
+                    </li>
+                </ul>
+                <button class="btn my-2 my-sm-0 btn-light btn-outline-white"
+                        onclick="
+          localStorage.setItem('mode', (localStorage.getItem('mode') || 'light') === 'dark' ? 'light' : 'dark');
+          localStorage.getItem('mode') === 'dark' ? $('body').attr('data-theme','dark'): $('body').attr('data-theme','light');">
+                    <i class=" fas fa-adjust"></i>
+                </button>
+            </div>
+
+        </div>
+    </nav>
+</header>
+
+<main id="main" role="main" class="py-6">
+    <div class="container">
+        <h1 class="display-4">
+            Bitcoin Archives Search
+        </h1>
+        <p>
+            The plot reveals activity patterns of wallets, exchanges and users transacting on the Bitcoin network.
+            Some patterns are only visible on certain days or at certain times.
+            To reduce the noise you can apply filters, set the dot radius and highlight transactions based on their properties.
+            Additionally feerate estimates from various sources can be overlayed.
+            Hovering over a transaction reveals more information about that transaction, and clicking opens a new tab with the transaction in a blockchain explorer.
+        </p>
+
+    </div>
+
+    <div class="container">
+        <div class="alert alert-warning text-justified" id="alert-mobile" role="alert">
+            Seems like you are visiting with a mobile device. You might have a better experience with a bigger screen and a mouse. Landscape mode might also help.
+        </div>
+        <noscript>
+            <div class="alert alert-danger text-center">
+                This the chart requires JavaScript to load...
+            </div>
+        </noscript>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-7">
+                <input type="text" id="archive-search-text" class="form-control "
+                       placeholder="enter some keywords to search..."
+                       onfocus="this.placeholder = ''"
+                       onblur="this.placeholder = 'enter some keywords to search...'"
+                       aria-describedby="button-lookup-txid" aria-label="txid">
+            </div>
+            <div class="col-1 text-center">
+                <button class="btn btn-outline-primary text-center" type="button" id="archive-search-btn">
+                    Search
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <ul id="archiveList"></ul>
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+</footer>
+
+<script src="/js/3rd-party/jquery-3.3.1.slim.min.js"></script>
+<script src="/js/3rd-party/bootstrap.min.js"></script>
+<script src="/js/archives/search.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"
+        integrity="sha256-mpnrJ5DpEZZkwkE1ZgkEQQJW/46CSEh/STrZKOB/qoM=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.6.14/c3.min.js"
+        integrity="sha256-FSwELgAIM0rd8f7jcw6VH5LlIsVk8/WbssJ2nErPmX0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.0.3/chroma.min.js"
+        integrity="sha256-CnfzubvVAsthq0pwKJW1NedqCx5NoWbxyyF3of+CzYY=" crossorigin="anonymous"></script>
+</body>
+
+</html>

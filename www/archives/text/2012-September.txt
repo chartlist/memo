@@ -1,0 +1,3135 @@
+From matthewmitchell at godofgod.co.uk  Mon Sep 10 15:07:52 2012
+From: matthewmitchell at godofgod.co.uk (Matthew Mitchell)
+Date: Mon, 10 Sep 2012 16:07:52 +0100
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+Message-ID: <BA7EEDEA-5A56-42F5-A43D-0D4C9CC99DBC@godofgod.co.uk>
+
+Here is a BIP draft for improving the block relaying and validation so that it can be done in parallel and so that redundancy can be removed. This becomes more beneficial the larger the block sizes are.
+
+https://en.bitcoin.it/wiki/User:MatthewLM/ImprovedBlockRelayingProposal
+
+Matthew Mitchell
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120910/053635ab/attachment.html>
+
+From gmaxwell at gmail.com  Mon Sep 10 15:14:25 2012
+From: gmaxwell at gmail.com (Gregory Maxwell)
+Date: Mon, 10 Sep 2012 11:14:25 -0400
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <BA7EEDEA-5A56-42F5-A43D-0D4C9CC99DBC@godofgod.co.uk>
+References: <BA7EEDEA-5A56-42F5-A43D-0D4C9CC99DBC@godofgod.co.uk>
+Message-ID: <CAAS2fgTPLX+p_8eq8XTKHO-LsE+PgMs5SoDh=ho3wcdgCDXR6Q@mail.gmail.com>
+
+On Mon, Sep 10, 2012 at 11:07 AM, Matthew Mitchell
+<matthewmitchell at godofgod.co.uk> wrote:
+> Here is a BIP draft for improving the block relaying and validation so that
+> it can be done in parallel and so that redundancy can be removed. This
+> becomes more beneficial the larger the block sizes are.
+>
+> https://en.bitcoin.it/wiki/User:MatthewLM/ImprovedBlockRelayingProposal
+
+Why does this focus on actually sending the hash tree?  The block
+header + transaction list + transactions a node doesn't already know
+(often just the coinbase) is enough.
+
+
+
+From matthewmitchell at godofgod.co.uk  Mon Sep 10 15:25:25 2012
+From: matthewmitchell at godofgod.co.uk (Matthew Mitchell)
+Date: Mon, 10 Sep 2012 16:25:25 +0100
+Subject: [Bitcoin-development] Fwd:  Segmented Block Relaying BIP draft.
+References: <8819BE21-AB14-4407-8007-8D3DBD40444E@godofgod.co.uk>
+Message-ID: <4EA837E8-7224-497D-A3F7-B027A5148509@godofgod.co.uk>
+
+Almost forgot...
+
+Begin forwarded message:
+
+> From: Matthew Mitchell <matthewmitchell at godofgod.co.uk>
+> Subject: Re: [Bitcoin-development] Segmented Block Relaying BIP draft.
+> Date: 10 September 2012 16:23:45 BST
+> To: Gregory Maxwell <gmaxwell at gmail.com>
+> 
+> By "gettreelevel" and "treelevel" you get the level of the merle tree with the hashes for the segments you want to download. You could request all the transaction hashes by specifying a very deep level. You could modify the proposal by removing the "level" byte in "gettreelevel" and always send the deepest level ie. The transaction hashes. Though by specifying the level you do not need to download all of the transaction hashes, only the hashes you need to verify each segment.
+> 
+> 
+> On 10 Sep 2012, at 16:14, Gregory Maxwell <gmaxwell at gmail.com> wrote:
+>> 
+>> Why does this focus on actually sending the hash tree?  The block
+>> header + transaction list + transactions a node doesn't already know
+>> (often just the coinbase) is enough.
+> 
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120910/6bd57c32/attachment.html>
+
+From debian-bugs at bluematt.me  Mon Sep 10 16:29:20 2012
+From: debian-bugs at bluematt.me (Matt Corallo)
+Date: Mon, 10 Sep 2012 12:29:20 -0400
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <CAAS2fgTPLX+p_8eq8XTKHO-LsE+PgMs5SoDh=ho3wcdgCDXR6Q@mail.gmail.com>
+References: <BA7EEDEA-5A56-42F5-A43D-0D4C9CC99DBC@godofgod.co.uk>
+	<CAAS2fgTPLX+p_8eq8XTKHO-LsE+PgMs5SoDh=ho3wcdgCDXR6Q@mail.gmail.com>
+Message-ID: <1347294397.1419.4.camel@localhost.localdomain>
+
+I actually implemented parts of the header+ v<tx> stuff in a branch with
+my bloom filter stuff, you can see it here:
+https://github.com/TheBlueMatt/bitcoin/commits/bloom%2Brelayblock
+Its pretty stupid and would be pretty easy to DoS/get it stuck/etc, but
+in theory it works.  I don't see much reason why we'd need anything
+significantly more complicated, but maybe there is a use-case I'm
+missing?
+
+Matt
+
+On Mon, 2012-09-10 at 11:14 -0400, Gregory Maxwell wrote:
+> On Mon, Sep 10, 2012 at 11:07 AM, Matthew Mitchell
+> <matthewmitchell at godofgod.co.uk> wrote:
+> > Here is a BIP draft for improving the block relaying and validation so that
+> > it can be done in parallel and so that redundancy can be removed. This
+> > becomes more beneficial the larger the block sizes are.
+> >
+> > https://en.bitcoin.it/wiki/User:MatthewLM/ImprovedBlockRelayingProposal
+> 
+> Why does this focus on actually sending the hash tree?  The block
+> header + transaction list + transactions a node doesn't already know
+> (often just the coinbase) is enough.
+
+
+
+
+From luke at dashjr.org  Mon Sep 10 18:59:03 2012
+From: luke at dashjr.org (Luke-Jr)
+Date: Mon, 10 Sep 2012 18:59:03 +0000
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <BA7EEDEA-5A56-42F5-A43D-0D4C9CC99DBC@godofgod.co.uk>
+References: <BA7EEDEA-5A56-42F5-A43D-0D4C9CC99DBC@godofgod.co.uk>
+Message-ID: <201209101859.05009.luke@dashjr.org>
+
+On Monday, September 10, 2012 3:07:52 PM Matthew Mitchell wrote:
+> Here is a BIP draft for improving the block relaying and validation so that
+> it can be done in parallel and so that redundancy can be removed. This
+> becomes more beneficial the larger the block sizes are.
+> 
+> https://en.bitcoin.it/wiki/User:MatthewLM/ImprovedBlockRelayingProposal
+
+Most of the problem with block propagation lies in implementation, not 
+protocol... Distributing missing transaction on an as-needed basis is a 
+possible improvement at the protocol level, but there hasn't (AFAIK) been any 
+research into whether the little benefit outweighs the cost yet. In any case, 
+I don't see why 6 new messages are needed instead of simply adding a single 
+new type to getinv?
+
+
+
+From matthewmitchell at godofgod.co.uk  Mon Sep 10 19:34:10 2012
+From: matthewmitchell at godofgod.co.uk (Matthew Mitchell)
+Date: Mon, 10 Sep 2012 20:34:10 +0100
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <201209101859.05009.luke@dashjr.org>
+References: <BA7EEDEA-5A56-42F5-A43D-0D4C9CC99DBC@godofgod.co.uk>
+	<201209101859.05009.luke@dashjr.org>
+Message-ID: <239CFE18-302F-47F1-8686-67297FDDFB3C@godofgod.co.uk>
+
+Do you mean getdata? Here is the reason for the 6 new messages:
+
+getseginv,seginv - These are for learning about what segments of a block a node has. Else you could remove these messages and simply have nodes advertise blocks via inventory messages. In this case nodes would have to wait until they had fully received a block before relaying anything. No longer is there a benefit with nodes being able to relay segments of blocks before they have received the entire block.
+
+gettreelevel,treelevel - These are to received a level of the merle tree. Instead you might use get data but gettreelevel is more compact than get data and is clearly differentiates itself as part of the new protocol. Perhaps these messages could include the block headers alongside the hashes and you could request many at once like with the getheaders message? If you skip these messages, then you could verify the transactions at the end but there would be problems when peers give bad segments where data would need to be downloaded again.
+
+getsegment,segment - These are clearly important to request and receive segments for the blocks. These allows for nodes to download arbitrary segments of blocks. The optimum number of segments could be calculated by node software using measurements of download speeds and latency times, the number of connections and how likely redundancy is to occur. If a node is up-to-date and likely has many of the transactions in blocks, it can start asking for the deepest merle level (tx hashes) and ask nodes for segments, avoiding transactions it already has.
+
+I'll get around to doing measurements myself sometime to estimate the benefit of this proposal. It will certainly be beneficial when block sizes reach some size but not much is really known except what can be assumed/guessed.
+
+I should also mention the bitcointalk topic here: https://bitcointalk.org/index.php?topic=103295.0
+
+On 10 Sep 2012, at 19:59, "Luke-Jr" <luke at dashjr.org> wrote:
+> 
+> Most of the problem with block propagation lies in implementation, not 
+> protocol... Distributing missing transaction on an as-needed basis is a 
+> possible improvement at the protocol level, but there hasn't (AFAIK) been any 
+> research into whether the little benefit outweighs the cost yet. In any case, 
+> I don't see why 6 new messages are needed instead of simply adding a single 
+> new type to getinv?
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120910/ea129c44/attachment.html>
+
+From bitcoin-list at bluematt.me  Mon Sep 10 19:53:33 2012
+From: bitcoin-list at bluematt.me (Matt Corallo)
+Date: Mon, 10 Sep 2012 15:53:33 -0400
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <239CFE18-302F-47F1-8686-67297FDDFB3C@godofgod.co.uk>
+References: <BA7EEDEA-5A56-42F5-A43D-0D4C9CC99DBC@godofgod.co.uk>
+	<201209101859.05009.luke@dashjr.org>
+	<239CFE18-302F-47F1-8686-67297FDDFB3C@godofgod.co.uk>
+Message-ID: <1347306813.1419.20.camel@localhost.localdomain>
+
+It seems to me the whole idea of segmenting blocks would add very little
+(to nothing) with any sane block size.  Sure, if a block were to be
+10GB, it may make sense.  However, even in that case, it would be easier
+to relay a list of tx hashes (which may be a bit expensive) and txes
+separately instead of using a notion of block segments.  That said, I
+don't see blocks ever being that large and if they do become that large,
+as only a few full nodes will remain, upgrading their protocol would be
+(relatively) easy.  I would instead encourage focus on decreasing block
+relay times for the current network and as blocks approach 10MB (so that
+they can approach 10MB).
+
+Matt
+
+On Mon, 2012-09-10 at 20:34 +0100, Matthew Mitchell wrote:
+> Do you mean getdata? Here is the reason for the 6 new messages:
+> 
+> 
+> getseginv,seginv - These are for learning about what segments of a
+> block a node has. Else you could remove these messages and simply have
+> nodes advertise blocks via inventory messages. In this case nodes
+> would have to wait until they had fully received a block before
+> relaying anything. No longer is there a benefit with nodes being able
+> to relay segments of blocks before they have received the entire
+> block.
+> 
+> 
+> gettreelevel,treelevel - These are to received a level of
+> the merle tree. Instead you might use get data but gettreelevel is
+> more compact than get data and is clearly differentiates itself as
+> part of the new protocol. Perhaps these messages could include the
+> block headers alongside the hashes and you could request many at once
+> like with the getheaders message? If you skip these messages, then you
+> could verify the transactions at the end but there would be problems
+> when peers give bad segments where data would need to be downloaded
+> again.
+> 
+> 
+> getsegment,segment - These are clearly important to request and
+> receive segments for the blocks. These allows for nodes
+> to download arbitrary segments of blocks. The optimum number of
+> segments could be calculated by node software using measurements of
+> download speeds and latency times, the number of connections and how
+> likely redundancy is to occur. If a node is up-to-date and likely has
+> many of the transactions in blocks, it can start asking for the
+> deepest merle level (tx hashes) and ask nodes for segments, avoiding
+> transactions it already has.
+> 
+> 
+> I'll get around to doing measurements myself sometime to estimate the
+> benefit of this proposal. It will certainly be beneficial when block
+> sizes reach some size but not much is really known except what can be
+> assumed/guessed.
+> 
+> 
+> I should also mention the bitcointalk topic
+> here: https://bitcointalk.org/index.php?topic=103295.0
+> 
+> On 10 Sep 2012, at 19:59, "Luke-Jr" <luke at dashjr.org> wrote:
+> > 
+> > Most of the problem with block propagation lies in implementation,
+> > not 
+> > protocol... Distributing missing transaction on an as-needed basis
+> > is a 
+> > possible improvement at the protocol level, but there hasn't (AFAIK)
+> > been any 
+> > research into whether the little benefit outweighs the cost yet. In
+> > any case, 
+> > I don't see why 6 new messages are needed instead of simply adding a
+> > single 
+> > new type to getinv?
+
+
+
+
+
+From gmaxwell at gmail.com  Mon Sep 10 20:00:57 2012
+From: gmaxwell at gmail.com (Gregory Maxwell)
+Date: Mon, 10 Sep 2012 16:00:57 -0400
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <1347306813.1419.20.camel@localhost.localdomain>
+References: <BA7EEDEA-5A56-42F5-A43D-0D4C9CC99DBC@godofgod.co.uk>
+	<201209101859.05009.luke@dashjr.org>
+	<239CFE18-302F-47F1-8686-67297FDDFB3C@godofgod.co.uk>
+	<1347306813.1419.20.camel@localhost.localdomain>
+Message-ID: <CAAS2fgQcZsEy7bvc6e1Rz-z6B3hUkf_OEKrk79pR0QuCwqx-vA@mail.gmail.com>
+
+On Mon, Sep 10, 2012 at 3:53 PM, Matt Corallo <bitcoin-list at bluematt.me> wrote:
+> It seems to me the whole idea of segmenting blocks would add very little
+> (to nothing) with any sane block size.  Sure, if a block were to be
+> 10GB, it may make sense.  However, even in that case, it would be easier
+
+As you know there is a hard protocol limit of 1MB.
+
+If you're going to talk about doing that you are screwing with the
+core economic promises of the system. (in particular, removing the cap
+eliminates the only armwave we have for long term security).  But in
+any case, removing it requires a complete and totally incompatible
+hardfork, and at that point you can do whatever you want with the
+protocol. Changing how blocks are fetched is almost incidental to the
+number of other things that would be changed.  I don't think it makes
+sense to design for that especially when something far simpler (as you
+pointed out) is prudent for the design of bitcoin.
+
+
+
+From matthewmitchell at godofgod.co.uk  Tue Sep 11 19:07:39 2012
+From: matthewmitchell at godofgod.co.uk (Matthew Mitchell)
+Date: Tue, 11 Sep 2012 20:07:39 +0100
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+Message-ID: <2104FC7F-0AE0-4C55-9987-B20EFCE19FC3@godofgod.co.uk>
+
+For some reason sourceforge is not sending me updates anymore but I can see the replies online?
+
+There could be a slightly more simple protocol which gives all the transactions hashes and nodes can then download the transactions separately. However there are two problems:
+
+1. Downloading all the transactions individually might be inefficient. My proposal will allow nodes to request multiple transactions at once.
+2. Why not add a few additional components to the protocol to allow requests for any level of the merkle tree? It's not very complicated at all and protects against the future.
+
+Sure, analysis needs to be done to see at what point the proposal would give benefit and I will hopefully get around to doing some measurements of peer behaviour to aid with this.
+
+I think it's a good idea to think ahead rather than only do what is beneficial for the network currently. The block sizes at the moment are about 0.1MB but what if the bitcoin demand starts pushing that into megabytes? And yes the ~0.95MB limit needs to be changed in order for bitcoin to grow that far. Why would the limit not be lifted? How will bitcoin demand be satisfied other than having large fees to deter transactions, hoping the fees are large enough to balance the demand with the block size limits to prevent many transactions being unconfirmed and annoying users? That limit has got to go eventually. And then it could be that block sizes do become large enough to worry about the performance in relaying.
+
+Best not to leave this to the last minute, so at the very least I think it's good to talk about this.
+
+
+From gmaxwell at gmail.com  Tue Sep 11 19:42:32 2012
+From: gmaxwell at gmail.com (Gregory Maxwell)
+Date: Tue, 11 Sep 2012 15:42:32 -0400
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <2104FC7F-0AE0-4C55-9987-B20EFCE19FC3@godofgod.co.uk>
+References: <2104FC7F-0AE0-4C55-9987-B20EFCE19FC3@godofgod.co.uk>
+Message-ID: <CAAS2fgSymOJ=cQnNwK9+nvRYszHHH4vtUpoQYWNNYoVaYB5Gpg@mail.gmail.com>
+
+On Tue, Sep 11, 2012 at 3:07 PM, Matthew Mitchell
+<matthewmitchell at godofgod.co.uk> wrote:
+> For some reason sourceforge is not sending me updates anymore but I can see the replies online?
+>
+> There could be a slightly more simple protocol which gives all the transactions hashes and nodes can then download the transactions separately. However there are two problems:
+>
+> 1. Downloading all the transactions individually might be inefficient. My proposal will allow nodes to request multiple transactions at once.
+
+Someone can do that just by pipelining the one at a time requests.
+How much bandwidth do you think you could save over that?
+
+> 2. Why not add a few additional components to the protocol to allow requests for any level of the merkle tree? It's not very complicated at all and protects against the future.
+
+I don't see what value this provides.  For protecting against the
+future you might as well suggest uploading x86 code which gets
+executed to select transactions. "Protects against the future".  Can
+you clarify some more about exactly how you think it would help?
+
+It's sometimes desirable to be more general rather than more special
+case when it's costless... but having couple extra p2p protocol
+messages to implement, test for interop, guard against vulnerability,
+etc. isn't costless... and should be justified with concrete benefits.
+
+it's not clear to me how your proposal is really all that useful for
+very large blocks: I looks like it would lot of bytes sending
+redundant tree data.
+
+>The block sizes at the moment are about 0.1MB but what if the bitcoin demand starts pushing that into megabytes?
+
+And what if? _Bitcoin_ blocksizes can't be any larger.  Some future
+incompatible system? well perhaps. But we're working on the protocol
+for bitcoin now.
+
+> And yes the ~0.95MB limit needs to be changed in order for bitcoin to grow that far. Why would the limit not be lifted? How will bitcoin demand be satisfied other than having large fees to deter transactions, hoping the fees are large enough to balance the demand with the block size limits to prevent many transactions being unconfirmed and annoying users? That limit has got to go eventually. And then it could be that block sizes do become large enough to worry about the performance in relaying.
+
+The finite size? and ultimately the contention for space it causes? is
+the only thing will creates non-trivial fees. Without the fees there
+is no honest economic motivation to mine with adequate computing power
+to provide security (lots of dishonest motivations? e.g. applying
+control over the currency exist), you'd just have a race to the
+bottom, given unbounded block sizes it is always rational for
+decentralized to include any transaction with a fee even if it is very
+small? otherwise the next rational solver is just going to include it.
+
+Bitcoin gets its value through scarcity. There are two kinds of
+scarcity that are economically important, scarcity of the coins? there
+will never be more than 21 million? and scarcity of the block space
+which, as the protocol is defined and enforced by every node can not
+be more than 1MB. The latter scarcity is what makes the security model
+economically sane.
+
+Fortunately, its perfectly possible to make transactions denominated
+in bitcoin outside of the blockchain, and in a secure and distributed
+manner that respects the principles that make bitcoin attractive, but
+with information hiding that improves privacy, transaction speed, and
+scalability. See, e.g. the good work being done by Open transactions
+to create distributed cryptographic banks.  So blockchain scarcity
+itself doesn't prevent Bitcoin from being a one world currency
+(something which isn't at all sane no matter how big you make the
+blocks if you don't allow for other modes of transaction processing?
+who the heck wants to possibly wait an hour to get a 1 confirm
+sodapop??).
+
+>From the beginning it was obvious that confirmations would eventually
+be slower (or expensive to make merely slow; Bitcoin is incapable of
+reliable fast confirmations)? thats the nature the stochastic
+consensus and the fee based security support.  You could instead
+imagine a future where bitcoin's security came by collusion by major
+financial cartels and governments, and where fees aren't important....
+ But I reject that future, it's a perfectly viable one, but why bother
+with Bitcoins in the first place? To make some early adopters a little
+bit of money starting off the next big centrally controlled fiat?
+Boring.
+
+I can't say for sure if the 1MB limit will stay exactly as is forever,
+as I expect the economics work with any limit out of a fairly broad
+range that is low enough to both make the space seriously scarce and
+low enough that 'inexpensive' (e.g. privately owned) hardware can
+continue to audit it to preserve the decentralized security,  and the
+economic importance of the size limit is more subtle than the
+inflation resistance... but I know that changing it is precisely as
+technically difficult as changing the 21 million limit: all Bitcoin
+node software must be replaced with incompatible software, and I
+believe it would be just as economically risky? if not more so? if
+done wrong, as at least inflation would have a easily understood
+direct dillution effect while inadequate security would potentially
+make all Bitcoin worthless.  As such I don't think it's even worth
+discussing until there is an urgent demand to clarify the tradeoffs...
+
+Should the block size ever be increased the message format used for
+relaying the larger blocks will be the smallest of the issues being
+discussed.
+
+
+
+From matthewmitchell at godofgod.co.uk  Tue Sep 11 21:48:43 2012
+From: matthewmitchell at godofgod.co.uk (Matthew Mitchell)
+Date: Tue, 11 Sep 2012 22:48:43 +0100
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <CAAS2fgSymOJ=cQnNwK9+nvRYszHHH4vtUpoQYWNNYoVaYB5Gpg@mail.gmail.com>
+References: <2104FC7F-0AE0-4C55-9987-B20EFCE19FC3@godofgod.co.uk>
+	<CAAS2fgSymOJ=cQnNwK9+nvRYszHHH4vtUpoQYWNNYoVaYB5Gpg@mail.gmail.com>
+Message-ID: <19ED4257-0BCA-41C5-A533-B0AB9B500181@godofgod.co.uk>
+
+On 11 Sep 2012, at 20:42, Gregory Maxwell <gmaxwell at gmail.com> wrote:
+
+> Someone can do that just by pipelining the one at a time requests.
+> How much bandwidth do you think you could save over that?
+
+You wouldn't need to pipeline the requests, just place more than one inventory vector in get data, right? Well my messages would save the space of those inventory vectors. Instead of needing 36 byte inventory vectors for each transaction and a var int, you would need two var ints only. And then the transaction responses only need one header, so you save 24 bytes for each transaction after the first. You could say that is a small benefit.
+ 
+> I don't see what value this provides.  For protecting against the
+> future you might as well suggest uploading x86 code which gets
+> executed to select transactions. "Protects against the future".  Can
+> you clarify some more about exactly how you think it would help?
+
+Well it depends on wether you seriously think bitcoin blocks should be limited at a million bytes or not.
+
+> it's not clear to me how your proposal is really all that useful for
+> very large blocks: I looks like it would lot of bytes sending
+> redundant tree data.
+
+Look at bittorrent. With bittorrent you don't download files from a single peer all at once.
+
+> Bitcoin gets its value through scarcity. There are two kinds of
+> scarcity that are economically important, scarcity of the coins? there
+> will never be more than 21 million? and scarcity of the block space
+> which, as the protocol is defined and enforced by every node can not
+> be more than 1MB. The latter scarcity is what makes the security model
+> economically sane.
+
+Why wouldn't requesting minimum fees in the software work as is done currently?
+
+> Fortunately, its perfectly possible to make transactions denominated
+> in bitcoin outside of the blockchain, and in a secure and distributed
+> manner that respects the principles that make bitcoin attractive, but
+> with information hiding that improves privacy, transaction speed, and
+> scalability. See, e.g. the good work being done by Open transactions
+> to create distributed cryptographic banks.  So blockchain scarcity
+> itself doesn't prevent Bitcoin from being a one world currency
+> (something which isn't at all sane no matter how big you make the
+> blocks if you don't allow for other modes of transaction processing?
+> who the heck wants to possibly wait an hour to get a 1 confirm
+> sodapop??).
+
+So what you essentially suggest is having bitcoin banks that maintain trust through Open Transaction contracts which contains proof of agreement, providing some legal protection? One wonders why have bitcoin at all then? Why not have an elaborate e-money system between several banks using Open Transactions? Bitcoin doesn't just contain proof of if something was done right or not, it contains actual certainty that it will be done right. And how does Open Transactions prevent fractional reserve fraud?
+
+I suppose when people consider bitcoin banks, they will consider bitcoin being useless.
+
+>  but I know that changing it is precisely as
+> technically difficult as changing the 21 million limit
+
+Set the change to occur at some block in the future leaving time for people to upgrade. Send out alert messages to notify users to upgrade. Issue is, some people might not like the change for whatever reasons.
+
+As far as I see it, if bitcoin won't scale, then it's worth looking at something different to bitcoin that will scale.
+
+
+From gmaxwell at gmail.com  Tue Sep 11 23:22:05 2012
+From: gmaxwell at gmail.com (Gregory Maxwell)
+Date: Tue, 11 Sep 2012 19:22:05 -0400
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <19ED4257-0BCA-41C5-A533-B0AB9B500181@godofgod.co.uk>
+References: <2104FC7F-0AE0-4C55-9987-B20EFCE19FC3@godofgod.co.uk>
+	<CAAS2fgSymOJ=cQnNwK9+nvRYszHHH4vtUpoQYWNNYoVaYB5Gpg@mail.gmail.com>
+	<19ED4257-0BCA-41C5-A533-B0AB9B500181@godofgod.co.uk>
+Message-ID: <CAAS2fgRfXBrsFm_zdNFe7Z4FN7uQ5zSg++scng=hNrHZZV93VQ@mail.gmail.com>
+
+On Tue, Sep 11, 2012 at 5:48 PM, Matthew Mitchell
+<matthewmitchell at godofgod.co.uk> wrote:
+> You wouldn't need to pipeline the requests, just place more than one inventory vector in get data, right? Well my messages would save the space of those inventory vectors. Instead of needing 36 byte inventory vectors for each transaction and a var int, you would need two var ints only. And then the transaction responses only need one header, so you save 24 bytes for each transaction after the first. You could say that is a small benefit.
+
+But you only need to request the transactions you don't have. Most of
+time you should already have almost all of the transactions.
+
+> Look at bittorrent. With bittorrent you don't download files from a single peer all at once.
+
+You can fetch transactions from multiple peers with just a simple
+mechanism that gives you the headers plus the txn list. And if you
+want ArgumentAdSomethingElse, thats what bittorrent does too: the
+torrent file contains the list of block hashes, and you get it from
+one place.
+
+> Why wouldn't requesting minimum fees in the software work as is done currently?
+
+Because there is no motivation not to set them to zero, if you don't
+someone else will.  Right now the income from fees is hardly relevant,
+and the ability to drive more non-existant because there isn't enough
+load to create scarcity.
+
+
+> So what you essentially suggest is having bitcoin banks that maintain trust through Open Transaction contracts which contains proof of agreement, providing some legal protection? One wonders why have bitcoin at all then? Why not have an elaborate e-money system between several banks using Open Transactions?
+
+Because it can't resist inflation. You have to trust that the banks
+won't conspire to their mutual benefit to inflate the base currency.
+OT can make it so a 'bank' (which is really a distributed collection
+of nodes, not a single point of trust) can trivially prove how much
+"gold certificates" it has issued, but you also need to prove how much
+'gold' exists and which keys hold it, and for that you need a _global_
+consensus; which bitcoin provides...
+
+If you don't like
+
+>Bitcoin doesn't just contain proof of if something was done right or not, it contains actual certainty that it will be done right. And how does Open >Transactions prevent fractional reserve fraud?
+
+Well, Bitcoin gives you no certainty that any particular transaction
+will be confirmed at all, ever; so perhaps best not to overstate it
+too much. But yes, Bitcoin is great. ... but all that greatness
+depends on there being a way to fund enough computation so that
+attacks are too costly to be justified and that the cost of
+maintaining a system to fully validate the system's rules (e.g. that
+the miners aren't mining duplicate txns to create inflation for
+themselves) is low enough that it will naturally enormously
+distributed so that a conspiracy is effectively impossible.  Otherwise
+everything consolidates down to a few meganodes and the attractive
+properties are all gone.
+
+OT's issuers can prove how much bitcoin they hold on the blockchain
+(by nothing more sophisticated than signmessage) and they can prove
+how many tokens they've issued against it.
+
+And I didn't mean to suggest OT as a unique solution. Another path is
+ripple, the idea of which is a sort of a p2p hawala where you have
+pairwise trust and debt. It can allow you to circulate around tokens
+between a community of users and only settle infrequently (as
+determined by your level of trust, the debt involved, and the cost of
+the bitcoin transaction) against bitcoin.
+
+> I suppose when people consider bitcoin banks, they will consider bitcoin being useless.
+
+They already exist, in crappy centralized form? e.g. look at mtgox
+codes and user to user instant transfers; and bitcoin isn't useless.
+Plus some extra system of some kind is the _only_ way to securely
+irreversible transactions which are reliably fast, so it's not like
+there is any real prospect of using bitcoin directly for all kinds of
+uses at scale. (yes, blocks are 'only' 10 minutes apart on average,
+but if you care about fast, you care about e.g. the 99% not the
+average)
+
+> As far as I see it, if bitcoin won't scale, then it's worth looking at something different to bitcoin that will scale.
+
+Bitcoin scales fine.  It is not a singular replacement for everything
+you can imagine it being a replacement for, however, or at least not a
+good replacement.  The fact that you could conceivably make it
+directly scale up to handle e.g. the volume of all the credit network
+doesn't make that a good idea. It would still be a very poor
+replacement for a credit network (slow transactions; which can't be
+fixed by tweaking some parameters, the bitcoin blockchain consensus
+algorithm has infinite convergence time when the block time falls
+below the hash-power-weighed latency), and that kind of scaling would
+absolutely ruin the decentralization, making it so only large states
+and megabanks could run full nodes, and even at that level it couldn't
+match the worldwide volume of cash transactions or 'internal' money
+transactions (like money moving around on all the poker tables in the
+world).   It's like someone made the mistake of saying the floor wax
+is edible (linseed oil) and now you complain that its a crappy desert
+topping. :P
+
+Maybe people will ultimately agree to raise the block sizes, but I
+expect and hope that they'll only do so when it is entirely
+uncontroversial that doing so won't significantly degrade the
+decentralization (certainly not the case today: a large portion of the
+network appears to have trouble keeping up with large blocks right
+now, though upcoming software improvements will help enormously), or
+the mining economics.   And yes, of course, you schedule the change
+for the future, but as you note that it doesn't solve the problem of
+people opposing it.
+
+
+
+From thiagocmartinsc at gmail.com  Wed Sep 12 23:27:32 2012
+From: thiagocmartinsc at gmail.com (=?ISO-2022-JP?B?TWFydGlueCAtIBskQiU4JSchPCVgJTobKEI=?=)
+Date: Wed, 12 Sep 2012 20:27:32 -0300
+Subject: [Bitcoin-development] Announcement: libcoin
+In-Reply-To: <CAJSM8J1pTh4WdkZWB9tK-z6rpTr7auhY-2SBuq+9xW1gkowBGQ@mail.gmail.com>
+References: <D55C3D18-8286-44E9-B877-6FCE7C05E980@ceptacle.com>
+	<CAJSM8J1pTh4WdkZWB9tK-z6rpTr7auhY-2SBuq+9xW1gkowBGQ@mail.gmail.com>
+Message-ID: <CAJSM8J1Gg80790+RnTPoR=OR9Vp5TZVGSvBmN19nxki8bhX5nQ@mail.gmail.com>
+
+Michael,
+
+ I think it is time to your Libcoin to become the official Bitcoin...   ;-)
+
+ Look: https://bitcointalk.org/index.php?topic=108987.msg1185827
+
+ It is more or less the same idea, right?!
+
+Best!
+Thiago
+
+On 16 July 2012 17:14, Martinx - ????? <thiagocmartinsc at gmail.com> wrote:
+
+> Hi Michael!
+>
+>  I would like to ask you one thing:
+>
+>  1- Release a new version of Libcoin closest as possible with mainline
+> Bitcoin.
+>
+>  I mean, do not add any extra code to it and also, do not change any
+> stdout / stderr messages.
+>
+>  How much do you think that this will cost?
+>
+>  For the extra code: I'll need to run the "blockchain side" as Linux user
+> called "blockchain" and, each of my regular Linux user will have its own
+> wallet.dat file (without the blockchain).
+>
+> Thanks!
+> Thiago
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120912/0df95dce/attachment.html>
+
+From mike at plan99.net  Thu Sep 13 08:42:58 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Thu, 13 Sep 2012 10:42:58 +0200
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <CAAS2fgRfXBrsFm_zdNFe7Z4FN7uQ5zSg++scng=hNrHZZV93VQ@mail.gmail.com>
+References: <2104FC7F-0AE0-4C55-9987-B20EFCE19FC3@godofgod.co.uk>
+	<CAAS2fgSymOJ=cQnNwK9+nvRYszHHH4vtUpoQYWNNYoVaYB5Gpg@mail.gmail.com>
+	<19ED4257-0BCA-41C5-A533-B0AB9B500181@godofgod.co.uk>
+	<CAAS2fgRfXBrsFm_zdNFe7Z4FN7uQ5zSg++scng=hNrHZZV93VQ@mail.gmail.com>
+Message-ID: <CANEZrP0HHhSXyN9pWODtTxHMfRB4B0w-eSdvNHH13WwLVgECrw@mail.gmail.com>
+
+For what it's worth I disagree with Gregory on nearly all these
+points, so don't take it as some kind of consensus from the Bitcoin
+community ;)
+
+Matts change is reasonable but I think we all agree it has minimal
+impact at the moment relative to other things, so something even more
+complex than that seems like a non-starter. Bloom filtering is a lot
+more important.
+
+
+
+From matthewmitchell at godofgod.co.uk  Thu Sep 13 14:05:29 2012
+From: matthewmitchell at godofgod.co.uk (Matthew Mitchell)
+Date: Thu, 13 Sep 2012 15:05:29 +0100
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <CANEZrP0HHhSXyN9pWODtTxHMfRB4B0w-eSdvNHH13WwLVgECrw@mail.gmail.com>
+References: <2104FC7F-0AE0-4C55-9987-B20EFCE19FC3@godofgod.co.uk>
+	<CAAS2fgSymOJ=cQnNwK9+nvRYszHHH4vtUpoQYWNNYoVaYB5Gpg@mail.gmail.com>
+	<19ED4257-0BCA-41C5-A533-B0AB9B500181@godofgod.co.uk>
+	<CAAS2fgRfXBrsFm_zdNFe7Z4FN7uQ5zSg++scng=hNrHZZV93VQ@mail.gmail.com>
+	<CANEZrP0HHhSXyN9pWODtTxHMfRB4B0w-eSdvNHH13WwLVgECrw@mail.gmail.com>
+Message-ID: <FC0AF926-2CBD-49BA-A3B7-AF9D70A83CE4@godofgod.co.uk>
+
+On 13 Sep 2012, at 09:42, Mike Hearn <mike at plan99.net> wrote:
+
+> For what it's worth I disagree with Gregory on nearly all these
+> points, so don't take it as some kind of consensus from the Bitcoin
+> community ;)
+> 
+> Matts change is reasonable but I think we all agree it has minimal
+> impact at the moment relative to other things, so something even more
+> complex than that seems like a non-starter. Bloom filtering is a lot
+> more important.
+
+Sure other things may be done before this, I was seeing this as a change somewhere down the line but not urgent.
+
+@Gregory
+
+> But you only need to request the transactions you don't have. Most of
+> time you should already have almost all of the transactions.
+
+Yes, my proposal allows you to do this. You skip out transactions your already have. My proposal is simply better than others because it takes full advantage of the merkle tree structure with minor additions that are simple to implement. How hard is it to get the hashes at a particular level of a merkle tree? Not hard at all. How hard is it to place a selection of transactions from a block into a message Not hard at all. Implementation of the protocol requirements would be a piece of cake. The harder bit would be to create an algorithm to determine the best level of segmentation but this is not required to comply with the protocol.
+
+> Because there is no motivation not to set them to zero, if you don't
+> someone else will
+
+The motivation to incentivise miners and maintain stronger security? The difficulty only has to be high enough to prevent a cartel of malicious miners taking control of the network, something that is potentially a problem today with the large mining pools. Remember that the more transactions there are the more fees there can be for miners to collect. The more people that are using bitcoin, the greater bitcoins will be worth. A bigger network should be good for miners when relying on fees.
+
+> And yes, of course, you schedule the change
+> for the future, but as you note that it doesn't solve the problem of
+> people opposing it.
+
+If it's so controversial that it creates a split making two separated currencies then I'd see it turning out like the format wars (VHS vs Betamax and Blu-ray vs HD-DVD). Eventually people will move towards one or the other since it's better for people to have universalised agreement on a system.
+
+
+From gmaxwell at gmail.com  Thu Sep 13 15:16:09 2012
+From: gmaxwell at gmail.com (Gregory Maxwell)
+Date: Thu, 13 Sep 2012 11:16:09 -0400
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <FC0AF926-2CBD-49BA-A3B7-AF9D70A83CE4@godofgod.co.uk>
+References: <2104FC7F-0AE0-4C55-9987-B20EFCE19FC3@godofgod.co.uk>
+	<CAAS2fgSymOJ=cQnNwK9+nvRYszHHH4vtUpoQYWNNYoVaYB5Gpg@mail.gmail.com>
+	<19ED4257-0BCA-41C5-A533-B0AB9B500181@godofgod.co.uk>
+	<CAAS2fgRfXBrsFm_zdNFe7Z4FN7uQ5zSg++scng=hNrHZZV93VQ@mail.gmail.com>
+	<CANEZrP0HHhSXyN9pWODtTxHMfRB4B0w-eSdvNHH13WwLVgECrw@mail.gmail.com>
+	<FC0AF926-2CBD-49BA-A3B7-AF9D70A83CE4@godofgod.co.uk>
+Message-ID: <CAAS2fgSd6t038Yzb-Vy34J61xob+kVqA8pK+w1+ZwJ6XtQRJww@mail.gmail.com>
+
+On Thu, Sep 13, 2012 at 10:05 AM, Matthew Mitchell
+<matthewmitchell at godofgod.co.uk> wrote:
+
+> @Gregory
+>
+>> But you only need to request the transactions you don't have. Most of
+>> time you should already have almost all of the transactions.
+>
+> Yes, my proposal allows you to do this. You skip out transactions your already have. My proposal is simply better than others because it takes full advantage of the merkle tree structure with minor additions that are simple to implement. How hard is it to get the hashes at a particular level of a merkle tree? Not hard at all. How hard is it to place a selection of transactions from a block into a message Not hard at all. Implementation of the protocol requirements would be a piece of cake. The harder bit would be to create an algorithm to determine the best level of segmentation but this is not required to comply with the protocol.
+
+Sorry, I'm still not seeing what the value is.  How is the tree level
+useful to anyone?  If you did want to get only parts of the
+transaction list, why not just ranges from the lowest level?
+
+
+
+From matthewmitchell at godofgod.co.uk  Thu Sep 13 15:46:21 2012
+From: matthewmitchell at godofgod.co.uk (Matthew Mitchell)
+Date: Thu, 13 Sep 2012 16:46:21 +0100
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+References: <2B95CF41-4304-4D2A-9ABF-198D97B7449B@godofgod.co.uk>
+Message-ID: <1C04E92E-D53F-4914-B0AC-A002AAB5F978@godofgod.co.uk>
+
+
+On 13 Sep 2012, at 16:16, Gregory Maxwell <gmaxwell at gmail.com> wrote:
+
+> Sorry, I'm still not seeing what the value is.  How is the tree level
+> useful to anyone?  If you did want to get only parts of the
+> transaction list, why not just ranges from the lowest level?
+
+Obtaining a particular tree level allows you to verify segments without needing to download all the transaction hashes first. You only need one hash per segment. For instance if you want to divide the block into 8 segments you specify level 3 and download 8 hashes. You could download all transaction hashes if you wanted and it would still work, it just requires more data transfer for the hashes. This was the reason why merkle trees were used in bitcoin, to avoid requiring all hashes to verify data.
+
+
+
+
+From matthewmitchell at godofgod.co.uk  Thu Sep 13 17:49:49 2012
+From: matthewmitchell at godofgod.co.uk (Matthew Mitchell)
+Date: Thu, 13 Sep 2012 18:49:49 +0100
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <CAAS2fgQi8QFwU2M=wLiDodt3SmO48vUV5Sp3YCb1OmGJ5m=E7Q@mail.gmail.com>
+References: <2104FC7F-0AE0-4C55-9987-B20EFCE19FC3@godofgod.co.uk>
+	<CAAS2fgSymOJ=cQnNwK9+nvRYszHHH4vtUpoQYWNNYoVaYB5Gpg@mail.gmail.com>
+	<19ED4257-0BCA-41C5-A533-B0AB9B500181@godofgod.co.uk>
+	<CAAS2fgRfXBrsFm_zdNFe7Z4FN7uQ5zSg++scng=hNrHZZV93VQ@mail.gmail.com>
+	<CANEZrP0HHhSXyN9pWODtTxHMfRB4B0w-eSdvNHH13WwLVgECrw@mail.gmail.com>
+	<FC0AF926-2CBD-49BA-A3B7-AF9D70A83CE4@godofgod.co.uk>
+	<CAAS2fgSd6t038Yzb-Vy34J61xob+kVqA8pK+w1+ZwJ6XtQRJww@mail.gmail.com>
+	<2B95CF41-4304-4D2A-9ABF-198D97B7449B@godofgod.co.uk>
+	<CAAS2fgQi8QFwU2M=wLiDodt3SmO48vUV5Sp3YCb1OmGJ5m=E7Q@mail.gmail.com>
+Message-ID: <A1DC7DE8-F355-4B61-AF18-94F07DF6421E@godofgod.co.uk>
+
+
+On 13 Sep 2012, at 16:51, Gregory Maxwell <gmaxwell at gmail.com> wrote:
+
+> I thoroughly understand the value of tree hashes. That wasn't what I
+> was asking about.
+> 
+> If you're validating a block you need all the transactions, once you
+> have them or their hashes you can build the tree without transferring
+> more, e.g. what a fully validating node needs. If you're checking a
+> single transaction to need the path from the transaction to the root
+> (what a SPV nodes need, for example).
+> 
+> Can you spell out the 'end user'ish application for fetching a tree level?
+
+A merkle tree root is found by hashing the two children together and those children are found the same way until you get to the greatest level down the tree. This means you can validate children as being correct as long as they hash together to form the root. This means you do not need all the transaction hashes to validate segments of the block, you only need the root hashes for all the segments you want. Let's say there are 8 transactions and you want to verify 4 segments (2 transactions each), The merkle tree looks like this (Might not work depending on the font):
+
+Level 0:               *
+                      / \
+                     /   \
+                    /     \
+                   /       \
+                  /         \
+                 /           \
+                /             \
+Level 1:       *               *
+              / \             / \
+             /   \           /   \
+            /     \         /     \
+Level 2:   *       *       *       *
+          / \     / \     / \     / \
+Level 3: *   *   *   *   *   *   *   *
+
+When you look at any non-leaf node you can see a separate merkle tree where the root can be found exactly the same as any other merkle tree. In this example you want four segments, so you ask for level 2. Now imagine a tree without level 3, you can validate the root with level 2. In fact you can validate that the root exists for any level. So you first check that the level 2 hashes do indeed calculate to the root. Once this is done you can now use these hashes to validate the segments. When you receive a segment, you check that segment against the segment's root. So you've validated the segment transactions for the segment root and the segment root was validated for the entire tree's root. You validate the segments for each segment root and this way you know all the transactions are valid for the four segments and thus are valid for the entire tree. This way you have downloaded 4 hashes instead of 8. 
+
+Downloading the transactions hashes are therefore not necessary only the level for the segment roots. You might for instance want to divide the block into two segments in which case you ask for level 1 and download 2 hashes.
+
+I hope that made sense.
+
+And yes the merkle tree is particularly useful for validating a single transaction exists in a block as that saves a large proportion of the data required. The redundant data removed in the proposal here is smaller as a proportion of the total data (Because most of the data is the actual transactions themselves), so you might argue it's not worth it but it's simple to implement.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120913/5e035fd4/attachment.html>
+
+From pieter.wuille at gmail.com  Thu Sep 13 18:59:02 2012
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Thu, 13 Sep 2012 20:59:02 +0200
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <A1DC7DE8-F355-4B61-AF18-94F07DF6421E@godofgod.co.uk>
+References: <2104FC7F-0AE0-4C55-9987-B20EFCE19FC3@godofgod.co.uk>
+	<CAAS2fgSymOJ=cQnNwK9+nvRYszHHH4vtUpoQYWNNYoVaYB5Gpg@mail.gmail.com>
+	<19ED4257-0BCA-41C5-A533-B0AB9B500181@godofgod.co.uk>
+	<CAAS2fgRfXBrsFm_zdNFe7Z4FN7uQ5zSg++scng=hNrHZZV93VQ@mail.gmail.com>
+	<CANEZrP0HHhSXyN9pWODtTxHMfRB4B0w-eSdvNHH13WwLVgECrw@mail.gmail.com>
+	<FC0AF926-2CBD-49BA-A3B7-AF9D70A83CE4@godofgod.co.uk>
+	<CAAS2fgSd6t038Yzb-Vy34J61xob+kVqA8pK+w1+ZwJ6XtQRJww@mail.gmail.com>
+	<2B95CF41-4304-4D2A-9ABF-198D97B7449B@godofgod.co.uk>
+	<CAAS2fgQi8QFwU2M=wLiDodt3SmO48vUV5Sp3YCb1OmGJ5m=E7Q@mail.gmail.com>
+	<A1DC7DE8-F355-4B61-AF18-94F07DF6421E@godofgod.co.uk>
+Message-ID: <20120913185900.GA393@vps7135.xlshosting.net>
+
+On Thu, Sep 13, 2012 at 06:49:49PM +0100, Matthew Mitchell wrote:
+> A merkle tree root is found by hashing the two children together and those children are found the same way until you get to the greatest level down the tree. This means you can validate children as being correct as long as they hash together to form the root. This means you do not need all the transaction hashes to validate segments of the block, you only need the root hashes for all the segments you want. Let's say there are 8 transactions and you want to verify 4 segments (2 transactions each), The merkle tree looks like this (Might not work depending on the font):
+
+> I hope that made sense.
+
+I'm quite sure Gregory thoroughly understands how Merkle trees work and why they are useful.
+
+His question was about the use case. Let me try to answer his question, by making some assumptions about your intentions. Correct me if I'm wrong - I haven't read all details.
+
+You want to parallellize block downloads, while at the same time preventing re-download of transactions that are already known.
+To do so, a requesting node would first request (for example) the 8 level-3 hashes, then start 8 parallel threads to download the
+transactions from presumably 8 different peers. Each thread then fetches the transaction id's that correspond to its own 1/8th of
+the block, and requests the transactions whose txid is not yet known.
+Comparing this with Gregory's own suggestion (just fetch the entire txid list at first, and then (again as parallellized as needed)
+fetch the unknown transactions from several peers), this does indeed have an advantage: you need to download (relatively) far less
+data before the threaded part can start. If this is what you propose, it is certainly meaningful, but the gains aren't very large,
+in my opinion.
+
+However, my impression while reading your proposal was at times that you intend to process the different layers of the
+Merkle tree iteratively after starting the initial parallel segments. I don't think that is useful, as you'll need the actual
+txids anyway before deciding whether they need to be downloaded at all, it adds several round-trips, and once you have downloaded
+the intermediate merkle hashes for about 8 levels, you've already transferred more data than the transactions themselves. I think
+Gregory also assumed something like this, making him question why it's useful. Anyway, this whole paragraph is one assumption, so
+if it's not the case, ignore me.
+
+Can you clarify what you mean? Preferably by giving a concrete sequence of exchanged messages, with a given purpose?
+
+PS: the reason Satoshi used a Merkle tree for the transactions in a block was to allow a short piece of data (the hashes along a
+path in the tree) to prove a transaction belongs to it - I doubt he intended it for parallellizing downloads (though it certainly
+opens some opportunities here).
+
+-- 
+Pieter
+
+
+
+
+
+
+
+
+
+From matthewmitchell at godofgod.co.uk  Thu Sep 13 20:24:35 2012
+From: matthewmitchell at godofgod.co.uk (Matthew Mitchell)
+Date: Thu, 13 Sep 2012 21:24:35 +0100
+Subject: [Bitcoin-development] Segmented Block Relaying BIP draft.
+In-Reply-To: <20120913185900.GA393@vps7135.xlshosting.net>
+References: <2104FC7F-0AE0-4C55-9987-B20EFCE19FC3@godofgod.co.uk>
+	<CAAS2fgSymOJ=cQnNwK9+nvRYszHHH4vtUpoQYWNNYoVaYB5Gpg@mail.gmail.com>
+	<19ED4257-0BCA-41C5-A533-B0AB9B500181@godofgod.co.uk>
+	<CAAS2fgRfXBrsFm_zdNFe7Z4FN7uQ5zSg++scng=hNrHZZV93VQ@mail.gmail.com>
+	<CANEZrP0HHhSXyN9pWODtTxHMfRB4B0w-eSdvNHH13WwLVgECrw@mail.gmail.com>
+	<FC0AF926-2CBD-49BA-A3B7-AF9D70A83CE4@godofgod.co.uk>
+	<CAAS2fgSd6t038Yzb-Vy34J61xob+kVqA8pK+w1+ZwJ6XtQRJww@mail.gmail.com>
+	<2B95CF41-4304-4D2A-9ABF-198D97B7449B@godofgod.co.uk>
+	<CAAS2fgQi8QFwU2M=wLiDodt3SmO48vUV5Sp3YCb1OmGJ5m=E7Q@mail.gmail.com>
+	<A1DC7DE8-F355-4B61-AF18-94F07DF6421E@godofgod.co.uk>
+	<20120913185900.GA393@vps7135.xlshosting.net>
+Message-ID: <9F7EFD92-B922-45E9-97A8-03FFC811502D@godofgod.co.uk>
+
+
+On 13 Sep 2012, at 19:59, Pieter Wuille <pieter.wuille at gmail.com> wrote:
+
+> You want to parallellize block downloads, while at the same time preventing re-download of transactions that are already known.
+> To do so, a requesting node would first request (for example) the 8 level-3 hashes, then start 8 parallel threads to download the
+> transactions from presumably 8 different peers. Each thread then fetches the transaction id's that correspond to its own 1/8th of
+> the block, and requests the transactions whose txid is not yet known.
+> Comparing this with Gregory's own suggestion (just fetch the entire txid list at first, and then (again as parallellized as needed)
+> fetch the unknown transactions from several peers), this does indeed have an advantage: you need to download (relatively) far less
+> data before the threaded part can start. If this is what you propose, it is certainly meaningful, but the gains aren't very large,
+> in my opinion.
+
+This is not fully correct. I propose downloading the roots of the segments when you are not looking to remove redundant transaction downloads. This would be the case when the node is not up-to-date and is unlikely to have transactions in the required blocks. When a node is up-to-date and can benefit from removing redundant transaction downloads it can switch to downloading all the transactions hashes by specifying a high level number. Also I wouldn't recommend using one thread per connection, I'd recommend using one thread for all connections.
+
+> However, my impression while reading your proposal was at times that you intend to process the different layers of the
+> Merkle tree iteratively after starting the initial parallel segments. I don't think that is useful, as you'll need the actual
+> txids anyway before deciding whether they need to be downloaded at all, it adds several round-trips, and once you have downloaded
+> the intermediate merkle hashes for about 8 levels, you've already transferred more data than the transactions themselves. I think
+> Gregory also assumed something like this, making him question why it's useful. Anyway, this whole paragraph is one assumption, so
+> if it's not the case, ignore me.
+
+This isn't what I was suggesting. I was suggesting you only need to download one level. Once you have done that you verify everything for the hashes on that level.
+
+> 
+> Can you clarify what you mean? Preferably by giving a concrete sequence of exchanged messages, with a given purpose?
+
+Well you will need to ask for the headers first. Once you do that you can start downloading the full blocks for the headers.  The node should use "get blocks" to find nodes with segments of the blocks they need. Now for each block:
+
+1. Send getsiginv to a number of peers to know the segments of the blocks they have. 
+2. Send gettreelevel requesting a level of the merkle tree from a peer that can provide it. When up-to-date use a high level to get the transaction hashes to find redundant data.
+3. Validate the treelevel response
+4. Send getsegment for each segment wanted (at the same time where possible) to the peers that have these segments. Skip transactions already known.
+5. Validate the transactions in each segment received. Stop if the block is invalid and disconnect peers that give transactions which do not fit the merkle tree.
+6. Revert to getdata if peers using the protocol cannot satisfy the block download.
+
+When a valid block segment is received, include the block in inv and headers messages for other peers using the protocol. Thus relaying can begin before the entire block is downloaded.
+
+I'm thinking about improvements to this proposal. I'll get to that tomorrow perhaps?
+
+Thank you everyone for the replies.
+
+
+From showard314 at gmail.com  Fri Sep 14 01:57:05 2012
+From: showard314 at gmail.com (Scott Howard)
+Date: Thu, 13 Sep 2012 21:57:05 -0400
+Subject: [Bitcoin-development] separate out blockchain db and wallet to two
+	dirs?
+Message-ID: <CANg8-dCUC=qEqBSay5VKdqZOwEnx_UxYrT2LbV+20Vb1FbCJ1A@mail.gmail.com>
+
+This idea is from a Debian user [1].
+
+What do you think of moving the > 2 GB db to $HOME/.cache/bitcoin and
+leaving the wallet and other config files in $HOME/.bitcoin? This is
+so backups can skip the .cache directory and the proposal follows the
+freedesktop.org XDG Base Directory Specification [2]. Personal
+info/settings stays in .bitcoin/ and everything that can be rebuilt
+goes to .cache/bitcoin/ I know users can do a work around and set it
+up themselves with symlinks, but interested in what you guys think.
+
+Cheers,
+Scott (Debian Developer but new to bitcoin)
+
+
+
+[1] http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=660286
+[2] http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+
+
+
+From grarpamp at gmail.com  Fri Sep 14 02:15:24 2012
+From: grarpamp at gmail.com (grarpamp)
+Date: Thu, 13 Sep 2012 22:15:24 -0400
+Subject: [Bitcoin-development] separate out blockchain db and wallet to
+ two dirs?
+In-Reply-To: <CANg8-dCUC=qEqBSay5VKdqZOwEnx_UxYrT2LbV+20Vb1FbCJ1A@mail.gmail.com>
+References: <CANg8-dCUC=qEqBSay5VKdqZOwEnx_UxYrT2LbV+20Vb1FbCJ1A@mail.gmail.com>
+Message-ID: <CAD2Ti28-gxXwJF4MXEHO9o4_4Z7hsNM7T9XQRX1K8Q2OLmB+mw@mail.gmail.com>
+
+I mentioned this somewhere a while ago.
+It is enough of a sysadmin problem to warrant a feature ticket.
+Open one on github for it.
+XDGBDS is not canon. So don't hardcode said paths.
+All paths should be specifiable in bitcoin the config file, whose
+location should itself be specifiable on the command line.
+
+
+
+From peter at coinlab.com  Fri Sep 14 02:18:13 2012
+From: peter at coinlab.com (Peter Vessenes)
+Date: Fri, 14 Sep 2012 11:18:13 +0900
+Subject: [Bitcoin-development] separate out blockchain db and wallet to
+ two dirs?
+In-Reply-To: <CAD2Ti28-gxXwJF4MXEHO9o4_4Z7hsNM7T9XQRX1K8Q2OLmB+mw@mail.gmail.com>
+References: <CANg8-dCUC=qEqBSay5VKdqZOwEnx_UxYrT2LbV+20Vb1FbCJ1A@mail.gmail.com>
+	<CAD2Ti28-gxXwJF4MXEHO9o4_4Z7hsNM7T9XQRX1K8Q2OLmB+mw@mail.gmail.com>
+Message-ID: <CAMGNxUt8ic39pdq1zobSF0khR_vOixTDZMSixAhWTLd2hLMVAg@mail.gmail.com>
+
+I like this idea, although I would say the blockchain should go in
+/var/lib/bitcoin by default, right? I'm just a longtime LInux guy, not a
+formal sysadmin, though.
+
+Peter
+
+On Fri, Sep 14, 2012 at 11:15 AM, grarpamp <grarpamp at gmail.com> wrote:
+
+> I mentioned this somewhere a while ago.
+> It is enough of a sysadmin problem to warrant a feature ticket.
+> Open one on github for it.
+> XDGBDS is not canon. So don't hardcode said paths.
+> All paths should be specifiable in bitcoin the config file, whose
+> location should itself be specifiable on the command line.
+>
+>
+> ------------------------------------------------------------------------------
+> Got visibility?
+> Most devs has no idea what their production app looks like.
+> Find out how fast your code is with AppDynamics Lite.
+> http://ad.doubleclick.net/clk;262219671;13503038;y?
+> http://info.appdynamics.com/FreeJavaPerformanceDownload.html
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+
+
+
+-- 
+------------------------------
+
+[image: CoinLab Logo]PETER VESSENES
+CEO
+
+*peter at coinlab.com * /  206.486.6856  / SKYPE: vessenes
+811 FIRST AVENUE  /  SUITE 480  /  SEATTLE, WA 98104
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120914/2b3f898d/attachment.html>
+
+From grarpamp at gmail.com  Fri Sep 14 02:59:02 2012
+From: grarpamp at gmail.com (grarpamp)
+Date: Thu, 13 Sep 2012 22:59:02 -0400
+Subject: [Bitcoin-development] separate out blockchain db and wallet to
+ two dirs?
+In-Reply-To: <CAMGNxUt8ic39pdq1zobSF0khR_vOixTDZMSixAhWTLd2hLMVAg@mail.gmail.com>
+References: <CANg8-dCUC=qEqBSay5VKdqZOwEnx_UxYrT2LbV+20Vb1FbCJ1A@mail.gmail.com>
+	<CAD2Ti28-gxXwJF4MXEHO9o4_4Z7hsNM7T9XQRX1K8Q2OLmB+mw@mail.gmail.com>
+	<CAMGNxUt8ic39pdq1zobSF0khR_vOixTDZMSixAhWTLd2hLMVAg@mail.gmail.com>
+Message-ID: <CAD2Ti29fRiqfSzv8-MdLQg+s+0kHCSEEME=XiY687N7DnM0Lag@mail.gmail.com>
+
+> I like this idea, although I would say the blockchain should go in /var/lib/bitcoin
+> by default, right? I'm just a longtime LInux guy, not a formal sysadmin, though.
+
+Further, bitcoin doesn't allow easy separation of the files without
+detachdb (off by default), nor does it supply a user agnostic system
+daemon to do the block processing separately from user wallet ops.
+So I would suggest until then it remain split up somewhere under
+.bitcoin rather than in /var or anywhere else.
+
+
+
+From grarpamp at gmail.com  Fri Sep 14 03:03:23 2012
+From: grarpamp at gmail.com (grarpamp)
+Date: Thu, 13 Sep 2012 23:03:23 -0400
+Subject: [Bitcoin-development] separate out blockchain db and wallet to
+ two dirs?
+In-Reply-To: <CAMGNxUt8ic39pdq1zobSF0khR_vOixTDZMSixAhWTLd2hLMVAg@mail.gmail.com>
+References: <CANg8-dCUC=qEqBSay5VKdqZOwEnx_UxYrT2LbV+20Vb1FbCJ1A@mail.gmail.com>
+	<CAD2Ti28-gxXwJF4MXEHO9o4_4Z7hsNM7T9XQRX1K8Q2OLmB+mw@mail.gmail.com>
+	<CAMGNxUt8ic39pdq1zobSF0khR_vOixTDZMSixAhWTLd2hLMVAg@mail.gmail.com>
+Message-ID: <CAD2Ti2-2ObsR243OaH1uioUAURWZ4+aXUYq9kLpjyMoBpdm1AA@mail.gmail.com>
+
+Linux typically uses the FHS, which various distros often bastardize:
+ http://www.linuxfoundation.org/collaborate/workgroups/lsb/fhs
+BSD typically uses the traditional hierarchy, for which admins
+ often add /home and /opt:
+ http://svnweb.freebsd.org/base/head/share/man/man7/hier.7?revision=HEAD&view=markup
+
+You'd have to read them both and decide which camp you're in.
+ https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
+
+Since bitcoin isn't really an X app at it's core, XDG doesn't really
+apply.
+ http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+
+Further, bitcoin doesn't allow easy separation of the files without
+detachdb (off by default), nor does it supply a user agnostic system
+daemon to do the block processing separately from user wallet ops.
+So I would suggest until then it remain split up somewhere under
+.bitcoin rather than in /var or anywhere else.
+
+And when you figure out where I should place my messages in
+full the first time, please let me know because I obviously need help.
+
+
+
+From laanwj at gmail.com  Fri Sep 14 05:27:47 2012
+From: laanwj at gmail.com (Wladimir)
+Date: Fri, 14 Sep 2012 07:27:47 +0200
+Subject: [Bitcoin-development] separate out blockchain db and wallet to
+ two dirs?
+In-Reply-To: <CANg8-dCUC=qEqBSay5VKdqZOwEnx_UxYrT2LbV+20Vb1FbCJ1A@mail.gmail.com>
+References: <CANg8-dCUC=qEqBSay5VKdqZOwEnx_UxYrT2LbV+20Vb1FbCJ1A@mail.gmail.com>
+Message-ID: <CA+s+GJChAYSDTV1GTKq+cqygyt1=DRdDsyaPbyNXpTiG51f1cw@mail.gmail.com>
+
+On Fri, Sep 14, 2012 at 3:57 AM, Scott Howard <showard314 at gmail.com> wrote:
+
+> This idea is from a Debian user [1].
+>
+> What do you think of moving the > 2 GB db to $HOME/.cache/bitcoin and
+> leaving the wallet and other config files in $HOME/.bitcoin? This is
+> so backups can skip the .cache directory and the proposal follows the
+> freedesktop.org XDG Base Directory Specification [2]. Personal
+> info/settings stays in .bitcoin/ and everything that can be rebuilt
+> goes to .cache/bitcoin/ I know users can do a work around and set it
+> up themselves with symlinks, but interested in what you guys think.
+>
+
+This is currently not feasible due to BerkelyDB limitations. All the
+databases are within one 'environment', which is necessarily one directory
+(it can probably be hacked around, but obviously we're really careful).
+
+When LevelDB for the block chain and the custom format for the wallets is
+introduces, various new configurations will be possible: Multiple wallets,
+wallet in block chain in separate dirs, etc.
+
+Wladimir
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120914/b2af0259/attachment.html>
+
+From jgarzik at exmulti.com  Fri Sep 14 07:40:55 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Fri, 14 Sep 2012 03:40:55 -0400
+Subject: [Bitcoin-development] separate out blockchain db and wallet to
+ two dirs?
+In-Reply-To: <CA+s+GJChAYSDTV1GTKq+cqygyt1=DRdDsyaPbyNXpTiG51f1cw@mail.gmail.com>
+References: <CANg8-dCUC=qEqBSay5VKdqZOwEnx_UxYrT2LbV+20Vb1FbCJ1A@mail.gmail.com>
+	<CA+s+GJChAYSDTV1GTKq+cqygyt1=DRdDsyaPbyNXpTiG51f1cw@mail.gmail.com>
+Message-ID: <CA+8xBpeur+VAwaUDSUp64-BtJKxOOzK5vgm6nyfRT41z6e449g@mail.gmail.com>
+
+On Fri, Sep 14, 2012 at 1:27 AM, Wladimir <laanwj at gmail.com> wrote:
+> This is currently not feasible due to BerkelyDB limitations. All the
+> databases are within one 'environment', which is necessarily one directory
+> (it can probably be hacked around, but obviously we're really careful).
+>
+> When LevelDB for the block chain and the custom format for the wallets is
+> introduces, various new configurations will be possible: Multiple wallets,
+> wallet in block chain in separate dirs, etc.
+
+Indeed.  See many threads on the forum discussing this...  a
+frequently requested feature.
+
+As Wladimir says, it's a database constraint at the moment.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From gavinandresen at gmail.com  Tue Sep 18 00:03:46 2012
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Mon, 17 Sep 2012 20:03:46 -0400
+Subject: [Bitcoin-development] Bitcoin-Qt/bitcoind version 0.7 released
+Message-ID: <CABsx9T2=WmmjejC-Gdizk=-qosPaeXWqJF-RPDT4GjT=pXYRZA@mail.gmail.com>
+
+Bitcoin version 0.7.0 is now available for download at:
+  http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.7.0/
+
+We recommend that everybody running prior versions of bitcoind/Bitcoin-Qt
+upgrade to this release.
+
+Please report bugs using the issue tracker at github:
+  https://github.com/bitcoin/bitcoin/issues
+
+Project source code is hosted at github; you can get
+source-only tarballs/zipballs directly from there:
+  https://github.com/bitcoin/bitcoin/tarball/v0.7.0  # .tar.gz
+  https://github.com/bitcoin/bitcoin/zipball/v0.7.0  # .zip
+
+Ubuntu Linux users can use the "Personal Package Archive" (PPA)
+maintained by Matt Corallo to automatically keep
+bitcoin up-to-date.  Just type
+  sudo apt-add-repository ppa:bitcoin/bitcoin
+in your terminal, then install the bitcoin-qt package:
+  sudo apt-get install bitcoin-qt
+
+
+How to Upgrade
+--------------
+
+If you are running an older version, shut it down. Wait
+until it has completely shut down (which might take a few minutes for older
+versions), then run the installer (on Windows) or just copy over
+/Applications/Bitcoin-Qt (on Mac) or bitcoind/bitcoin-qt (on Linux).
+
+If you were running on Linux with a version that might have been compiled
+with a different version of Berkeley DB (for example, if you were using the
+PPA and are switching to the binary release), then run the old version again
+with the -detachdb argument and shut it down; if you do not, then the new
+version will not be able to read the database files and will exit with an error.
+
+Incompatible Changes
+--------------------
+* Replaced the 'getmemorypool' RPC command with 'getblocktemplate/submitblock'
+  and 'getrawmempool' commands.
+* Remove deprecated RPC 'getblocknumber'
+
+Bitcoin Improvement Proposals implemented
+-----------------------------------------
+BIP 22 - 'getblocktemplate', 'submitblock' RPCs
+BIP 34 - block version 2, height in coinbase
+BIP 35 - 'mempool' message, extended 'getdata' message behavior
+
+
+Core bitcoin handling and blockchain database
+---------------------------------------------
+* Reduced CPU usage, by eliminating some redundant hash calculations
+* Cache signature verifications, to eliminate redundant signature checks
+* Transactions with zero-value outputs are considered non-standard
+* Mining: when creating new blocks, sort 'paid' area by fee-per-kb
+* Database: better validation of on-disk stored data
+* Database: minor optimizations and reliability improvements
+* -loadblock=FILE will import an external block file
+* Additional DoS (denial-of-service) prevention measures
+* New blockchain checkpoint at block 193,000
+
+
+JSON-RPC API
+------------
+* Internal HTTP server is now thread-per-connection, rather than
+  a single-threaded queue that would stall on network I/O.
+* Internal HTTP server supports HTTP/1.1, pipelined requests and
+  connection keep-alive.
+* Support JSON-RPC 2.0 batches, to encapsulate multiple JSON-RPC requests
+  within a single HTTP request.
+* IPv6 support
+* Added raw transaction API.  See https://gist.github.com/2839617
+* Added 'getrawmempool', to list contents of TX memory pool
+* Added 'getpeerinfo', to list data about each connected network peer
+* Added 'listaddressgroupings' for better coin control
+* Rework gettransaction, getblock calls. 'gettransaction' responds for
+  non-wallet TXs now.
+* Remove deprecated RPC 'getblocknumber'
+* Remove superceded RPC 'getmemorypool' (see BIP 22, above)
+* listtransactions output now displays "smart" times for transactions,
+  and 'blocktime' and 'timereceived' fields were added
+
+
+P2P networking
+--------------
+* IPv6 support
+* Tor hidden service support (see doc/Tor.txt)
+* Attempts to fix "stuck blockchain download" problems
+* Replace BDB database "addr.dat" with internally-managed "peers.dat"
+  file containing peer address data.
+* Lower default send buffer from 10MB to 1MB
+* proxy: SOCKS5 by default
+* Support connecting by hostnames passed to proxy
+* Add -seednode connections, and use this instead of DNS seeds when proxied
+* Added -externalip and -discover
+* Add -onlynet to connect only to a given network (IPv4, IPv6, or Tor)
+* Separate listening sockets, -bind=<addr>
+
+
+Qt GUI
+------
+* Add UI RPC console / debug window
+* Re-Enable URI handling on Windows, add safety checks and tray-notifications
+* Harmonize the use of ellipsis ("...") to be used in menus, but not on buttons
+* Add 2 labels to the overviewpage that display Wallet and Transaction
+status (obsolete or current)
+* Extend the optionsdialog (e.g. language selection) and re-work it to
+a tabbed UI
+* Merge sign/verify message into a single window with tabbed UI
+* Ensure a changed bitcoin unit immediately updates all GUI elements
+that use units
+* Update QR Code dialog
+* Improve error reporting at startup
+* Fine-grained UI updates for a much smoother UI during block downloads
+* Remove autocorrection of 0/i in addresses in UI
+* Reorganize tray icon menu into more logical order
+* Persistently poll for balance change when number of blocks changed
+* Much better translations
+* Override progress bar design on platforms with segmented progress
+bars to assist with readability
+* Added 'immature balance' display on the overview page
+* (Windows only): enable ASLR and DEP for bitcoin-qt.exe
+* (Windows only): add meta-data to bitcoin-qt.exe (e.g. description)
+
+Internal codebase
+-----------------
+* Additional unit tests
+* Compile warning fixes
+
+
+Miscellaneous
+-------------
+* Reopen debug.log upon SIGHUP
+* Bash programmable completion for bitcoind(1)
+* On supported OS's, each thread is given a useful name
+
+------------------------------
+
+Thanks to everybody who contributed to this release:
+
+Chris Moore
+Christian von Roques
+David Joel Schwartz
+Douglas Huff
+Fordy
+Gavin Andresen
+Giel van Schijndel
+Gregory Maxwell
+Jeff Garzik
+Luke Dashjr
+Matt Corallo
+Michael Ford
+Michael Hendricks
+Peter Todd
+Philip Kaufmann
+Pieter Wuille
+R E Broadley
+Ricardo M. Correia
+Rune K. Svendsen
+Scott Ellis
+Stephane Glondu
+Wladimir J. van der Laan
+cardpuncher
+coderrr
+fanquake
+grimd34th
+sje397
+xanatos
+
+Thanks to Sergio Lerner for reporting denial-of-service
+vulnerabilities fixed in this release.
+
+
+
+From jgarzik at exmulti.com  Sat Sep 22 07:28:05 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Sat, 22 Sep 2012 03:28:05 -0400
+Subject: [Bitcoin-development] Atomic coin swapping?
+Message-ID: <CA+8xBpczY1DkgmHsVL8m30JaM1d+FwN_gpBhq6DFScm1nvLF5w@mail.gmail.com>
+
+Forum URL: https://bitcointalk.org/index.php?topic=112007.0
+
+gmaxwell was talking about colored coins[1] in IRC recently.  They are
+potentially interesting in the context of distributed bonds[2], which
+I am currently pursuing with pybond[3].
+
+Here is the problem I am trying to solve, does the crowd have an answer?
+
+1. Alice transfers a 1-satoshi colored coin to Bob.
+2. Bob transfers 100 BTC to Alice.  May be restricted to 1 txout, if
+that eases implementation details.
+3. Steps #1 and #2 happen as an atomic unit, all-or-none.
+4. Alice and Bob must both approve this atomic transfer of coins, with
+appropriate signatures.
+
+Is this possible within the current bitcoin system?  As far as I can
+see, the answer is "no" but maybe I'm missing something.
+
+My best guess to the answer is "possible, but requires a new SIGHASH_* type"?
+
+[1] https://bitcointalk.org/index.php?topic=106449.0
+[2] https://bitcointalk.org/index.php?topic=92421.0
+[3] https://github.com/jgarzik/pybond
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From timon.elviejo at gmail.com  Sat Sep 22 09:10:16 2012
+From: timon.elviejo at gmail.com (=?ISO-8859-1?Q?Jorge_Tim=F3n?=)
+Date: Sat, 22 Sep 2012 11:10:16 +0200
+Subject: [Bitcoin-development] Atomic coin swapping?
+In-Reply-To: <CA+8xBpczY1DkgmHsVL8m30JaM1d+FwN_gpBhq6DFScm1nvLF5w@mail.gmail.com>
+References: <CA+8xBpczY1DkgmHsVL8m30JaM1d+FwN_gpBhq6DFScm1nvLF5w@mail.gmail.com>
+Message-ID: <CAGQP0AEnkRqiEb2_COpQpLKkZfHf0fFgHmquO5oY4_Gh84k7cA@mail.gmail.com>
+
+I'm very interested in this. I was expecting transitive/multi-hop
+transactions (Ripple) with colored coins, and I don't understand why
+is not possible.
+
+>From https://en.bitcoin.it/wiki/Contracts
+
+---
+SIGHASH_ALL: This is the default. It indicates that everything about
+the transaction is signed, except for the input scripts. Signing the
+input scripts as well would obviously make it impossible to construct
+a transaction, so they are always blanked out. Note, though, that
+other properties of the input, like the connected output and sequence
+numbers, are signed; it's only the scripts that are not. Intuitively,
+it means "I agree to put my money in, if everyone puts their money in
+and the outputs are this".
+---
+
+Why "Signing the input scripts as well would obviously make it
+impossible to construct a transaction"?
+I don't understand that part. I think a new SIGHASH_* type that
+doesn't pay attention to that "obviously" is needed to achieve what we
+want.
+
+Say we want the following transaction:
+
+A 1 satoshi -> B 1 satoshi -> C 100 btc -> A
+
+It would be necessary to sign the following:
+
+Inputs: from srcA, from srcB,
+Outputs: 1 satoshi to destB, 1 satoshi to destC, 100 btc to destA
+
+"from srcC" is not really necessary.
+
+This same scheme can be used for n-hops.
+
+What am I missing?
+
+On 9/22/12, Jeff Garzik <jgarzik at exmulti.com> wrote:
+> Forum URL: https://bitcointalk.org/index.php?topic=112007.0
+>
+> gmaxwell was talking about colored coins[1] in IRC recently.  They are
+> potentially interesting in the context of distributed bonds[2], which
+> I am currently pursuing with pybond[3].
+>
+> Here is the problem I am trying to solve, does the crowd have an answer?
+>
+> 1. Alice transfers a 1-satoshi colored coin to Bob.
+> 2. Bob transfers 100 BTC to Alice.  May be restricted to 1 txout, if
+> that eases implementation details.
+> 3. Steps #1 and #2 happen as an atomic unit, all-or-none.
+> 4. Alice and Bob must both approve this atomic transfer of coins, with
+> appropriate signatures.
+>
+> Is this possible within the current bitcoin system?  As far as I can
+> see, the answer is "no" but maybe I'm missing something.
+>
+> My best guess to the answer is "possible, but requires a new SIGHASH_*
+> type"?
+>
+> [1] https://bitcointalk.org/index.php?topic=106449.0
+> [2] https://bitcointalk.org/index.php?topic=92421.0
+> [3] https://github.com/jgarzik/pybond
+>
+> --
+> Jeff Garzik
+> exMULTI, Inc.
+> jgarzik at exmulti.com
+>
+> ------------------------------------------------------------------------------
+> How fast is your code?
+> 3 out of 4 devs don\\\'t know how their code performs in production.
+> Find out how slow your code is with AppDynamics Lite.
+> http://ad.doubleclick.net/clk;262219672;13503038;z?
+> http://info.appdynamics.com/FreeJavaPerformanceDownload.html
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+
+
+-- 
+Jorge Tim?n
+
+
+
+From mike at plan99.net  Sat Sep 22 11:04:54 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Sat, 22 Sep 2012 13:04:54 +0200
+Subject: [Bitcoin-development] Atomic coin swapping?
+In-Reply-To: <CAGQP0AEnkRqiEb2_COpQpLKkZfHf0fFgHmquO5oY4_Gh84k7cA@mail.gmail.com>
+References: <CA+8xBpczY1DkgmHsVL8m30JaM1d+FwN_gpBhq6DFScm1nvLF5w@mail.gmail.com>
+	<CAGQP0AEnkRqiEb2_COpQpLKkZfHf0fFgHmquO5oY4_Gh84k7cA@mail.gmail.com>
+Message-ID: <CANEZrP0XGoZoz0AqKQtL-YVP=O9qZ+i9UXRgoGOqVNuFdo+Yog@mail.gmail.com>
+
+Perhaps I missing something obvious about the definition of coloured coins,
+but this appears to be very simple. Just create a transaction that
+transfers 300 coins and have an unsigned input connected to the coloured
+output. send to the owner of the coloured output, they sign it and
+broadcast.
+On Sep 22, 2012 11:10 AM, "Jorge Tim?n" <timon.elviejo at gmail.com> wrote:
+
+> I'm very interested in this. I was expecting transitive/multi-hop
+> transactions (Ripple) with colored coins, and I don't understand why
+> is not possible.
+>
+> >From https://en.bitcoin.it/wiki/Contracts
+>
+> ---
+> SIGHASH_ALL: This is the default. It indicates that everything about
+> the transaction is signed, except for the input scripts. Signing the
+> input scripts as well would obviously make it impossible to construct
+> a transaction, so they are always blanked out. Note, though, that
+> other properties of the input, like the connected output and sequence
+> numbers, are signed; it's only the scripts that are not. Intuitively,
+> it means "I agree to put my money in, if everyone puts their money in
+> and the outputs are this".
+> ---
+>
+> Why "Signing the input scripts as well would obviously make it
+> impossible to construct a transaction"?
+> I don't understand that part. I think a new SIGHASH_* type that
+> doesn't pay attention to that "obviously" is needed to achieve what we
+> want.
+>
+> Say we want the following transaction:
+>
+> A 1 satoshi -> B 1 satoshi -> C 100 btc -> A
+>
+> It would be necessary to sign the following:
+>
+> Inputs: from srcA, from srcB,
+> Outputs: 1 satoshi to destB, 1 satoshi to destC, 100 btc to destA
+>
+> "from srcC" is not really necessary.
+>
+> This same scheme can be used for n-hops.
+>
+> What am I missing?
+>
+> On 9/22/12, Jeff Garzik <jgarzik at exmulti.com> wrote:
+> > Forum URL: https://bitcointalk.org/index.php?topic=112007.0
+> >
+> > gmaxwell was talking about colored coins[1] in IRC recently.  They are
+> > potentially interesting in the context of distributed bonds[2], which
+> > I am currently pursuing with pybond[3].
+> >
+> > Here is the problem I am trying to solve, does the crowd have an answer?
+> >
+> > 1. Alice transfers a 1-satoshi colored coin to Bob.
+> > 2. Bob transfers 100 BTC to Alice.  May be restricted to 1 txout, if
+> > that eases implementation details.
+> > 3. Steps #1 and #2 happen as an atomic unit, all-or-none.
+> > 4. Alice and Bob must both approve this atomic transfer of coins, with
+> > appropriate signatures.
+> >
+> > Is this possible within the current bitcoin system?  As far as I can
+> > see, the answer is "no" but maybe I'm missing something.
+> >
+> > My best guess to the answer is "possible, but requires a new SIGHASH_*
+> > type"?
+> >
+> > [1] https://bitcointalk.org/index.php?topic=106449.0
+> > [2] https://bitcointalk.org/index.php?topic=92421.0
+> > [3] https://github.com/jgarzik/pybond
+> >
+> > --
+> > Jeff Garzik
+> > exMULTI, Inc.
+> > jgarzik at exmulti.com
+> >
+> >
+> ------------------------------------------------------------------------------
+> > How fast is your code?
+> > 3 out of 4 devs don\\\'t know how their code performs in production.
+> > Find out how slow your code is with AppDynamics Lite.
+> > http://ad.doubleclick.net/clk;262219672;13503038;z?
+> > http://info.appdynamics.com/FreeJavaPerformanceDownload.html
+> > _______________________________________________
+> > Bitcoin-development mailing list
+> > Bitcoin-development at lists.sourceforge.net
+> > https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+> >
+>
+>
+> --
+> Jorge Tim?n
+>
+>
+> ------------------------------------------------------------------------------
+> How fast is your code?
+> 3 out of 4 devs don\\\'t know how their code performs in production.
+> Find out how slow your code is with AppDynamics Lite.
+> http://ad.doubleclick.net/clk;262219672;13503038;z?
+> http://info.appdynamics.com/FreeJavaPerformanceDownload.html
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120922/170b0f11/attachment.html>
+
+From mike at plan99.net  Sat Sep 22 17:05:03 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Sat, 22 Sep 2012 19:05:03 +0200
+Subject: [Bitcoin-development] Atomic coin swapping?
+In-Reply-To: <CAGQP0AEnkRqiEb2_COpQpLKkZfHf0fFgHmquO5oY4_Gh84k7cA@mail.gmail.com>
+References: <CA+8xBpczY1DkgmHsVL8m30JaM1d+FwN_gpBhq6DFScm1nvLF5w@mail.gmail.com>
+	<CAGQP0AEnkRqiEb2_COpQpLKkZfHf0fFgHmquO5oY4_Gh84k7cA@mail.gmail.com>
+Message-ID: <CANEZrP257oD26WkYNr4fXuMOkURstsiuA0NoD92gBxViyf9xWw@mail.gmail.com>
+
+>
+> Why "Signing the input scripts as well would obviously make it
+> impossible to construct a transaction"?
+
+
+As it states in the source code, signatures cannot sign themselves.  If
+scriptSigs were included in the data that is being signed, the act of
+inserting the newly calculated signature for one input would break the
+signatures for all the others.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120922/8bdee6a4/attachment.html>
+
+From jgarzik at exmulti.com  Sat Sep 22 17:09:16 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Sat, 22 Sep 2012 13:09:16 -0400
+Subject: [Bitcoin-development] Atomic coin swapping?
+In-Reply-To: <CAGQP0AEnkRqiEb2_COpQpLKkZfHf0fFgHmquO5oY4_Gh84k7cA@mail.gmail.com>
+References: <CA+8xBpczY1DkgmHsVL8m30JaM1d+FwN_gpBhq6DFScm1nvLF5w@mail.gmail.com>
+	<CAGQP0AEnkRqiEb2_COpQpLKkZfHf0fFgHmquO5oY4_Gh84k7cA@mail.gmail.com>
+Message-ID: <CA+8xBpdJ9uCn4Du75mUmb6J7n+WAjQ+GY3LsAg5EESsWqfD8GQ@mail.gmail.com>
+
+On Sat, Sep 22, 2012 at 5:10 AM, Jorge Tim?n <timon.elviejo at gmail.com> wrote:
+> I'm very interested in this. I was expecting transitive/multi-hop
+> transactions (Ripple) with colored coins, and I don't understand why
+> is not possible.
+>
+> From https://en.bitcoin.it/wiki/Contracts
+>
+> ---
+> SIGHASH_ALL: This is the default. It indicates that everything about
+
+Yes, SIGHASH_ALL was the crucial piece I was missing.
+
+I have updated the post to add a concrete example with as much detail
+as necessary for programmers to recreate.  Review requested:
+https://bitcointalk.org/index.php?topic=112007.msg1212356#msg1212356
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From timon.elviejo at gmail.com  Sat Sep 22 18:24:45 2012
+From: timon.elviejo at gmail.com (=?ISO-8859-1?Q?Jorge_Tim=F3n?=)
+Date: Sat, 22 Sep 2012 20:24:45 +0200
+Subject: [Bitcoin-development] Atomic coin swapping?
+In-Reply-To: <CA+8xBpdJ9uCn4Du75mUmb6J7n+WAjQ+GY3LsAg5EESsWqfD8GQ@mail.gmail.com>
+References: <CA+8xBpczY1DkgmHsVL8m30JaM1d+FwN_gpBhq6DFScm1nvLF5w@mail.gmail.com>
+	<CAGQP0AEnkRqiEb2_COpQpLKkZfHf0fFgHmquO5oY4_Gh84k7cA@mail.gmail.com>
+	<CA+8xBpdJ9uCn4Du75mUmb6J7n+WAjQ+GY3LsAg5EESsWqfD8GQ@mail.gmail.com>
+Message-ID: <CAGQP0AHwLCa3oMkXOTyMEMQ2mAwLH057krz+PBm57Jwa_K1a_Q@mail.gmail.com>
+
+On 9/22/12, Mike Hearn <mike at plan99.net> wrote:
+>>
+>> Why "Signing the input scripts as well would obviously make it
+>> impossible to construct a transaction"?
+>
+>
+> As it states in the source code, signatures cannot sign themselves.  If
+> scriptSigs were included in the data that is being signed, the act of
+> inserting the newly calculated signature for one input would break the
+> signatures for all the others.
+
+I see. By "input scripts" I thought you meant scriptPubKey rather than
+scriptSigs. We only need to sign scriptPubKey. Right, Jeff?
+
+> Yes, SIGHASH_ALL was the crucial piece I was missing.
+
+Great, there's no need for an additional SIGHASH.
+I guess you're implementing the simple case you describe first.
+Do you plan to implement the more general case with n participants
+instead of only 2 (a Ripple transaction)?
+That would be awesome.
+
+-- 
+Jorge Tim?n
+
+
+
+On 9/22/12, Jeff Garzik <jgarzik at exmulti.com> wrote:
+> On Sat, Sep 22, 2012 at 5:10 AM, Jorge Tim?n <timon.elviejo at gmail.com>
+> wrote:
+>> I'm very interested in this. I was expecting transitive/multi-hop
+>> transactions (Ripple) with colored coins, and I don't understand why
+>> is not possible.
+>>
+>> From https://en.bitcoin.it/wiki/Contracts
+>>
+>> ---
+>> SIGHASH_ALL: This is the default. It indicates that everything about
+>
+> Yes, SIGHASH_ALL was the crucial piece I was missing.
+>
+> I have updated the post to add a concrete example with as much detail
+> as necessary for programmers to recreate.  Review requested:
+> https://bitcointalk.org/index.php?topic=112007.msg1212356#msg1212356
+>
+> --
+> Jeff Garzik
+> exMULTI, Inc.
+> jgarzik at exmulti.com
+>
+
+
+-- 
+Jorge Tim?n
+
+
+
+From mike at plan99.net  Sun Sep 23 12:12:58 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Sun, 23 Sep 2012 14:12:58 +0200
+Subject: [Bitcoin-development] Large backlog of transactions building up?
+Message-ID: <CANEZrP2r6sVC_63xx6U7XLbFkukrFEhq-mGAse3vHJ6nf3Q1cw@mail.gmail.com>
+
+Has anyone got long term longs that contain the pool size and timestamps?
+
+Unfortunately I forgot to enable timestamps in the logs for my own
+nodes (the privacy benefit of disabling this by default is
+questionable, imho). But just looking at the general trends and
+cross-checking against my own memory it definitely seems that there
+are more and more pending transactions that don't get cleared into
+blocks.
+
+One of my nodes now routinely has 4000 transactions in the mempool.
+Blocks typically clear only a few hundred at most, which is what you'd
+expect given current transaction rates (around 300 per ten minute
+interval). So what are the other pending transactions doing and why
+aren't they getting drained out of the mempool?
+
+
+
+From jgarzik at exmulti.com  Sun Sep 23 20:30:20 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Sun, 23 Sep 2012 16:30:20 -0400
+Subject: [Bitcoin-development] Large backlog of transactions building up?
+In-Reply-To: <CANEZrP2r6sVC_63xx6U7XLbFkukrFEhq-mGAse3vHJ6nf3Q1cw@mail.gmail.com>
+References: <CANEZrP2r6sVC_63xx6U7XLbFkukrFEhq-mGAse3vHJ6nf3Q1cw@mail.gmail.com>
+Message-ID: <CA+8xBpen9o3Oji0ePsbU-ZQCSpFO+tAZt63LaOsR30KULYbUhQ@mail.gmail.com>
+
+On Sun, Sep 23, 2012 at 8:12 AM, Mike Hearn <mike at plan99.net> wrote:
+> Has anyone got long term longs that contain the pool size and timestamps?
+>
+> Unfortunately I forgot to enable timestamps in the logs for my own
+> nodes (the privacy benefit of disabling this by default is
+> questionable, imho). But just looking at the general trends and
+> cross-checking against my own memory it definitely seems that there
+> are more and more pending transactions that don't get cleared into
+> blocks.
+>
+> One of my nodes now routinely has 4000 transactions in the mempool.
+> Blocks typically clear only a few hundred at most, which is what you'd
+> expect given current transaction rates (around 300 per ten minute
+> interval). So what are the other pending transactions doing and why
+> aren't they getting drained out of the mempool?
+
+Yeah, my public nodes currently have 2200+  Over time, it gets
+cluttered naturally due to the disconnect between what miners mine and
+what relayers relay.
+
+I've long argued that all mempool implementations should limit the
+lifetime of any TX to a specific number of blocks.  Rationale:
+- bitcoin clients retransmit until TX is confirmed
+- provides a deterministic lifetime for a TX; if you KNOW a TX will
+disappear 144 blocks (24 hours) after you stop transmitting, then it
+is probably safe to initiate recovery procedures and perhaps revise
+the transaction
+- prevents zombie TXs from littering memory... they hang around,
+wasting resources, but never get confirmed
+
+No one has strenuously argued against this, so I suppose it is down to
+writing a patch, and coming up with a good number we (as a network)
+can agree upon.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From gmaxwell at gmail.com  Sun Sep 23 20:44:55 2012
+From: gmaxwell at gmail.com (Gregory Maxwell)
+Date: Sun, 23 Sep 2012 16:44:55 -0400
+Subject: [Bitcoin-development] Large backlog of transactions building up?
+In-Reply-To: <CA+8xBpen9o3Oji0ePsbU-ZQCSpFO+tAZt63LaOsR30KULYbUhQ@mail.gmail.com>
+References: <CANEZrP2r6sVC_63xx6U7XLbFkukrFEhq-mGAse3vHJ6nf3Q1cw@mail.gmail.com>
+	<CA+8xBpen9o3Oji0ePsbU-ZQCSpFO+tAZt63LaOsR30KULYbUhQ@mail.gmail.com>
+Message-ID: <CAAS2fgR7yiyTWyuwAqxsnAb-xv9bmBFUxDwJhEkRH1PCP=pzJw@mail.gmail.com>
+
+On Sun, Sep 23, 2012 at 4:30 PM, Jeff Garzik <jgarzik at exmulti.com> wrote:
+> Yeah, my public nodes currently have 2200+  Over time, it gets
+> cluttered naturally due to the disconnect between what miners mine and
+> what relayers relay.
+
+Right, this disconnect is why simple scalar measures of mempool size
+aren't terribly informative.
+
+There are bursts of weird transactions (e.g. someone was flooding zero
+value txn a few weeks ago; before that there were some enormous series
+of double-spend induced orphans), and other sustained loads that quite
+a few miners are intentionally excluding.
+
+> No one has strenuously argued against this, so I suppose it is down to
+> writing a patch, and coming up with a good number we (as a network)
+> can agree upon.
+
+Sounds good? my only concern is that nodes will repeat their own
+transactions but not the unconfirmed parents. So being more aggressive
+can turn otherwise valid transactions into orphans.
+
+Would there be value in an archive-mempool which is only checked when
+you receive an orphan transaction?
+
+I would point out that you can't _KNOW_ a txn will disappear. Someone
+else could happily reannounce it. (I know you know this; but it's good
+to be clear on that point when we talk about it!)
+
+
+
+From mike at plan99.net  Sun Sep 23 21:54:03 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Sun, 23 Sep 2012 23:54:03 +0200
+Subject: [Bitcoin-development] Large backlog of transactions building up?
+In-Reply-To: <CAAS2fgR7yiyTWyuwAqxsnAb-xv9bmBFUxDwJhEkRH1PCP=pzJw@mail.gmail.com>
+References: <CANEZrP2r6sVC_63xx6U7XLbFkukrFEhq-mGAse3vHJ6nf3Q1cw@mail.gmail.com>
+	<CA+8xBpen9o3Oji0ePsbU-ZQCSpFO+tAZt63LaOsR30KULYbUhQ@mail.gmail.com>
+	<CAAS2fgR7yiyTWyuwAqxsnAb-xv9bmBFUxDwJhEkRH1PCP=pzJw@mail.gmail.com>
+Message-ID: <CANEZrP03R_6nQQ-_uxdF++g-ON4ynsNBTDFqmVt2ZnLy49GqZg@mail.gmail.com>
+
+> Sounds good? my only concern is that nodes will repeat their own
+> transactions but not the unconfirmed parents.
+
+Nodes repeat wallet transactions and any previous transactions that
+are not yet included in the chain (see
+CWalletTx::RelayWalletTransaction). So I don't think it's an issue.
+
+(ok, bitcoinj clients don't do that, they just announce their own transactions)
+
+
+
+From mike at plan99.net  Mon Sep 24 13:35:42 2012
+From: mike at plan99.net (Mike Hearn)
+Date: Mon, 24 Sep 2012 15:35:42 +0200
+Subject: [Bitcoin-development] bitcoinj 0.6 now available
+Message-ID: <CANEZrP3-1yvpac+OevQp8U1jO2eAzE3tMp3pzjxCyYA2p56Jdw@mail.gmail.com>
+
+I'm pleased to announce the release of version 0.6 of bitcoinj, the leading
+Java implementation of Bitcoin. You can download the source from Google
+Code, or use the release-0.6 branch from git. Our Nexus repository will be
+updated soon.
+
+This release focuses on improved compliance with the protocol, improved and
+more scalable network handling, a more flexible send API, other misc API
+improvements and of course, a large pile of bug fixes. You should upgrade
+your software to use bitcoinj 0.6 as soon as possible, if only to benefit
+from the fixes - the API changes are minimal so it should be easy.
+
+In more detail:
+
+   - Thanks to Jim Burton, the wallet now stores the depth and work done
+   for all transactions, and coinbase transactions are now processed
+   correctly. The ability to handle pubkey-only outputs was added, so these
+   are now spendable. Migration from 0.5 wallets that don't store this is
+   supported, but only for depth, by using
+   WalletProtobufSerializer.setChainHeight().
+   - Made some more APIs documented and public.
+   - Improved block chain download handling.
+   - Added compatibility with the broken URIs generated by blockchain.info,
+   meaning that the iPhone app and Android apps can now read each others
+   QRcodes.
+   - Wallets can now auto-save themselves, taking the hassle of managing
+   wallet persistence away from your app. See the javadocs for
+   Wallet.autoSaveToFile() for information on this.
+   - The network layer was rewritten on top of Netty to be more robust,
+   more scalable and to remove flakyness in the unit tests. Thanks to Miron
+   Cuperman for this work.
+   - Thanks to Matt Corallo the ping/pong protocol is now supported. Also
+   various protocol conformance issues and other misc bugs were resolved.
+   - WalletTool now has a RAW_DUMP option that prints the raw protocol
+   buffer form as text.
+   - You can now explicitly set fees on a created transaction using the fee
+   member of SendRequest. Please note that the correct fees for a
+   transaction are still not auto-calculated or minimized. This will come in a
+   future release.
+   - Many bug fixes.
+
+API changes:
+
+   - TransactionConfidence.OVERRIDDEN_BY_DOUBLE_SPEND is now called DEAD
+   - PeerGroup.broadcastTransaction now returns a Guava ListenableFuture (which
+   is a subclass of Future, so it's compatible). The future completes when the
+   transaction has been heard back from the network, instead of just being
+   written out.
+   - Wallet.sendCoins() now returns a SendResult that contains both the
+   transaction, and the future returned by PeerGroup.broadcastTransaction(),
+   so it will no longer block. As a result sendCoinsAsync() has been
+   removed.
+   - Various send methods on Wallet now take a SendRequest object that lets
+   you customize the created transactions. The methods that let you explicitly
+   set the change address are removed, you should set the changeAddress member
+   of the SendRequest instead.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120924/484d4944/attachment.html>
+
+From timon.elviejo at gmail.com  Tue Sep 25 17:34:50 2012
+From: timon.elviejo at gmail.com (=?ISO-8859-1?Q?Jorge_Tim=F3n?=)
+Date: Tue, 25 Sep 2012 19:34:50 +0200
+Subject: [Bitcoin-development] Large backlog of transactions building up?
+In-Reply-To: <CANEZrP03R_6nQQ-_uxdF++g-ON4ynsNBTDFqmVt2ZnLy49GqZg@mail.gmail.com>
+References: <CANEZrP2r6sVC_63xx6U7XLbFkukrFEhq-mGAse3vHJ6nf3Q1cw@mail.gmail.com>
+	<CA+8xBpen9o3Oji0ePsbU-ZQCSpFO+tAZt63LaOsR30KULYbUhQ@mail.gmail.com>
+	<CAAS2fgR7yiyTWyuwAqxsnAb-xv9bmBFUxDwJhEkRH1PCP=pzJw@mail.gmail.com>
+	<CANEZrP03R_6nQQ-_uxdF++g-ON4ynsNBTDFqmVt2ZnLy49GqZg@mail.gmail.com>
+Message-ID: <CAGQP0AHdmyMhrOA1mMqjxobu8S0r6OnvducV7H=HFaiv-PR+rw@mail.gmail.com>
+
+On 9/23/12, Jeff Garzik <jgarzik at exmulti.com> wrote:
+> - provides a deterministic lifetime for a TX; if you KNOW a TX will
+> disappear 144 blocks (24 hours) after you stop transmitting, then it
+> is probably safe to initiate recovery procedures and perhaps revise
+> the transaction
+> - prevents zombie TXs from littering memory... they hang around,
+> wasting resources, but never get confirmed
+
+I don't understand. Can the chain enforce this number?
+Why can't clients delete all those transactions right now?
+
+On 9/23/12, Gregory Maxwell <gmaxwell at gmail.com> wrote:
+> There are bursts of weird transactions (e.g. someone was flooding zero
+> value txn a few weeks ago; before that there were some enormous series
+> of double-spend induced orphans), and other sustained loads that quite
+> a few miners are intentionally excluding.
+
+Why clients store transactions that don't obey the current rules of
+the chain at all?
+
+
+
+From gmaxwell at gmail.com  Tue Sep 25 17:52:10 2012
+From: gmaxwell at gmail.com (Gregory Maxwell)
+Date: Tue, 25 Sep 2012 13:52:10 -0400
+Subject: [Bitcoin-development] Large backlog of transactions building up?
+In-Reply-To: <CAGQP0AHdmyMhrOA1mMqjxobu8S0r6OnvducV7H=HFaiv-PR+rw@mail.gmail.com>
+References: <CANEZrP2r6sVC_63xx6U7XLbFkukrFEhq-mGAse3vHJ6nf3Q1cw@mail.gmail.com>
+	<CA+8xBpen9o3Oji0ePsbU-ZQCSpFO+tAZt63LaOsR30KULYbUhQ@mail.gmail.com>
+	<CAAS2fgR7yiyTWyuwAqxsnAb-xv9bmBFUxDwJhEkRH1PCP=pzJw@mail.gmail.com>
+	<CANEZrP03R_6nQQ-_uxdF++g-ON4ynsNBTDFqmVt2ZnLy49GqZg@mail.gmail.com>
+	<CAGQP0AHdmyMhrOA1mMqjxobu8S0r6OnvducV7H=HFaiv-PR+rw@mail.gmail.com>
+Message-ID: <CAAS2fgRmS0ssKJvJsrhpbmj4awViexhQbQJB-TUU1gUQ8TzOeg@mail.gmail.com>
+
+On Tue, Sep 25, 2012 at 1:34 PM, Jorge Tim?n <timon.elviejo at gmail.com> wrote:
+> On 9/23/12, Jeff Garzik <jgarzik at exmulti.com> wrote:
+>> - provides a deterministic lifetime for a TX; if you KNOW a TX will
+>> disappear 144 blocks (24 hours) after you stop transmitting, then it
+>> is probably safe to initiate recovery procedures and perhaps revise
+>> the transaction
+>> - prevents zombie TXs from littering memory... they hang around,
+>> wasting resources, but never get confirmed
+>
+> I don't understand. Can the chain enforce this number?
+> Why can't clients delete all those transactions right now?
+
+This is discussion about transactions which are not in the chain yet.
+
+> On 9/23/12, Gregory Maxwell <gmaxwell at gmail.com> wrote:
+>> There are bursts of weird transactions (e.g. someone was flooding zero
+>> value txn a few weeks ago; before that there were some enormous series
+>> of double-spend induced orphans), and other sustained loads that quite
+>> a few miners are intentionally excluding.
+>
+> Why clients store transactions that don't obey the current rules of
+> the chain at all?
+
+The double spending transaction is not stored? which is, in fact, the
+problem which creates these huge chain. When a transaction depending
+on the doublespend is received we do not know its parent (because we
+dropped it because it was a rule violation) so we keep it around as an
+orphan hoping its parent arrives.
+
+The software could maintain a cache of rejected txids to consult for
+orphan txn's parents, but it would need to be dropped any time there
+is a reorg so I don't know how useful it would be.
+
+
+
+From steve at mistfpga.net  Tue Sep 25 18:32:44 2012
+From: steve at mistfpga.net (steve)
+Date: Tue, 25 Sep 2012 19:32:44 +0100
+Subject: [Bitcoin-development] Bitcoin Testing Project
+Message-ID: <5061F8CC.9070906@mistfpga.net>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hi All,
+
+After the failure to get any real testing done for the 0.7 release (all
+of which is my fault) I have decided to rejig things.
+
+I am heavily into test driven development, and I have a strong
+background in requirements management, and automation.
+
+I want to leave bettermeans behind, maybe we might be able to keep the
+voting aspect of it, and link it into mantis.
+
+So, what I have been doing over the past few weeks is developing a
+rudimentary requirements set, basic requirement tracking, tests to
+prove/stress the requirements.
+
+The next most important thing is to get release/acceptance tests done -
+these primarily focus on new stuff doesnt break old (ie lose a wallet,
+etc) and needs no special requirements.
+
+To this end I have installed various opensource applications (mantis,
+salomeTMF, bugzilla, etc) and am currently evaluating the best workflow
+process.
+
+This was a much longer post, but decided against it. :)
+
+So, what I want to know is who wants to be a part helping me out with
+all this? I am finalising the workflow flow diagrams and they should be
+ready for inspection soon.
+
+Anyone interested in helping out/reviewing processes? even if it is just
+some encouragement, it is all greatly appreciated.
+
+Drop me an email if you want access to the current setup and help me
+review the different software for the bitcoin workflow process.
+
+cheers,
+
+steve
+
+- -- 
+my PGP public key is at pgp.mit.edu id: 0x5016FB50
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Mozilla - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJQYfjMAAoJEFvEB9dQFvtQSmsH/R/FEdOQRB7ncTnHhaP8woLu
+nIiGX2DgLOWLOF9launSuTCrtVm2G56B9Dgl/BqScFxeuJGbzje7+kp7LgjtA3uy
+kS9DUZ1zhUfhslGP0UpVJJGX6Yfk8GbQ4nUcuL1VTv6nSZXWP2EvLMDPpRgKwyi5
+z1FiyBg2A3Kg3Er+VmHPmpI0zZAGB5ytaenUp4xXGhL7Nk66i5X0twVr51xlEm0L
+zKCDXHzWTvNNlT7TzMjIxShJ/EcgCI1r6tVD3T+2e9QeVm0QNw3xeNUkMxKn+ul8
+d1v1OxJbHD1CsNqW+XgVvFE2SJReizaHNOFwrqcpVCp7bABnWAB5eyTzB9B9IX8=
+=di5x
+-----END PGP SIGNATURE-----
+
+
+
+From bitcoin-list at bluematt.me  Tue Sep 25 20:41:17 2012
+From: bitcoin-list at bluematt.me (Matt Corallo)
+Date: Tue, 25 Sep 2012 16:41:17 -0400
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <5061F8CC.9070906@mistfpga.net>
+References: <5061F8CC.9070906@mistfpga.net>
+Message-ID: <1348605677.2284.2.camel@localhost.localdomain>
+
+Although Jenkins may not be the best system, we already have jenkins and
+pull-tester (which is a dumb python script I wrote to test all incoming
+pull requests from github).  
+
+They both run the same set of scripts, namely those at
+https://github.com/TheBlueMatt/test-scripts (its pretty basic right now,
+but since it is on github, I was hoping someone would find the
+inspiration to add to it).
+
+I dont really care if we keep using jenkins, but I figure we might as
+well keep all the tests in one place?
+
+Anyway, I'm all for more testing (I'm always complaining about how we
+need more tests for stuff...).
+
+Matt
+
+On Tue, 2012-09-25 at 19:32 +0100, steve wrote:
+> Hi All,
+> 
+> After the failure to get any real testing done for the 0.7 release (all
+> of which is my fault) I have decided to rejig things.
+> 
+> I am heavily into test driven development, and I have a strong
+> background in requirements management, and automation.
+> 
+> I want to leave bettermeans behind, maybe we might be able to keep the
+> voting aspect of it, and link it into mantis.
+> 
+> So, what I have been doing over the past few weeks is developing a
+> rudimentary requirements set, basic requirement tracking, tests to
+> prove/stress the requirements.
+> 
+> The next most important thing is to get release/acceptance tests done -
+> these primarily focus on new stuff doesnt break old (ie lose a wallet,
+> etc) and needs no special requirements.
+> 
+> To this end I have installed various opensource applications (mantis,
+> salomeTMF, bugzilla, etc) and am currently evaluating the best workflow
+> process.
+> 
+> This was a much longer post, but decided against it. :)
+> 
+> So, what I want to know is who wants to be a part helping me out with
+> all this? I am finalising the workflow flow diagrams and they should be
+> ready for inspection soon.
+> 
+> Anyone interested in helping out/reviewing processes? even if it is just
+> some encouragement, it is all greatly appreciated.
+> 
+> Drop me an email if you want access to the current setup and help me
+> review the different software for the bitcoin workflow process.
+> 
+> cheers,
+> 
+> steve
+
+
+
+
+From nanotube at gmail.com  Tue Sep 25 20:49:22 2012
+From: nanotube at gmail.com (Daniel F)
+Date: Tue, 25 Sep 2012 16:49:22 -0400
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <5061F8CC.9070906@mistfpga.net>
+References: <5061F8CC.9070906@mistfpga.net>
+Message-ID: <506218D2.9090102@gmail.com>
+
+on 09/25/2012 02:32 PM steve said the following:
+> Anyone interested in helping out/reviewing processes? even if it is just
+> some encouragement, it is all greatly appreciated.
+
+not enough time in the day for me to seriously help out, but since you
+asked, here's some encouragement. :) more testing == good.
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 224 bytes
+Desc: OpenPGP digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120925/0f8c9abf/attachment.sig>
+
+From g.rowe at froot.co.uk  Tue Sep 25 21:25:39 2012
+From: g.rowe at froot.co.uk (Gary Rowe)
+Date: Tue, 25 Sep 2012 22:25:39 +0100
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <506218D2.9090102@gmail.com>
+References: <5061F8CC.9070906@mistfpga.net>
+	<506218D2.9090102@gmail.com>
+Message-ID: <CAKm8k+2B1dTMz+xsoD4JL-Eao5e2oiZcSnN_8UpqqMV5cmJeMg@mail.gmail.com>
+
+This is definitely worth doing and I wish you every encouragement.
+
+For my part I'm working on a different area of the Bitcoin ecosystem and
+that is taking up all my time so I can only cheer you on from the sidelines.
+
+On 25 September 2012 21:49, Daniel F <nanotube at gmail.com> wrote:
+
+> on 09/25/2012 02:32 PM steve said the following:
+> > Anyone interested in helping out/reviewing processes? even if it is just
+> > some encouragement, it is all greatly appreciated.
+>
+> not enough time in the day for me to seriously help out, but since you
+> asked, here's some encouragement. :) more testing == good.
+>
+>
+>
+> ------------------------------------------------------------------------------
+> Live Security Virtual Conference
+> Exclusive live event will cover all the ways today's security and
+> threat landscape has changed and how IT managers can respond. Discussions
+> will include endpoint security, mobile security and the latest in malware
+> threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120925/b170e63a/attachment.html>
+
+From laanwj at gmail.com  Wed Sep 26 05:49:13 2012
+From: laanwj at gmail.com (Wladimir)
+Date: Wed, 26 Sep 2012 07:49:13 +0200
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <1348605677.2284.2.camel@localhost.localdomain>
+References: <5061F8CC.9070906@mistfpga.net>
+	<1348605677.2284.2.camel@localhost.localdomain>
+Message-ID: <CA+s+GJCO7_TXCPh1P33HS-wNHpL7DbZcimUxE3wR9Y=XfrfBrA@mail.gmail.com>
+
+I think it's a great initiative Steve,
+
+On Tue, Sep 25, 2012 at 10:41 PM, Matt Corallo <bitcoin-list at bluematt.me> wrote:
+
+> They both run the same set of scripts, namely those at
+> https://github.com/TheBlueMatt/test-scripts (its pretty basic right now,
+> but since it is on github, I was hoping someone would find the
+> inspiration to add to it).
+
+The pulltester and Jenkins are really useful, I think it's best to
+keep these and improve them if needed.
+
+> I dont really care if we keep using jenkins, but I figure we might as
+> well keep all the tests in one place?
+
+Which brings me to another issue: we desperately need a page that
+links all the developer resources for bitcoin dev:
+
+- link to my doxygen docs (https://dev.visucore.com/bitcoin/doxygen/)
+- bluematt's pulltester and jenkins
+- any testing dashboards Steve is going to add
+
+But also:
+
+- how to check out the source code, how to find the build instructions
+for your platform
+- contribution guidelines
+- where to ask w/ development problems (this mailing list, #bitcoin-dev)
+- where to begin, which bugs to solve first
+...
+
+Maybe on bitcoin.org, but at least easy to find for people that want
+to contribute, not just some deeply nested wiki page. Ie, something
+like
+
+https://www.mozilla.org/en-US/contribute/
+http://www.ogre3d.org/developers
+...
+
+I'm willing to write this. But I know these kinds of proposals always
+end in a big discussion about what should be and what should not be on
+bitcoin.org, however we should be a bit pragmatic here.
+
+Wladimir
+
+
+
+From nanotube at gmail.com  Wed Sep 26 11:41:13 2012
+From: nanotube at gmail.com (Daniel F)
+Date: Wed, 26 Sep 2012 07:41:13 -0400
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <CA+s+GJCO7_TXCPh1P33HS-wNHpL7DbZcimUxE3wR9Y=XfrfBrA@mail.gmail.com>
+References: <5061F8CC.9070906@mistfpga.net>
+	<1348605677.2284.2.camel@localhost.localdomain>
+	<CA+s+GJCO7_TXCPh1P33HS-wNHpL7DbZcimUxE3wR9Y=XfrfBrA@mail.gmail.com>
+Message-ID: <5062E9D9.2080205@gmail.com>
+
+on 09/26/2012 01:49 AM Wladimir said the following:
+
+> I'm willing to write this. But I know these kinds of proposals always
+> end in a big discussion about what should be and what should not be on
+> bitcoin.org, however we should be a bit pragmatic here.
+
+May I suggest a page bitcoin.org/developers, that links to a wiki page
+of developer resources?
+That way there's an easy link from the main site, but the content is
+readily editable and expandable.
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 224 bytes
+Desc: OpenPGP digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120926/573eb685/attachment.sig>
+
+From luke at dashjr.org  Wed Sep 26 12:00:49 2012
+From: luke at dashjr.org (Luke-Jr)
+Date: Wed, 26 Sep 2012 12:00:49 +0000
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <5062E9D9.2080205@gmail.com>
+References: <5061F8CC.9070906@mistfpga.net>
+	<CA+s+GJCO7_TXCPh1P33HS-wNHpL7DbZcimUxE3wR9Y=XfrfBrA@mail.gmail.com>
+	<5062E9D9.2080205@gmail.com>
+Message-ID: <201209261200.51332.luke@dashjr.org>
+
+On Wednesday, September 26, 2012 11:41:13 AM Daniel F wrote:
+> on 09/26/2012 01:49 AM Wladimir said the following:
+> > I'm willing to write this. But I know these kinds of proposals always
+> > end in a big discussion about what should be and what should not be on
+> > bitcoin.org, however we should be a bit pragmatic here.
+> 
+> May I suggest a page bitcoin.org/developers, that links to a wiki page
+> of developer resources?
+> That way there's an easy link from the main site, but the content is
+> readily editable and expandable.
+
+The front page already has wiki links. Adding a direct link to a developer 
+resources page there would probably make sense.
+
+
+
+From steve at mistfpga.net  Wed Sep 26 12:28:40 2012
+From: steve at mistfpga.net (steve)
+Date: Wed, 26 Sep 2012 13:28:40 +0100
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <1348605677.2284.2.camel@localhost.localdomain>
+References: <5061F8CC.9070906@mistfpga.net>
+	<1348605677.2284.2.camel@localhost.localdomain>
+Message-ID: <5062F4F8.6040504@mistfpga.net>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hi Matt,
+
+Glad to have another ninja onboard :)
+
+On 25/09/2012 21:41, Matt Corallo wrote:
+> Although Jenkins may not be the best system, we already have
+> jenkins and pull-tester (which is a dumb python script I wrote to
+> test all incoming pull requests from github).
+
+I have never heard of jenkins before.  I need to do some more digging.
+is this the right thing?
+
+https://wiki.jenkins-ci.org/display/JENKINS/Mantis+Plugin
+
+Mantis on the other hand, I know exceptionally well.  I hate
+duplication of work/data unless absolutely necessary.  I will check
+jenkins out (just out of interest what is it actually meant to do? the
+website implies framework, but not what its for)
+
+So, currently there are 4 potential places for bugs to be reported
+1 - jenkins (and unit tests)
+2 - git
+3 - mailing list
+4 - forum (bitcointalk...)
+5? - is there still the ability to add bugs via sourceforge?
+
+Adding to this doesnt make sense.  Each one of these reporting methods
+is for a different thing.  I am not seeking to replace these (or even
+unify them) I am looking for software that will take testcases and bug
+reports against them [and allow for test campaigns].  Mantis is so
+flexible and industry standard and if the jenkins plugin works... then
+we can keep things as they are until they fit into better places.
+
+The reason I am so behind mantis as the backbone is it works with more
+or less anything, and can easily modded to work with whatever people
+are most comfortable with - however it is exceptionally powerful and
+has had a constant stream of workflow improvements over the past few
+years.
+
+> 
+> They both run the same set of scripts, namely those at 
+> https://github.com/TheBlueMatt/test-scripts (its pretty basic right
+> now, but since it is on github, I was hoping someone would find
+> the inspiration to add to it).
+
+I will check it out. I wrote a very basic script that wikified the
+changelog, and linked to the changes and created wiki pages for the
+testcases.  have you seen the stuff I put on bettermeans? bits keep
+vanishing then re appearing.
+
+This is the outline of the testing that I setup for 0.7
+
+https://secure.bettermeans.com/projects/4256/wiki
+
+> 
+> I dont really care if we keep using jenkins, but I figure we might
+> as well keep all the tests in one place?
+
+Yes, I would love to unify all build testing and testcases into one
+place.  I am still on the fence as to including unit tests into this.
+However I do see 3 distinct type of testcases
+1 - requirements based testcases (requirements based off the current
+block chain rules - these are edge cases and known interoperability
+issues)
+
+2 - Acceptance based testcases - these are testcases that should be
+run for every build.  Check out the General Acceptance Tests in the
+wiki link for examples and testcases
+
+3 - Testcases for reference implementations of things (like multisig -
+i see these working like the /test folder when you install a new perl
+module)
+
+These three things alone are a massive task. and they still wont cover
+everything.  I would like to get the workflow so that people can
+sponsor or donate to a specific campaign (eg a new feature is
+implemented, people want it tested so can donate just for that
+campaign [developing testcases, structure, requirements, etc])
+
+Once this is done, I will get to do some exciting stuff (like writing
+fuzzers, automation, etc) unfortunately I do not know python, only perl.
+
+> 
+> Anyway, I'm all for more testing (I'm always complaining about how
+> we need more tests for stuff...).
+
+Nice, I love testing.  I think we will get on :)
+
+And I would rather go for interoperability between testing rather than
+rewriting it all.
+
+Cheers,
+
+steve
+
+> 
+> Matt
+> 
+> On Tue, 2012-09-25 at 19:32 +0100, steve wrote:
+>> Hi All,
+>> 
+>> After the failure to get any real testing done for the 0.7
+>> release (all of which is my fault) I have decided to rejig
+>> things.
+>> 
+>> I am heavily into test driven development, and I have a strong 
+>> background in requirements management, and automation.
+>> 
+>> I want to leave bettermeans behind, maybe we might be able to
+>> keep the voting aspect of it, and link it into mantis.
+>> 
+>> So, what I have been doing over the past few weeks is developing
+>> a rudimentary requirements set, basic requirement tracking, tests
+>> to prove/stress the requirements.
+>> 
+>> The next most important thing is to get release/acceptance tests
+>> done - these primarily focus on new stuff doesnt break old (ie
+>> lose a wallet, etc) and needs no special requirements.
+>> 
+>> To this end I have installed various opensource applications
+>> (mantis, salomeTMF, bugzilla, etc) and am currently evaluating
+>> the best workflow process.
+>> 
+>> This was a much longer post, but decided against it. :)
+>> 
+>> So, what I want to know is who wants to be a part helping me out
+>> with all this? I am finalising the workflow flow diagrams and
+>> they should be ready for inspection soon.
+>> 
+>> Anyone interested in helping out/reviewing processes? even if it
+>> is just some encouragement, it is all greatly appreciated.
+>> 
+>> Drop me an email if you want access to the current setup and help
+>> me review the different software for the bitcoin workflow
+>> process.
+>> 
+>> cheers,
+>> 
+>> steve
+> 
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Mozilla - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJQYvT4AAoJEFvEB9dQFvtQlgkIAJX7JYel5RGmCsbptGdQrCnT
+BR42tUwTg1t/NRUJ6RA8/Ou8lzallztQquShpLn4mZdQpoalvETdtAwcPnQKnaZb
+M5inZE/IEq8WJM1y4YkHt3BLou4BJbjwncCNy1/jqcm6f2Oonrg7isVbDwY/7JlP
+y/epm7XELS7NU4vVubBwQCunwvtsuydXRzuI812LiLXNqpXFMHvG2m8a2RajXE0/
+xW4lOMy/hUFzEgYRQWCTAru4Ts2x3Xt26NaEUh/uKvHLwBZJ4xbdu3gpupiPb4sI
+bCHnVFOC7zoQKOAnfPkCMyvtyoqpzM9HW2+DWI51FoOz851Y2F36N3Fpk/2lii4=
+=W5xI
+-----END PGP SIGNATURE-----
+
+
+
+From laanwj at gmail.com  Wed Sep 26 12:49:21 2012
+From: laanwj at gmail.com (Wladimir)
+Date: Wed, 26 Sep 2012 14:49:21 +0200
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <5062F4F8.6040504@mistfpga.net>
+References: <5061F8CC.9070906@mistfpga.net>
+	<1348605677.2284.2.camel@localhost.localdomain>
+	<5062F4F8.6040504@mistfpga.net>
+Message-ID: <CA+s+GJBM4DwDoqT8RC0+SyrLYrLGZuGZSuoj7zbHunQa3kFoRA@mail.gmail.com>
+
+Steve,
+
+> So, currently there are 4 potential places for bugs to be reported
+> 1 - jenkins (and unit tests)
+> 2 - git
+> 3 - mailing list
+> 4 - forum (bitcointalk...)
+> 5? - is there still the ability to add bugs via sourceforge?
+
+Currently github is the authoritative place to report issues. When
+someone reports a bug on the mailing list, IRC or forum, they are
+generally asked to make a github issue (or, someone else makes the
+issue for them). Failed tests are generally also reported on github,
+by the pull tester.
+
+We currently have 232 issues, mostly classified into categories such
+as "Bug", "Improvement", "GUI", "Wallet", and so on.
+
+Also it's easy to refer to github issues in commits with #123, with
+automatic linking.
+
+I'm not sure it is worth the effort to move to another system
+(especially if you need a another login etc...). But I'm probably
+misunderstanding what you're trying to do.
+
+Wladimir
+
+
+
+From steve at mistfpga.net  Wed Sep 26 13:22:52 2012
+From: steve at mistfpga.net (steve)
+Date: Wed, 26 Sep 2012 14:22:52 +0100
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <CA+s+GJBM4DwDoqT8RC0+SyrLYrLGZuGZSuoj7zbHunQa3kFoRA@mail.gmail.com>
+References: <5061F8CC.9070906@mistfpga.net>
+	<1348605677.2284.2.camel@localhost.localdomain>
+	<5062F4F8.6040504@mistfpga.net>
+	<CA+s+GJBM4DwDoqT8RC0+SyrLYrLGZuGZSuoj7zbHunQa3kFoRA@mail.gmail.com>
+Message-ID: <506301AC.90101@mistfpga.net>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+- -----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 26/09/2012 13:49, Wladimir wrote:
+> Steve,
+
+Hi Wladimir,
+
+> 
+>> So, currently there are 4 potential places for bugs to be 
+>> reported 1 - jenkins (and unit tests) 2 - git 3 - mailing list 4 
+>> - forum (bitcointalk...) 5? - is there still the ability to add 
+>> bugs via sourceforge?
+> 
+> Currently github is the authoritative place to report issues. When
+>  someone reports a bug on the mailing list, IRC or forum, they are
+>  generally asked to make a github issue (or, someone else makes the
+>  issue for them). Failed tests are generally also reported on 
+> github, by the pull tester.
+
+excellent, that makes things much easier.
+
+> 
+> We currently have 232 issues, mostly classified into categories 
+> such as "Bug", "Improvement", "GUI", "Wallet", and so on.
+> 
+> Also it's easy to refer to github issues in commits with #123, with
+> automatic linking.
+> 
+> I'm not sure it is worth the effort to move to another system 
+> (especially if you need a another login etc...). But I'm probably 
+> misunderstanding what you're trying to do.
+
+I think you might be misunderstanding a little. I am not trying to
+replace the current system, I need to make sure that what I do will be
+compatible with it (seamlessly so for the developer). I do not want this
+to generate extra work for the development team.
+
+However testing is a lot more than just bug reporting, dont get me
+wrong bug reports are important, but so is running a testcase and that
+testcase passing, especially if that testcase is linked to the proof
+of a requirement. I am trying to develop a qa environment that is
+conducive to testing and will allow the testers to shine in all their
+glory :) and we need different tools and methodologies.
+
+Git is too developer centric to be useful for organising testing. -
+however there is a large amount of software that is compatible with
+git, so the core development team only ever need to work with git.
+
+The linking between a bug, the requirement, the fix, the retest, and
+updating of regression testplan is vital. So is the ability to
+organise testing campaigns and assigning tests, work units and test
+relevant docs/scripts/ideas, etc.
+
+I hope this clears things up a bit?
+
+Cheers,
+
+steve
+
+> 
+> Wladimir
+> 
+
+- -----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Mozilla - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJQYwESAAoJEFvEB9dQFvtQ/GUH/jv2c5L0OcL/kHkX/z0Yqbl/
+2IntPLdjXNKLuz0A7BMz7XfUyVmWlZrw44qxmi+Vyk5PKNBjYIidm763xHnTeJLN
+ULQBckYexMvan9hAyYZUOt85IpesdNgqTIsqh8f49y4roHOy8GT4M/2fhzXpnsGg
+G9d2m8jWGpj/kxl9qE7/WjVQC4APwBi/NiJsCrcHswgweN+zENc/Pot9YBLxAZu/
+ACBUX/xFymRdaZN8P2LWBXuKx6E2WEcBdPCCWArX07wPiBlrashx9Gz6tiNzIiNq
+x2c4ltLzRa45AmiDtQhwqyTprz/DbyeAYO1sIsfpUxDeu9e3xTb/Zd96jfKIWI0=
+=iHI1
+- -----END PGP SIGNATURE-----
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Mozilla - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJQYwGsAAoJEFvEB9dQFvtQxOsIAKgBBOKHNFtoV2cN+GVqzlip
+yy0qiMvMTZKrraOhEw8QNNuOlB3LRchi+RDR/PvQkVfuwi/jHB2gUBzlapLoECBv
+EH8pgT/MO281pXzARgRSVkRYqkb3ljhQz3mEQg9RhR9h5t9g2mL3Tvppt7249Bg8
+oGXPj6xmMcrbClF5qDbwQUUDGJfOo4eti0jSVD3qp2NE7QpPVQwuN5buchpoKt3P
+9aJnjeZdLmuAk2RPoDaLXUFc9unT8AcnW96juD0zoVA9wKvAa6/8IZQf0mzV4iZP
+yiWGNOQtBZ+jyu2ixiEnvHqqG2ZmjtUVqWtjHkxYgrCyuuK2jOcTMNEWfn7SfKc=
+=yP7N
+-----END PGP SIGNATURE-----
+
+
+
+From mark at monetize.io  Wed Sep 26 16:06:41 2012
+From: mark at monetize.io (Mark Friedenbach)
+Date: Wed, 26 Sep 2012 09:06:41 -0700
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <506301AC.90101@mistfpga.net>
+References: <5061F8CC.9070906@mistfpga.net>
+	<1348605677.2284.2.camel@localhost.localdomain>
+	<5062F4F8.6040504@mistfpga.net>
+	<CA+s+GJBM4DwDoqT8RC0+SyrLYrLGZuGZSuoj7zbHunQa3kFoRA@mail.gmail.com>
+	<506301AC.90101@mistfpga.net>
+Message-ID: <CACh7GpHFY_KUhhtk09H_oCzBtRh66artDCqz8pXNTh_ZzkAABg@mail.gmail.com>
+
+Running a concurrent Mantis tracker would be confusing and fragment the
+development pathway. We have an issue tracker; it's on github.
+
+What's being talked about here are two separate things. Jenkins is a
+continuous integration system. It can be configured to run the suite of
+unit tests, regression tests, and any kind of automated functional tests
+for every commit on github and every pull request.
+
+Github is our issue tracker. Github, and only github, is where new issues
+should be reported (unless it's security related, in which case an email
+should be sent to the core devs directly).
+
+Certainly developers should be responsible for making sure that regression
+tests for bugs they fix make it either into the unit tests or Matt's
+functional test repository. QA should hold them accountable for that
+(re-opening tickets for bugs that have been fixed but without regression
+tests).
+
+The other thing we're talking about is coordinated release testing--getting
+release candidates in the hands of actual users and making sure that issues
+are reported. This is something that can't be automated as the point really
+is to pick up on things that the testing suite missed. You sound more
+qualified than me for coming up with a process, but in the end discovered
+issues should be reported to github, the final repository of issues that
+hold up Gavin from doing a release.
+
+Just my 0.002BTC
+Mark
+
+On Wed, Sep 26, 2012 at 6:22 AM, steve <steve at mistfpga.net> wrote:
+>
+> I think you might be misunderstanding a little. I am not trying to
+> replace the current system, I need to make sure that what I do will be
+> compatible with it (seamlessly so for the developer). I do not want this
+> to generate extra work for the development team.
+>
+> However testing is a lot more than just bug reporting, dont get me
+> wrong bug reports are important, but so is running a testcase and that
+> testcase passing, especially if that testcase is linked to the proof
+> of a requirement. I am trying to develop a qa environment that is
+> conducive to testing and will allow the testers to shine in all their
+> glory :) and we need different tools and methodologies.
+>
+> Git is too developer centric to be useful for organising testing. -
+> however there is a large amount of software that is compatible with
+> git, so the core development team only ever need to work with git.
+>
+> The linking between a bug, the requirement, the fix, the retest, and
+> updating of regression testplan is vital. So is the ability to
+> organise testing campaigns and assigning tests, work units and test
+> relevant docs/scripts/ideas, etc.
+>
+> I hope this clears things up a bit?
+>
+> Cheers,
+>
+> steve
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120926/5b9b6e20/attachment.html>
+
+From jgarzik at exmulti.com  Wed Sep 26 17:10:31 2012
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Wed, 26 Sep 2012 13:10:31 -0400
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <CACh7GpHFY_KUhhtk09H_oCzBtRh66artDCqz8pXNTh_ZzkAABg@mail.gmail.com>
+References: <5061F8CC.9070906@mistfpga.net>
+	<1348605677.2284.2.camel@localhost.localdomain>
+	<5062F4F8.6040504@mistfpga.net>
+	<CA+s+GJBM4DwDoqT8RC0+SyrLYrLGZuGZSuoj7zbHunQa3kFoRA@mail.gmail.com>
+	<506301AC.90101@mistfpga.net>
+	<CACh7GpHFY_KUhhtk09H_oCzBtRh66artDCqz8pXNTh_ZzkAABg@mail.gmail.com>
+Message-ID: <CA+8xBpe_QC-U=HjvMQa-+RkFKZJvdU4Gq0NJZXrme=Uh-rns+w@mail.gmail.com>
+
+On Wed, Sep 26, 2012 at 12:06 PM, Mark Friedenbach <mark at monetize.io> wrote:
+> Certainly developers should be responsible for making sure that regression
+> tests for bugs they fix make it either into the unit tests or Matt's
+> functional test repository. QA should hold them accountable for that
+> (re-opening tickets for bugs that have been fixed but without regression
+> tests).
+
+As a goal or general principle, this is agreeable.
+
+But slavish attention to this will only get ignored.  There is finite
+developer resources, and regression tests for certain types of bugs,
+like prickly P2P network interaction bugs or RPC API bugs, could
+potentially involve many days or weeks of coding, to sufficiently
+simulate the environment.  The ability to easily, automatically and
+programmatically reproduce certain classes of bugs is simply out of
+reach right now, and nobody is going to shut down development to fix
+that problem.
+
+We should move towards this direction, yes, but bitcoin test cases are
+not always going to be as easy as writing (say) a compiler testcase.
+
+We can always use the help of a few good QA coders:  simulating a P2P
+environment and checking the RPC API are two examples of very
+complicated problems that -can- be automated for testing... with a lot
+of work.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From steve at mistfpga.net  Wed Sep 26 17:44:34 2012
+From: steve at mistfpga.net (steve)
+Date: Wed, 26 Sep 2012 18:44:34 +0100
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <CACh7GpHFY_KUhhtk09H_oCzBtRh66artDCqz8pXNTh_ZzkAABg@mail.gmail.com>
+References: <5061F8CC.9070906@mistfpga.net>
+	<1348605677.2284.2.camel@localhost.localdomain>
+	<5062F4F8.6040504@mistfpga.net>
+	<CA+s+GJBM4DwDoqT8RC0+SyrLYrLGZuGZSuoj7zbHunQa3kFoRA@mail.gmail.com>
+	<506301AC.90101@mistfpga.net>
+	<CACh7GpHFY_KUhhtk09H_oCzBtRh66artDCqz8pXNTh_ZzkAABg@mail.gmail.com>
+Message-ID: <50633F02.6030807@mistfpga.net>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 26/09/2012 17:06, Mark Friedenbach wrote:
+> Running a concurrent Mantis tracker would be confusing and fragment
+> the development pathway. We have an issue tracker; it's on github.
+
+I think you misunderstand what I am proposing.
+
+QA needs more than just an issue tracker. i have yet to find any
+opensource software that integrates testcases, nor any method for
+generating testplans, nor any method for linking testcases and plans
+to requirements, that work with git.
+
+We will need software for this (as well as workflow software) and it
+is much easier to integrate this into mantis/bugzilla. They are both
+so much more functional than Git.
+
+both mantis and bugzilla have full two way functionality with git.
+
+> 
+> What's being talked about here are two separate things. Jenkins is
+> a continuous integration system. It can be configured to run the
+> suite of unit tests, regression tests, and any kind of automated
+> functional tests for every commit on github and every pull
+> request.
+
+well 3 but okay.  Jenkins integrates both with mantis (and therefore a
+testsuite, etc) and with git. I do not see why anything should be any
+different.  again I am not trying to change any current process, just
+develop some new ones.
+
+> 
+> Github is our issue tracker. Github, and only github, is where new
+> issues should be reported (unless it's security related, in which
+> case an email should be sent to the core devs directly).
+
+You will only ever receive bug reports via git. How they are entered
+should not be of concern.
+
+There will be no space in mantis/zilla for bugs that are not related
+to testcases.
+
+> 
+> Certainly developers should be responsible for making sure that
+> regression tests for bugs they fix make it either into the unit
+> tests or Matt's functional test repository. QA should hold them
+> accountable for that (re-opening tickets for bugs that have been
+> fixed but without regression tests).
+
+I feel very strongly that developers should not do regression testing
+or any signoff testing on their own code. QA should do the testing. I
+am 50/50 if they should write the testcases. the QA process should
+make things easier for the dev team, not generate more work for them.
+
+> 
+> The other thing we're talking about is coordinated release
+> testing--getting release candidates in the hands of actual users
+> and making sure that issues are reported. This is something that
+> can't be automated as the point really is to pick up on things that
+> the testing suite missed. You sound more qualified than me for
+> coming up with a process, but in the end discovered issues should
+> be reported to github, the final repository of issues that hold up
+> Gavin from doing a release.
+
+All the core development team will still use git. the extra software
+is needed by test.
+
+(And the third point was coming up with a suite of tests for 3rd party
+developers to test their interoperability - this will having nothing
+to do with git, or mantis. But the solution should be compatible with
+mantis/zilla)
+
+> 
+> Just my 0.002BTC Mark
+> 
+> On Wed, Sep 26, 2012 at 6:22 AM, steve <steve at mistfpga.net> wrote:
+>> 
+>> I think you might be misunderstanding a little. I am not trying
+>> to replace the current system, I need to make sure that what I do
+>> will be compatible with it (seamlessly so for the developer). I
+>> do not want this to generate extra work for the development
+>> team.
+>> 
+>> However testing is a lot more than just bug reporting, dont get
+>> me wrong bug reports are important, but so is running a testcase
+>> and that testcase passing, especially if that testcase is linked
+>> to the proof of a requirement. I am trying to develop a qa
+>> environment that is conducive to testing and will allow the
+>> testers to shine in all their glory :) and we need different
+>> tools and methodologies.
+>> 
+>> Git is too developer centric to be useful for organising testing.
+>> - however there is a large amount of software that is compatible
+>> with git, so the core development team only ever need to work
+>> with git.
+>> 
+>> The linking between a bug, the requirement, the fix, the retest,
+>> and updating of regression testplan is vital. So is the ability
+>> to organise testing campaigns and assigning tests, work units and
+>> test relevant docs/scripts/ideas, etc.
+>> 
+>> I hope this clears things up a bit?
+>> 
+>> Cheers,
+>> 
+>> steve
+>> 
+> 
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Mozilla - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJQYz8CAAoJEFvEB9dQFvtQjkMH/Apa95IRh21mfNIuyK8kOSdt
+55tLoT9a6DFyF1IPTgjHQlPN/A0JCPy/p2rIEEL7XzWpCMu1zU8BzBNmJsxGAZJG
+C0ue1eDEywKNFEMPTgQdebC2MbNSfUBA6lGJ5vijQlcXKoIuiV/LS7IMYh57T4u1
+6Tc/SGypGe8kBLuFTihmIGH5uFS6arNGlcGgh+HRn+O4jKiAcw06lIoKh7S9Rj5e
+bmkimvOfproCIZeNQfSJH1BfYZaVVsJ1ouVI7ch6ytFpKsZ622zYF0Iq3042kEEp
+Fyqh9pDDNTJ/dwbyFpTx0WaxZySdZfZmQOCxFCAeLaCpop/nKeUnW5fy3i0sYno=
+=rfHO
+-----END PGP SIGNATURE-----
+
+
+
+From gavinandresen at gmail.com  Wed Sep 26 18:09:55 2012
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Wed, 26 Sep 2012 14:09:55 -0400
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <50633F02.6030807@mistfpga.net>
+References: <5061F8CC.9070906@mistfpga.net>
+	<1348605677.2284.2.camel@localhost.localdomain>
+	<5062F4F8.6040504@mistfpga.net>
+	<CA+s+GJBM4DwDoqT8RC0+SyrLYrLGZuGZSuoj7zbHunQa3kFoRA@mail.gmail.com>
+	<506301AC.90101@mistfpga.net>
+	<CACh7GpHFY_KUhhtk09H_oCzBtRh66artDCqz8pXNTh_ZzkAABg@mail.gmail.com>
+	<50633F02.6030807@mistfpga.net>
+Message-ID: <CABsx9T119rT1NssV6YO8KPse3sEGHZJ-vzFFD3o=aAQ161g6-A@mail.gmail.com>
+
+There are test cases that can be automated. That's Jenkins, and those will
+be run automagically.
+
+Then there are tests that cannot be automated; things like "Does the GUI
+look OK on all of the platforms that we support (Windows XP/2000/Vista/7/8,
+Ubuntu/Debian blah with window managers foo and bar, OSX 10.5/6/7/8)."
+
+Thanks to Matt, we're doing great with automated functional test cases (can
+always do better, of course).
+
+We're failing on simple, boring stuff like making sure we actually run on
+all of the platforms that we say we run on BEFORE final release. That is
+where I think a QA team can add a lot of value.
+
+Steve: I'm worried you're over-designing The Process. A release acceptance
+test plan could be nothing more than a step-by-step checklist on a wiki
+page, Google Doc, or Drobox shared folder...
+
+-- 
+--
+Gavin Andresen
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20120926/4a465097/attachment.html>
+
+From bitcoin-list at bluematt.me  Thu Sep 27 00:53:26 2012
+From: bitcoin-list at bluematt.me (Matt Corallo)
+Date: Wed, 26 Sep 2012 20:53:26 -0400
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <5062F4F8.6040504@mistfpga.net>
+References: <5061F8CC.9070906@mistfpga.net>
+	<1348605677.2284.2.camel@localhost.localdomain>
+	<5062F4F8.6040504@mistfpga.net>
+Message-ID: <1348707206.1193.16.camel@localhost.localdomain>
+
+On Wed, 2012-09-26 at 13:28 +0100, steve wrote:
+> Hi Matt,
+> 
+> Glad to have another ninja onboard :)
+> 
+> On 25/09/2012 21:41, Matt Corallo wrote:
+> > Although Jenkins may not be the best system, we already have
+> > jenkins and pull-tester (which is a dumb python script I wrote to
+> > test all incoming pull requests from github).
+> 
+> I have never heard of jenkins before.  I need to do some more digging.
+> is this the right thing?
+> 
+> https://wiki.jenkins-ci.org/display/JENKINS/Mantis+Plugin
+For a mantis plugin, sure, I guess...
+> 
+> Mantis on the other hand, I know exceptionally well.  I hate
+> duplication of work/data unless absolutely necessary.  I will check
+> jenkins out (just out of interest what is it actually meant to do? the
+> website implies framework, but not what its for)
+Jenkins currently just runs the test script after each new commit to
+bitcoin (and provides binaries to anyone who wants them), so its pretty
+basic (though jenkins has way more features than we use).  The bitcoin
+one lives at http://jenkins.bluematt.me/
+> 
+> > 
+> > They both run the same set of scripts, namely those at 
+> > https://github.com/TheBlueMatt/test-scripts (its pretty basic right
+> > now, but since it is on github, I was hoping someone would find
+> > the inspiration to add to it).
+> 
+> I will check it out. I wrote a very basic script that wikified the
+> changelog,
+We currently keep a changelog at https://en.bitcoin.it/wiki/Changelog (I
+went back and added tons of logs a while back and it got updated, though
+0.7 seems to be missing...) anyway, automating that would be nice...
+> and linked to the changes and created wiki pages for the
+> testcases.  
+Having more info on that changelog page would be nice.
+> have you seen the stuff I put on bettermeans? bits keep
+> vanishing then re appearing.
+I have been meaning to catch up with the various attempts at better
+bitcoin testing that have started up a few times, but I keep never
+getting around to it...
+> 
+> This is the outline of the testing that I setup for 0.7
+> 
+> https://secure.bettermeans.com/projects/4256/wiki
+> 
+> > 
+> > I dont really care if we keep using jenkins, but I figure we might
+> > as well keep all the tests in one place?
+> 
+> Yes, I would love to unify all build testing and testcases into one
+> place.  I am still on the fence as to including unit tests into this.
+> However I do see 3 distinct type of testcases
+Even if unit tests are considered separate, having it all run in one
+huge test script makes it quite easy to implement new things (like
+pull-tester) which test some arbitrary bitcoind commit in the same way
+as every other tester.  
+> 1 - requirements based testcases (requirements based off the current
+> block chain rules - these are edge cases and known interoperability
+> issues)
+The BitcoinjBitcoindComparisonTool.jar file which is run as a part of
+the test scripts tries to hit as many block acceptance edge cases as
+possible (I'm sure I missed a ton, but it hits a lot too).  I've also
+been pushing alternate implementation implementors to use it to test
+their own implementations.
+> 
+> 2 - Acceptance based testcases - these are testcases that should be
+> run for every build.  Check out the General Acceptance Tests in the
+> wiki link for examples and testcases
+> 
+> 3 - Testcases for reference implementations of things (like multisig -
+> i see these working like the /test folder when you install a new perl
+> module)
+> 
+> These three things alone are a massive task. and they still wont cover
+> everything.  I would like to get the workflow so that people can
+> sponsor or donate to a specific campaign (eg a new feature is
+> implemented, people want it tested so can donate just for that
+> campaign [developing testcases, structure, requirements, etc])
+> 
+> Once this is done, I will get to do some exciting stuff (like writing
+> fuzzers, automation, etc) unfortunately I do not know python, only perl.
+As far as I'm concerned more test cases are more test cases, it may get
+unwieldy to maintain, but at least we'd have more test cases :)
+
+In terms of general testing strategies, I really prefer to script it
+all, jenkins is quite nice in that it can have slave workers using a
+different OS which run their own tests and then report back to the main
+jenkins instance.  Getting a real Windows slave to run the installer and
+test that thoroughly as well as basic Mac things (I know OSX uses a very
+different build system...) would be nice (though I dont really have time
+to write all those tests...)
+
+re: GUI testing is hard: I've heard Qt's unit test framework is really
+powerful and can even include things like click scripting and analysis
+of the current views (though, I agree, its still no doubt hard).  
+
+Matt
+
+
+
+
+
+From gmaxwell at gmail.com  Thu Sep 27 02:29:30 2012
+From: gmaxwell at gmail.com (Gregory Maxwell)
+Date: Wed, 26 Sep 2012 22:29:30 -0400
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <1348707206.1193.16.camel@localhost.localdomain>
+References: <5061F8CC.9070906@mistfpga.net>
+	<1348605677.2284.2.camel@localhost.localdomain>
+	<5062F4F8.6040504@mistfpga.net>
+	<1348707206.1193.16.camel@localhost.localdomain>
+Message-ID: <CAAS2fgRbco9Qaq8AvkZFL9FhDe6C-dTH9KgyxFg-GXAOhYCEWA@mail.gmail.com>
+
+On Wed, Sep 26, 2012 at 8:53 PM, Matt Corallo <bitcoin-list at bluematt.me> wrote:
+> Jenkins currently just runs the test script after each new commit to
+> bitcoin (and provides binaries to anyone who wants them), so its pretty
+> basic (though jenkins has way more features than we use).  The bitcoin
+> one lives at http://jenkins.bluematt.me/
+
+Jenkins is excellent at cycling through tests,  while additional
+external tools may bring some value they're not required.  It's also
+essential to automate all tests that we really care are run? with our
+small active development group and volunteer contributors the only
+tests we can count on being run are the automated ones. Automated
+tests included with the software? or at least the source? are also the
+only way to have a good chance of catching gnarly platform
+interactions.
+
+I think more than talking about testing I think we need is actual
+testing. Code coverage from the current tests (e.g. bitcoin-test and a
+testnet sync) is very unimpressive, and while coverage isn't some
+magical silver bullet and does not, by itself, mean the tests are good
+flaws in uncovered code can't be detected by the tests.  We also lack
+simple testing cycle documentation for people interested in testing
+manually to walk through, etc. I think all the meta discussion is not
+very useful until we actually have more substance to put into it.
+Otherwise I fear we're just building an airport by painting stripes
+and waiting for the planes to land...
+
+If someone wants to help and would like a list of some of the testing
+I think would be useful, ping me off-list and I can blast some
+suggestions. But I assume that anyone who actually wants to work on
+this isn't short of ideas, and at this point "work on what interests
+you, report what interesting thing you accomplish or discover" is
+probably a perfectly fine level of coordination.
+
+
+
+From steve at mistfpga.net  Sat Sep 29 18:26:49 2012
+From: steve at mistfpga.net (steve)
+Date: Sat, 29 Sep 2012 19:26:49 +0100
+Subject: [Bitcoin-development] Bitcoin Testing Project
+In-Reply-To: <CABsx9T119rT1NssV6YO8KPse3sEGHZJ-vzFFD3o=aAQ161g6-A@mail.gmail.com>
+References: <5061F8CC.9070906@mistfpga.net>
+	<1348605677.2284.2.camel@localhost.localdomain>
+	<5062F4F8.6040504@mistfpga.net>
+	<CA+s+GJBM4DwDoqT8RC0+SyrLYrLGZuGZSuoj7zbHunQa3kFoRA@mail.gmail.com>
+	<506301AC.90101@mistfpga.net>
+	<CACh7GpHFY_KUhhtk09H_oCzBtRh66artDCqz8pXNTh_ZzkAABg@mail.gmail.com>
+	<50633F02.6030807@mistfpga.net>
+	<CABsx9T119rT1NssV6YO8KPse3sEGHZJ-vzFFD3o=aAQ161g6-A@mail.gmail.com>
+Message-ID: <50673D69.5040105@mistfpga.net>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hi Gavin,
+
+Sorry for the delayed response, I wanted to take a couple of days to
+reflect on your email.
+
+On 26/09/2012 19:09, Gavin Andresen wrote:
+
+
+And their are other methods too.
+
+
+
+The GUI::Test package for perl will allow this to be greatly
+automated. (I have done this before on the localisation of photoshop.)
+
+
+
+this why we need detailed testscripts and plans.  so we know what has
+and hasnt been done. The more boring the task the more work that needs
+to go into testcase development.  This is the area I see as my
+greatest failing last time.  I have a large number of virtual machines
+and should have at least this work.  But we need very detailed
+testcases.  with decent testplans just downloading the software,
+syncing the block chain, syncing an existing wallet, rescanning the
+blockchain and verifying the balance would cover a large number of
+tests.  The idea behind having lots of very specific testcases is you
+get to see what tests have not been run.
+
+
+
+I understand your concern, however I have taken a couple of days to
+reflect on this and I still strongly feel that in order to make sure
+that this sticks, and is still useful in 1 years time we need to lay
+proper foundations. Those foundations are not word documents,
+spreadsheets, etc.  they are selecting the right tools for the job.
+
+We can gain so much benefit from using 3rd party software.
+(bettermeans would rock if it wasnt rotting)
+
+I am sure you could do your coding work just using vi, but an sdk
+makes it much easier and allows you to work in a more productive manner.
+
+I have had a couple of off list emails with some testers and they also
+feel that it is very important to make sure we have a sound foundation
+(mantis is so much more than just a bug reporting tool, I see the bug
+reporting functionality as secondary to the main test run
+functionality - but it doesnt have to be mantis based, we do need
+workflow and testcase software though - and proper software for this
+is much better than just a massive google doc.) however I am checking
+out some other software that has been recommended.  It will be very
+hard to change 'the process' once we have something we are used too
+(just look at the current resistance) I promise nothing will change
+for the dev team.  But test does need other tools, and processes.
+
+If you feel that strongly that I am going about this the wrong way, I
+am happy to step back and let someone else sort it out (I will still
+do all the testing I possibly can). I would feel that this would be a
+real shame and we have the chance to setup requirements to
+functionality to tests all with traceability. why not do it right from
+the start?
+
+I will open up my vps' somepoint over the next few days and you can
+see what I mean. I will setup a fake git project, and sort out the
+interactions.
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Mozilla - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJQZz1pAAoJEFvEB9dQFvtQRLkIAJtPCkW1R9vmMPY9u4o+ET1t
+w4pV/+W2PXo2p86HnljCIPLV/cua/1I/EJp7XR7s145Nj4KZUbzHGhvUUmwDOHW2
+TGvJs+HO1bjsJfh4pWEb6PXcW3TguZxZSt5/rBAAI/5BeomSuRcZOdoV87D1xnK8
+TSlgaseWrJcpKLO30/FQA3QnH/bjJ4OBmtHp8WaOtSnfww9Zbb5VYca37O15c2U4
+2d0RUunDg1w2kRbkKjztxr3YasSOX+07Uvj4d5Lw7zgA0U93krNWVT1Ypo94dNJ7
+6SyKi30UuqDdJ9XxZrMB/LBVNGOLlIBNWL++ocu5GFnOn9pnw57ZMBZM5g6YDpo=
+=ekQ/
+-----END PGP SIGNATURE-----
+
+
+

@@ -1,0 +1,4163 @@
+From zgenjix at yahoo.com  Wed Nov  2 21:23:01 2011
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Wed, 2 Nov 2011 14:23:01 -0700 (PDT)
+Subject: [Bitcoin-development] Lock protocol version numbers
+Message-ID: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+
+Hey,
+
+Can we lock the version numbers to be the protocol version (which changes rarely) and instead use the sub_version_num field + revision number for individual builds?
+
+Satoshi 0.4
+BitcoinJava 120311
+bitcoin-js 6
+
+Like so. Otherwise we will have version bumping insanity :)
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111102/bf315b92/attachment.html>
+
+From decker.christian at gmail.com  Wed Nov  2 21:32:10 2011
+From: decker.christian at gmail.com (Christian Decker)
+Date: Wed, 2 Nov 2011 22:32:10 +0100
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+Message-ID: <CALxbBHXOO+p40Q_j7sPK+cG1yGyDWo3fT2_Nd8xhsWmoXD5LNA@mail.gmail.com>
+
+I don't really get what you want to achieve with this. The protocol will be
+slow down evolution (hopefully) soon, while the clients will continue
+releasing at a similar rhythm. It took long enough to decouple the protocol
+version from being bumped each client release, now doing the inverse
+coupling makes no sense.
+
+Regards,
+Chris
+On Wed, Nov 2, 2011 at 10:23 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+
+> Hey,
+>
+> Can we lock the version numbers to be the protocol version (which changes
+> rarely) and instead use the sub_version_num field + revision number for
+> individual builds?
+>
+> Satoshi 0.4
+> BitcoinJava 120311
+> bitcoin-js 6
+>
+> Like so. Otherwise we will have version bumping insanity :)
+>
+>
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register now
+> http://p.sf.net/sfu/rsa-sfdev2dev1
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111102/82bfa1e1/attachment.html>
+
+From zgenjix at yahoo.com  Wed Nov  2 22:33:12 2011
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Wed, 2 Nov 2011 15:33:12 -0700 (PDT)
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <CABsx9T0zUCu2RFC0Nc4URMtu060wyHMaebEM87in=NSiNbp=rw@mail.gmail.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<CABsx9T0zUCu2RFC0Nc4URMtu060wyHMaebEM87in=NSiNbp=rw@mail.gmail.com>
+Message-ID: <1320273192.94365.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+
+Point taken.
+
+About the sub_version_num though. I prefer to let the field by defined clients however they wish, with just a guideline suggestion that IDENTIFIER VERSION is a format they should follow.
+
+The idea being that different projects would have different release scheduling schemes and it'd be restrictive to lock people into the popular major.minor system.
+
+So for the current bitcoin to find out the version number of other clients (if it was needed), it would have to parse the number from the string:
+
+"Satoshi 0.5"
+
+Although there would be little reason for this with a sane protocol versioning scheme.
+
+If we're agreed then I'll start on that BIP.
+
+
+
+________________________________
+From: Gavin Andresen <gavinandresen at gmail.com>
+To: Amir Taaki <zgenjix at yahoo.com>
+Sent: Wednesday, November 2, 2011 9:34 PM
+Subject: Re: [Bitcoin-development] Lock protocol version numbers
+
+Good idea.
+
+Sounds perfect for a BIP....
+
+On Wed, Nov 2, 2011 at 5:23 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+> Hey,
+> Can we lock the version numbers to be the protocol version (which changes
+> rarely) and instead use the sub_version_num field + revision number for
+> individual builds?
+
+-- 
+--
+Gavin Andresen
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111102/92391645/attachment.html>
+
+From decker.christian at gmail.com  Wed Nov  2 22:42:31 2011
+From: decker.christian at gmail.com (Christian Decker)
+Date: Wed, 2 Nov 2011 23:42:31 +0100
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <1320273192.94365.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<CABsx9T0zUCu2RFC0Nc4URMtu060wyHMaebEM87in=NSiNbp=rw@mail.gmail.com>
+	<1320273192.94365.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+Message-ID: <CALxbBHVgr+RD8T2NbZsrySPrL8OFtD8V7OHXfaOHrKfC8_nSnw@mail.gmail.com>
+
+Just for reference: https://github.com/bitcoin/bitcoin/pull/63
+The issue resulted in my most useless pull request fixing two variables :-)
+
+I second the use of sub_version_num as a Client and Version identifier.
+
+Regards,
+Chris
+
+On Wed, Nov 2, 2011 at 11:33 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+
+> Point taken.
+>
+> About the sub_version_num though. I prefer to let the field by defined
+> clients however they wish, with just a guideline suggestion that IDENTIFIER
+> VERSION is a format they should follow.
+>
+> The idea being that different projects would have different release
+> scheduling schemes and it'd be restrictive to lock people into the popular
+> major.minor system.
+>
+> So for the current bitcoin to find out the version number of other clients
+> (if it was needed), it would have to parse the number from the string:
+>
+> "Satoshi 0.5"
+>
+> Although there would be little reason for this with a sane protocol
+> versioning scheme.
+>
+> If we're agreed then I'll start on that BIP.
+>
+> ------------------------------
+> *From:* Gavin Andresen <gavinandresen at gmail.com>
+> *To:* Amir Taaki <zgenjix at yahoo.com>
+> *Sent:* Wednesday, November 2, 2011 9:34 PM
+> *Subject:* Re: [Bitcoin-development] Lock protocol version numbers
+>
+> Good idea.
+>
+> Sounds perfect for a BIP....
+>
+>
+> On Wed, Nov 2, 2011 at 5:23 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+> > Hey,
+> > Can we lock the version numbers to be the protocol version (which changes
+> > rarely) and instead use the sub_version_num field + revision number for
+> > individual builds?
+>
+> --
+> --
+> Gavin Andresen
+>
+>
+>
+>
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register now
+> http://p.sf.net/sfu/rsa-sfdev2dev1
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111102/6ae2fbe3/attachment.html>
+
+From luke at dashjr.org  Wed Nov  2 22:46:22 2011
+From: luke at dashjr.org (Luke-Jr)
+Date: Wed, 2 Nov 2011 18:46:22 -0400
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <1320273192.94365.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<CABsx9T0zUCu2RFC0Nc4URMtu060wyHMaebEM87in=NSiNbp=rw@mail.gmail.com>
+	<1320273192.94365.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+Message-ID: <201111021846.23887.luke@dashjr.org>
+
+On Wednesday, November 02, 2011 6:33:12 PM Amir Taaki wrote:
+> "Satoshi 0.5"
+
+What is "Satoshi 0.5" anyway? 0.5's server is bitcoind and GUI is Bitcoin-Qt; 
+the wx GUI client is gone, which is more or less what "Satoshi" referred to in 
+the past...
+
+
+
+From zgenjix at yahoo.com  Wed Nov  2 22:55:27 2011
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Wed, 2 Nov 2011 15:55:27 -0700 (PDT)
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <201111021846.23887.luke@dashjr.org>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<CABsx9T0zUCu2RFC0Nc4URMtu060wyHMaebEM87in=NSiNbp=rw@mail.gmail.com>
+	<1320273192.94365.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+	<201111021846.23887.luke@dashjr.org>
+Message-ID: <1320274527.19224.YahooMailNeo@web121010.mail.ne1.yahoo.com>
+
+Bitcoin is the protocol. The client protocol identifier needs a unique name. It is not a public name that anybody ever sees except protocol developers.
+
+For instance with libbitcoin, there might be several clients using it, but they'd all have the same protocol identifier.
+
+I think calling it Satoshi is apt homage to the person who made the original client reference protocol.
+
+Satoshi
+BitcoinCommunityOriginal
+...
+
+Take your pick.
+
+
+
+________________________________
+From: Luke-Jr <luke at dashjr.org>
+To: "bitcoin-development at lists.sourceforge.net" <bitcoin-development at lists.sourceforge.net>
+Cc: Amir Taaki <zgenjix at yahoo.com>
+Sent: Wednesday, November 2, 2011 10:46 PM
+Subject: Re: [Bitcoin-development] Lock protocol version numbers
+
+On Wednesday, November 02, 2011 6:33:12 PM Amir Taaki wrote:
+> "Satoshi 0.5"
+
+What is "Satoshi 0.5" anyway? 0.5's server is bitcoind and GUI is Bitcoin-Qt; 
+the wx GUI client is gone, which is more or less what "Satoshi" referred to in 
+the past...
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111102/bf8785d4/attachment.html>
+
+From zgenjix at yahoo.com  Wed Nov  2 22:58:43 2011
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Wed, 2 Nov 2011 15:58:43 -0700 (PDT)
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <CALxbBHVgr+RD8T2NbZsrySPrL8OFtD8V7OHXfaOHrKfC8_nSnw@mail.gmail.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<CABsx9T0zUCu2RFC0Nc4URMtu060wyHMaebEM87in=NSiNbp=rw@mail.gmail.com>
+	<1320273192.94365.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+	<CALxbBHVgr+RD8T2NbZsrySPrL8OFtD8V7OHXfaOHrKfC8_nSnw@mail.gmail.com>
+Message-ID: <1320274723.40397.YahooMailNeo@web121017.mail.ne1.yahoo.com>
+
+Cool thread. I enjoyed reading that :) Thanks for sharing.
+
+
+________________________________
+From: Christian Decker <decker.christian at gmail.com>
+To: Amir Taaki <zgenjix at yahoo.com>
+Cc: "bitcoin-development at lists.sourceforge.net" <bitcoin-development at lists.sourceforge.net>
+Sent: Wednesday, November 2, 2011 10:42 PM
+Subject: Re: [Bitcoin-development] Lock protocol version numbers
+
+
+Just for reference: https://github.com/bitcoin/bitcoin/pull/63
+The issue resulted in my most useless pull request fixing two variables :-)
+
+I second the use of sub_version_num as a Client and Version identifier.
+
+Regards,
+Chris
+
+
+On Wed, Nov 2, 2011 at 11:33 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+
+Point taken.
+>
+>
+>About the sub_version_num though. I prefer to let the field by defined clients however they wish, with just a guideline suggestion that IDENTIFIER VERSION is a format they should follow.
+>
+>
+>The idea being that different projects would have different release scheduling schemes and it'd be restrictive to lock people into the popular major.minor system.
+>
+>
+>So for the current bitcoin to find out the version number of other clients (if it was needed), it would have to parse the number from the string:
+>
+>
+>"Satoshi 0.5"
+>
+>
+>Although there would be little reason for this with a sane protocol versioning scheme.
+>
+>
+>If we're agreed then I'll start on that BIP.
+>
+>
+>
+>________________________________
+>From: Gavin Andresen <gavinandresen at gmail.com>
+>To: Amir Taaki <zgenjix at yahoo.com>
+>Sent: Wednesday, November 2, 2011 9:34 PM
+>Subject: Re: [Bitcoin-development] Lock protocol version numbers
+>
+>Good idea.
+>
+>Sounds perfect for a BIP....
+>
+>
+>On Wed, Nov 2, 2011 at 5:23 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+>> Hey,
+>> Can we lock the version numbers to be the protocol version (which changes
+>> rarely) and instead use the sub_version_num field + revision number for
+>> individual builds?
+>
+>-- 
+>--
+>Gavin Andresen
+>
+>
+>
+>------------------------------------------------------------------------------
+>RSA(R) Conference 2012
+>Save $700 by Nov 18
+>Register now
+>http://p.sf.net/sfu/rsa-sfdev2dev1
+>_______________________________________________
+>Bitcoin-development mailing list
+>Bitcoin-development at lists.sourceforge.net
+>https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111102/12e3637a/attachment.html>
+
+From luke at dashjr.org  Wed Nov  2 23:07:45 2011
+From: luke at dashjr.org (Luke-Jr)
+Date: Wed, 2 Nov 2011 19:07:45 -0400
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <1320274527.19224.YahooMailNeo@web121010.mail.ne1.yahoo.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<201111021846.23887.luke@dashjr.org>
+	<1320274527.19224.YahooMailNeo@web121010.mail.ne1.yahoo.com>
+Message-ID: <201111021907.46512.luke@dashjr.org>
+
+On Wednesday, November 02, 2011 6:55:27 PM Amir Taaki wrote:
+> I think calling it Satoshi is apt homage to the person who made the
+> original client reference protocol.
+
+My point is that the "Satoshi client" was the wxWidgets client, which was 
+retired by 0.5.
+
+
+
+From decker.christian at gmail.com  Wed Nov  2 23:22:38 2011
+From: decker.christian at gmail.com (Christian Decker)
+Date: Thu, 3 Nov 2011 00:22:38 +0100
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <201111021907.46512.luke@dashjr.org>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<201111021846.23887.luke@dashjr.org>
+	<1320274527.19224.YahooMailNeo@web121010.mail.ne1.yahoo.com>
+	<201111021907.46512.luke@dashjr.org>
+Message-ID: <CALxbBHV8K7CF34obMLsHnpmi65sMY3ra=JnGX00MkpYZmSo0xQ@mail.gmail.com>
+
+The mainline client (independently from the GUI) has been referenced to as
+"Satoshi" client. I personally like the name as a homage, but I guess it
+all comes down to the decision of the maintainers.
+
+Regards,
+Chris
+
+On Thu, Nov 3, 2011 at 12:07 AM, Luke-Jr <luke at dashjr.org> wrote:
+
+> On Wednesday, November 02, 2011 6:55:27 PM Amir Taaki wrote:
+> > I think calling it Satoshi is apt homage to the person who made the
+> > original client reference protocol.
+>
+> My point is that the "Satoshi client" was the wxWidgets client, which was
+> retired by 0.5.
+>
+>
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register now
+> http://p.sf.net/sfu/rsa-sfdev2dev1
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111103/fe144b63/attachment.html>
+
+From jgarzik at exmulti.com  Thu Nov  3 04:46:12 2011
+From: jgarzik at exmulti.com (Jeff Garzik)
+Date: Thu, 3 Nov 2011 00:46:12 -0400
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <CALxbBHV8K7CF34obMLsHnpmi65sMY3ra=JnGX00MkpYZmSo0xQ@mail.gmail.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<201111021846.23887.luke@dashjr.org>
+	<1320274527.19224.YahooMailNeo@web121010.mail.ne1.yahoo.com>
+	<201111021907.46512.luke@dashjr.org>
+	<CALxbBHV8K7CF34obMLsHnpmi65sMY3ra=JnGX00MkpYZmSo0xQ@mail.gmail.com>
+Message-ID: <CA+8xBpcYZAr3WVJh_E3e9vDosTve1wdnaRmrAE3=moeM0-G51w@mail.gmail.com>
+
+On Wed, Nov 2, 2011 at 7:22 PM, Christian Decker
+<decker.christian at gmail.com> wrote:
+> The mainline client (independently from the GUI) has been referenced to as
+> "Satoshi" client. I personally like the name as a homage, but I guess it all
+> comes down to the decision of the maintainers.
+
+That's how I take it to mean:  "satoshi client" is the client
+-started- by satoshi, that is actively distributed through
+github.com/bitcoin/bitcoin and bitcoin.org-linked downloads.  Changing
+to QT doesn't change the lingo.
+
+-- 
+Jeff Garzik
+exMULTI, Inc.
+jgarzik at exmulti.com
+
+
+
+From gavinandresen at gmail.com  Fri Nov  4 18:08:00 2011
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Fri, 4 Nov 2011 14:08:00 -0400
+Subject: [Bitcoin-development] Please help sanity test: Linux/Windows
+	0.5.0rc2 binaries
+Message-ID: <CABsx9T0FWqPAXFZMkWMvsL9OsZTWcjai8c2OVuEbX0oDtqUW1g@mail.gmail.com>
+
+I tagged v0.5.0rc2 this morning (then Luke hit me upside the head and
+I tagged it again because I messed up).
+
+Gitian-built binaries are uploaded to:
+  https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.5.0/test/
+
+I sanity-tested the windows setup.exe in an XP virtual machine, it
+installs and runs nicely. I'm about to run out; if somebody can sanity
+test the windows .zip and the 32/64 bit Linux .tar.gz I'd much
+appreciate it.
+
+shasums for the uploads are:
+  df994f18b6b715f6e0451b98b55ddd1946f2f353  bitcoin-0.5.0-win32-setup.exe
+  bfbad8acae987467976d535e48653ac7e28c6c76  bitcoin-0.5.0rc2-linux.tar.gz
+  fb2cfd2d8ad45269025a4604c679364a934796b4  bitcoin-0.5.0rc2-win32.zip
+
+Mac builds will be delayed a bit; there are issues creating a standalone .app.
+
+shasums of my v0.5.0rc2 gitian.zips:
+  f1fa954d179c65d1043438b78fcde8237874b9e1  bitcoin-0.5.0rc2-linux-gitian.zip
+  cec50f4b5d7222e475466143eb9e37aae026a582  bitcoin-0.5.0rc2-win32-gitian.zip
+
+
+-- 
+--
+Gavin Andresen
+
+
+
+From gavinandresen at gmail.com  Fri Nov  4 21:29:09 2011
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Fri, 4 Nov 2011 17:29:09 -0400
+Subject: [Bitcoin-development] Please help sanity test: Linux/Windows
+	0.5.0rc2 binaries
+In-Reply-To: <CABsx9T0FWqPAXFZMkWMvsL9OsZTWcjai8c2OVuEbX0oDtqUW1g@mail.gmail.com>
+References: <CABsx9T0FWqPAXFZMkWMvsL9OsZTWcjai8c2OVuEbX0oDtqUW1g@mail.gmail.com>
+Message-ID: <CABsx9T0wzyCJBTZz=UqX-gXLEaM6krgZeVqhN5089WbvCLjTJA@mail.gmail.com>
+
+If you wonder where the bitcoin-0.5.0rc2-linux.tar.gz went...
+
+I removed it because it is not sane (we need to teach the Qt build to
+statically link dependencies).
+
+Once the Mac and Linux deployment issues are fixed, expect a release
+candidate 3...
+
+-- 
+--
+Gavin Andresen
+
+
+
+From dhuff at jrbobdobbs.org  Fri Nov  4 21:35:05 2011
+From: dhuff at jrbobdobbs.org (Douglas Huff)
+Date: Fri, 4 Nov 2011 16:35:05 -0500
+Subject: [Bitcoin-development] Please help sanity test: Linux/Windows
+	0.5.0rc2 binaries
+In-Reply-To: <CABsx9T0wzyCJBTZz=UqX-gXLEaM6krgZeVqhN5089WbvCLjTJA@mail.gmail.com>
+References: <CABsx9T0FWqPAXFZMkWMvsL9OsZTWcjai8c2OVuEbX0oDtqUW1g@mail.gmail.com>
+	<CABsx9T0wzyCJBTZz=UqX-gXLEaM6krgZeVqhN5089WbvCLjTJA@mail.gmail.com>
+Message-ID: <7C8BD633-5F93-457B-93EC-6E72B09A5D17@jrbobdobbs.org>
+
+What's wrong with the mac build? I just built on 10.7 without any issues.
+
+-- 
+Douglas Huff
+
+On Nov 4, 2011, at 4:29 PM, Gavin Andresen wrote:
+
+> If you wonder where the bitcoin-0.5.0rc2-linux.tar.gz went...
+> 
+> I removed it because it is not sane (we need to teach the Qt build to
+> statically link dependencies).
+> 
+> Once the Mac and Linux deployment issues are fixed, expect a release
+> candidate 3...
+> 
+> -- 
+> --
+> Gavin Andresen
+> 
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register now
+> http://p.sf.net/sfu/rsa-sfdev2dev1
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 801 bytes
+Desc: Message signed with OpenPGP using GPGMail
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111104/61362829/attachment.sig>
+
+From mike at plan99.net  Sat Nov  5 14:32:07 2011
+From: mike at plan99.net (Mike Hearn)
+Date: Sat, 5 Nov 2011 15:32:07 +0100
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+Message-ID: <CANEZrP1OpuE1AHj1ARsGSkpkAwUQAr1_JaU=i4pjyERO6__+1A@mail.gmail.com>
+
+BitCoinJ already sets the subver field to its name and version.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111105/74b02677/attachment.html>
+
+From decker.christian at gmail.com  Sat Nov  5 14:45:54 2011
+From: decker.christian at gmail.com (Christian Decker)
+Date: Sat, 5 Nov 2011 15:45:54 +0100
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <CANEZrP1OpuE1AHj1ARsGSkpkAwUQAr1_JaU=i4pjyERO6__+1A@mail.gmail.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<CANEZrP1OpuE1AHj1ARsGSkpkAwUQAr1_JaU=i4pjyERO6__+1A@mail.gmail.com>
+Message-ID: <CALxbBHXRWjdpttLeGcPrdd4uwVs=kg4QL5Q4fmBghfxTA60Kag@mail.gmail.com>
+
+On BitDroid I stopped updating the protocol version at 31700 and set the
+string to be both Version and Client, just like BitcoinJ :-)
+
+On Sat, Nov 5, 2011 at 3:32 PM, Mike Hearn <mike at plan99.net> wrote:
+
+> BitCoinJ already sets the subver field to its name and version.
+>
+>
+>
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register now
+> http://p.sf.net/sfu/rsa-sfdev2dev1
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111105/2a3d286f/attachment.html>
+
+From zgenjix at yahoo.com  Sat Nov  5 15:39:49 2011
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Sat, 5 Nov 2011 08:39:49 -0700 (PDT)
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <1320507570.40074.YahooMailNeo@web121017.mail.ne1.yahoo.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<CANEZrP1OpuE1AHj1ARsGSkpkAwUQAr1_JaU=i4pjyERO6__+1A@mail.gmail.com>
+	<CALxbBHXRWjdpttLeGcPrdd4uwVs=kg4QL5Q4fmBghfxTA60Kag@mail.gmail.com>
+	<1320507570.40074.YahooMailNeo@web121017.mail.ne1.yahoo.com>
+Message-ID: <1320507589.87534.YahooMailNeo@web121019.mail.ne1.yahoo.com>
+
+>From talking with Patrick Strateman (phantomcircuit), he suggested this idea (which I will elaborate more on in the BIP):
+
+
+User-agent strings are a good starting point, however they aren't easy for parsing so we'll make a small modification to them.
+
+We need a hierarchy from protocol, variant, gui, flavour, build
+
+/Satoshi:314700/bitcoin-qt:0.4/
+
+How does that sound? In BitcoinJ's case:
+
+/BitcoinJ:0.2/AndroidBuild:0.8/
+
+Thoughts:
+
+- Do we need a freely defined comments field?
+
+/BitcoinJ:0.2[iPad; U; CPU OS 3_2_1]/AndroidBuild:0.8/
+/Satoshi:314700/bitcoin-qt:0.4[Ubuntu Oneiric]/
+
+
+
+________________________________
+From: Christian Decker <decker.christian at gmail.com>
+To: Mike Hearn <mike at plan99.net>
+Cc: Amir Taaki <zgenjix at yahoo.com>; "bitcoin-development at lists.sourceforge.net" <bitcoin-development at lists.sourceforge.net>
+Sent: Saturday, November 5, 2011 2:45 PM
+Subject: Re: [Bitcoin-development] Lock protocol version numbers
+
+
+On BitDroid I stopped updating the protocol version at 31700 and set the string to be both Version and Client, just like BitcoinJ :-)
+
+
+On Sat, Nov 5, 2011 at 3:32 PM, Mike Hearn <mike at plan99.net> wrote:
+
+BitCoinJ already sets the subver field to its name and version.
+>
+>
+>------------------------------------------------------------------------------
+>RSA(R) Conference 2012
+>Save $700 by Nov 18
+>Register now
+>http://p.sf.net/sfu/rsa-sfdev2dev1
+>_______________________________________________
+>Bitcoin-development mailing list
+>Bitcoin-development at lists.sourceforge.net
+>https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111105/c39c56c9/attachment.html>
+
+From decker.christian at gmail.com  Sat Nov  5 16:17:58 2011
+From: decker.christian at gmail.com (Christian Decker)
+Date: Sat, 5 Nov 2011 17:17:58 +0100
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <1320507589.87534.YahooMailNeo@web121019.mail.ne1.yahoo.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<CANEZrP1OpuE1AHj1ARsGSkpkAwUQAr1_JaU=i4pjyERO6__+1A@mail.gmail.com>
+	<CALxbBHXRWjdpttLeGcPrdd4uwVs=kg4QL5Q4fmBghfxTA60Kag@mail.gmail.com>
+	<1320507570.40074.YahooMailNeo@web121017.mail.ne1.yahoo.com>
+	<1320507589.87534.YahooMailNeo@web121019.mail.ne1.yahoo.com>
+Message-ID: <CALxbBHWYdt_LRQE5K=36fXNNSqyGVSyYwxi2-p8mxQaei5LCZg@mail.gmail.com>
+
+Sorry for shooting this approach down, but I'm against it. User-agent
+strings are an extremely bad idea as it would lead developers to start
+making communication choices depending on the client type. User-Agents in
+HTTP are only useful if the clients (browsers) do not adhere to a well
+defined behavior. I see the version string more as a kind of vanity point
+(xyz peers are using my network code) and it would be bad to base choices
+on it.
+For protocol choices we already have a good mechanism in place (nServices)
+to negotiate capabilities.
+
+I for one vote for keeping it as simple as possible, just a simple string,
+without any further meaning.
+
+On Sat, Nov 5, 2011 at 4:39 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+
+> From talking with Patrick Strateman (phantomcircuit), he suggested this
+> idea (which I will elaborate more on in the BIP):
+>
+> User-agent strings are a good starting point, however they aren't easy for
+> parsing so we'll make a small modification to them.
+>
+> We need a hierarchy from protocol, variant, gui, flavour, build
+>
+> /Satoshi:314700/bitcoin-qt:0.4/
+>
+> How does that sound? In BitcoinJ's case:
+>
+> /BitcoinJ:0.2/AndroidBuild:0.8/
+>
+> Thoughts:
+>
+> - Do we need a freely defined comments field?
+>
+> /BitcoinJ:0.2[iPad; U; CPU OS 3_2_1]/AndroidBuild:0.8/
+> /Satoshi:314700/bitcoin-qt:0.4[Ubuntu Oneiric]/
+>
+> ------------------------------
+> *From:* Christian Decker <decker.christian at gmail.com>
+> *To:* Mike Hearn <mike at plan99.net>
+> *Cc:* Amir Taaki <zgenjix at yahoo.com>; "
+> bitcoin-development at lists.sourceforge.net" <
+> bitcoin-development at lists.sourceforge.net>
+> *Sent:* Saturday, November 5, 2011 2:45 PM
+> *Subject:* Re: [Bitcoin-development] Lock protocol version numbers
+>
+> On BitDroid I stopped updating the protocol version at 31700 and set the
+> string to be both Version and Client, just like BitcoinJ :-)
+>
+> On Sat, Nov 5, 2011 at 3:32 PM, Mike Hearn <mike at plan99.net> wrote:
+>
+> BitCoinJ already sets the subver field to its name and version.
+>
+>
+>
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register now
+> http://p.sf.net/sfu/rsa-sfdev2dev1
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+>
+>
+>
+>
+>
+>
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register now
+> http://p.sf.net/sfu/rsa-sfdev2dev1
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111105/12fa49fd/attachment.html>
+
+From luke at dashjr.org  Sat Nov  5 16:29:15 2011
+From: luke at dashjr.org (Luke-Jr)
+Date: Sat, 5 Nov 2011 12:29:15 -0400
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <CALxbBHWYdt_LRQE5K=36fXNNSqyGVSyYwxi2-p8mxQaei5LCZg@mail.gmail.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<1320507589.87534.YahooMailNeo@web121019.mail.ne1.yahoo.com>
+	<CALxbBHWYdt_LRQE5K=36fXNNSqyGVSyYwxi2-p8mxQaei5LCZg@mail.gmail.com>
+Message-ID: <201111051229.16790.luke@dashjr.org>
+
+On Saturday, November 05, 2011 12:17:58 PM Christian Decker wrote:
+> Sorry for shooting this approach down, but I'm against it. User-agent
+> strings are an extremely bad idea as it would lead developers to start
+> making communication choices depending on the client type.
+
+This can be necessary in some cases. What happens when some popular client is 
+found with a subtle bug, and cannot otherwise be differentiated from other 
+similar-functionality clients? I have found User-Agent very valuable when 
+dealing with the wide variety of miner bugs when I have enabled new 
+functionality/behaviour on Eligius.
+
+
+
+From zgenjix at yahoo.com  Sat Nov  5 16:40:12 2011
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Sat, 5 Nov 2011 09:40:12 -0700 (PDT)
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <201111051229.16790.luke@dashjr.org>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<1320507589.87534.YahooMailNeo@web121019.mail.ne1.yahoo.com>
+	<CALxbBHWYdt_LRQE5K=36fXNNSqyGVSyYwxi2-p8mxQaei5LCZg@mail.gmail.com>
+	<201111051229.16790.luke@dashjr.org>
+Message-ID: <1320511212.70648.YahooMailNeo@web121017.mail.ne1.yahoo.com>
+
+
+
+On Saturday, November 05, 2011 12:17:58 PM Christian Decker wrote:
+>> Sorry for shooting this approach down, but I'm against it. User-agent
+>> strings are an extremely bad idea as it would lead developers to start
+>> making communication choices depending on the client type.
+> This can be necessary in some cases. What happens when some popular client is 
+> found with a subtle bug, and cannot otherwise be differentiated from other 
+> similar-functionality clients? I have found User-Agent very valuable when 
+> dealing with the wide variety of miner bugs when I have enabled new 
+> functionality/behaviour on Eligius.
+
+I can agree with this point though. If clients break the network protocol/do not comply properly with it, they should be disconnected and shunned. Hard love. We don't want any ambiguity in the protocol.
+
+Fail hard and fast.
+
+However my feeling about the user-agent string is that it is a vanity item, but here we'd be enforcing a format that everybody can understand and read. Lets say with libbitcoin- I'm sure that users of libbitcoin would like to have their client name in the string somehow. This was we can quickly understand which code-bases are being used and all the variants that exist build on those code-bases.
+
+Together with system information (how many Linux users are there?) and various system settings (how many 32bit users are there), and so on.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111105/ba67e2f1/attachment.html>
+
+From jordanmack at parhelic.com  Sat Nov  5 17:30:02 2011
+From: jordanmack at parhelic.com (Jordan Mack)
+Date: Sat, 05 Nov 2011 10:30:02 -0700
+Subject: [Bitcoin-development] Lock protocol version numbers
+In-Reply-To: <1320511212.70648.YahooMailNeo@web121017.mail.ne1.yahoo.com>
+References: <1320268981.72296.YahooMailNeo@web121003.mail.ne1.yahoo.com>
+	<1320507589.87534.YahooMailNeo@web121019.mail.ne1.yahoo.com>
+	<CALxbBHWYdt_LRQE5K=36fXNNSqyGVSyYwxi2-p8mxQaei5LCZg@mail.gmail.com>
+	<201111051229.16790.luke@dashjr.org>
+	<1320511212.70648.YahooMailNeo@web121017.mail.ne1.yahoo.com>
+Message-ID: <4EB5729A.7090205@parhelic.com>
+
+ > If clients break the network protocol/do not comply properly with it,
+ > they should be disconnected and shunned. Hard love. We don't want any
+ > ambiguity in the protocol.
+
+ > However my feeling about the user-agent string is that it is a vanity
+ > item, but here we'd be enforcing a format that everybody can
+ > understand and read.
+
+I agree with Amir completely on both these points.
+
+With something as critical as financial transactions, no exceptions can 
+be made. The reported client and version should be ignored completely. 
+If a client does not comply with the protocol, they must be rejected 
+outright.
+
+It is not in the best interest, or ability, to attempt to micromanage 
+how developers choose to use the information given. Recommendations and 
+guidelines can be made, but how they choose to implement is ultimately 
+their decision. In my opinion, clear and concise definition of the 
+protocol, and strict adherence in the mainline client, are the best 
+options available.
+
+The protocol version should be indicated so that it can properly be 
+handled. Neither the name of the client, or it's version, need to be 
+reported in this. Protocol validation should ignore this completely.
+
+I do not believe that leaving out the client name and version entirely 
+is the best option though. As silly as it may seem to some, vanity and 
+recognition are very strong motivators. We want to encourage more 
+supporters to the scene, not scare them away. The additional data 
+provided by this could also be used for calculating various statistics. 
+It sounds like BitcoinJ and BitDroid have already found ways of adding 
+it in anyway. I believe it is in the best interest of the developers to 
+formalize how this information will be included, and use it to their 
+advantage.
+
+TL;DR: Adhere strictly to the protocol, and reject clients that do not. 
+Add a user agent string of some kind, but keep it separate from the 
+protocol version.
+
+
+
+
+From zgenjix at yahoo.com  Sun Nov  6 01:05:21 2011
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Sat, 5 Nov 2011 18:05:21 -0700 (PDT)
+Subject: [Bitcoin-development] subvertx - bitcoin command line utilities
+Message-ID: <1320541521.79712.YahooMailNeo@web121001.mail.ne1.yahoo.com>
+
+Hey,
+
+Thought you might enjoy this/find it useful.
+
+https://bitcointalk.org/index.php?topic=50994.0
+
+Some tools for messing around with the network.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111105/0a7efae6/attachment.html>
+
+From pieter.wuille at gmail.com  Mon Nov  7 15:02:43 2011
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Mon, 7 Nov 2011 16:02:43 +0100
+Subject: [Bitcoin-development] Difficulty adjustment / time issues
+In-Reply-To: <CABsx9T2XLj4gZVPYodteaVCm0chR1n4WLUoSqB6+NnmWCDqHKQ@mail.gmail.com>
+References: <CABsx9T2XLj4gZVPYodteaVCm0chR1n4WLUoSqB6+NnmWCDqHKQ@mail.gmail.com>
+Message-ID: <20111107150240.GA26096@ulyssis.org>
+
+On Tue, Sep 13, 2011 at 11:06:37AM -0400, Gavin Andresen wrote:
+> Background:
+> 
+> Timejacking:
+>   http://culubas.blogspot.com/2011/05/timejacking-bitcoin_802.html
+> 
+> And a recent related exploit launched against the low-difficulty
+> alternative chains:
+>   https://bitcointalk.org/index.php?topic=43692.msg521772#msg521772
+
+Here is an idea for an alternative (simple but hacky) solution:
+* Keep all network rules as they are now.
+* The timestamp value of mutliple-of-2016-blocks is set equal to
+  the highest timestamp that occurred in the previous 11 blocks,
+  instead of the current time. This will always obey the previous
+  rules (it's always at least the median of the past 11 blocks,
+  and never more in the future than them).
+
+Initially, roll out software that only uses this new rule for
+block creation, but doesn't enforce it. When enough miners have
+upgraded, choose a point in the future where it becomes mandatory
+(causing a block chain split only for those creating blocks using
+old software).
+
+If i understand the problem correctly, this will prevent an attacker
+from introducing a time lapse in between the 2015-block windows.
+One problem i do see, is that it prevents X-Roll-Time for miners.
+Maybe a short interval (1 minute? 10 minutes?) instead of a fixed
+value could be allowed for the multiple-of-2016 blocks.
+
+Comments?
+
+-- 
+Pieter
+
+
+
+
+From luke at dashjr.org  Mon Nov  7 15:27:57 2011
+From: luke at dashjr.org (Luke-Jr)
+Date: Mon, 7 Nov 2011 10:27:57 -0500
+Subject: [Bitcoin-development] Difficulty adjustment / time issues
+In-Reply-To: <20111107150240.GA26096@ulyssis.org>
+References: <CABsx9T2XLj4gZVPYodteaVCm0chR1n4WLUoSqB6+NnmWCDqHKQ@mail.gmail.com>
+	<20111107150240.GA26096@ulyssis.org>
+Message-ID: <201111071027.58932.luke@dashjr.org>
+
+On Monday, November 07, 2011 10:02:43 AM Pieter Wuille wrote:
+> Maybe a short interval (1 minute? 10 minutes?) instead of a fixed
+> value could be allowed for the multiple-of-2016 blocks.
+
+Reminder that there is *already* a short interval only allowed for blocks in 
+general...
+
+
+
+From pieter.wuille at gmail.com  Mon Nov  7 15:43:21 2011
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Mon, 7 Nov 2011 16:43:21 +0100
+Subject: [Bitcoin-development] Difficulty adjustment / time issues
+In-Reply-To: <201111071027.58932.luke@dashjr.org>
+References: <CABsx9T2XLj4gZVPYodteaVCm0chR1n4WLUoSqB6+NnmWCDqHKQ@mail.gmail.com>
+	<20111107150240.GA26096@ulyssis.org>
+	<201111071027.58932.luke@dashjr.org>
+Message-ID: <20111107154319.GA9455@ulyssis.org>
+
+On Mon, Nov 07, 2011 at 10:27:57AM -0500, Luke-Jr wrote:
+> On Monday, November 07, 2011 10:02:43 AM Pieter Wuille wrote:
+> > Maybe a short interval (1 minute? 10 minutes?) instead of a fixed
+> > value could be allowed for the multiple-of-2016 blocks.
+> 
+> Reminder that there is *already* a short interval only allowed for blocks in 
+> general...
+
+In chains where no timejacking attack is going on, yes. In the common case
+the timestamp is limited to a range of [5 blocks in the past ... 2 hours in
+the future].
+
+However, during a timejacking attack, the timestamps of multiple-of-2016 blocks
+are essentially independent from the others. In such a case, most timestamps are
+very low, and only those of multiple-of-2016-blocks correspond to the current time.
+Each 2016*N-1 to 2016*N transition incurs an arbitrary large forward shift to the
+present time, each 2016*N to 2016*N+1 transition does a time shift backwards again
+that is allowed because the median allows single outliers. By fixing the timestamp
+occasionally more tightly to the maximum, instead of the median, no such time
+lapses are possible.
+
+Updated proposed rule: limit the timestamp of multiple-of-2016-blocks to
+[max(past 11 timestamps)+1 ... current_time+7200], essentially just using a maximum
+instead of a median. I believe that is enough to prevent the attack.
+
+-- 
+Pieter
+
+
+
+
+From gronager at ceptacle.com  Wed Nov  9 10:22:06 2011
+From: gronager at ceptacle.com (=?iso-8859-1?Q?Michael_Gr=F8nager?=)
+Date: Wed, 9 Nov 2011 11:22:06 +0100
+Subject: [Bitcoin-development] multisig, op_eval and lock_time/sequence...
+Message-ID: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+
+Hi All,
+
+Along with the multisig/op_eval BIPs (11/12) I am considering how the actual client functionality could be.
+
+Some of you might already have the solution for this - if not I would like to propose the following...
+
+Lets consider the 2 of 3 multisig - and lets say I now have some coins hence only redeemable using 2 key signatures. So when I want to spend them I would do:
+
+1. from client1 I issue a transaction containing one of the signatures, with a locktime e.g. 10 minutes from now and a sequence of 0. This transaction is now posted to the p2p network.
+
+2. client2 discovers the transaction and that it will affect its wallet. It hence modifies the transaction to includes also the second signature, changes the sequence to 0xFFFFFFFF=final and the lock_time to 0 and retransmits the transaction.
+
+3. The transaction is now valid and final and will be approved by the miners.
+
+However, for this setup to be possible, we need to reenable the replacement of transaction in the client....
+
+Anyone working on this now ?
+
+Alternatively, the transactions would need to be sent between clients using another protocol...
+
+Cheers,
+
+Michael
+
+
+
+
+
+From etotheipi at gmail.com  Wed Nov  9 14:43:37 2011
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Wed, 09 Nov 2011 09:43:37 -0500
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+Message-ID: <4EBA9199.7050201@gmail.com>
+
+That's what my proposal was for, in BIP 0010:
+
+https://github.com/genjix/bips/blob/master/bip-0010.md
+
+However, I just found a minor problem with it that should be addressed 
+if we want to enable super-lightweight clients that only sign tx's 
+without needing the blockchain.  Simply that the TxIns don't contain the 
+value of the TxOuts they are spending, which means the dumb tx-signers 
+with no blockchain can't tell how much input there is.  They can only 
+see the output values and recipients, which means they can't figure out 
+the tx fee, or how much money is in each of the TxIns they are signing.
+
+And most users/clients will have access to the blockchain, so it's not a 
+dealbreaker.  But it's something to consider.  Otherwise, I think this 
+is a big step towards bringing this complicatedprotocol a little closer 
+to Earth...
+
+
+
+
+
+
+On 11/09/2011 05:22 AM, Michael Gr?nager wrote:
+> Hi All,
+>
+> Along with the multisig/op_eval BIPs (11/12) I am considering how the actual client functionality could be.
+>
+> Some of you might already have the solution for this - if not I would like to propose the following...
+>
+> Lets consider the 2 of 3 multisig - and lets say I now have some coins hence only redeemable using 2 key signatures. So when I want to spend them I would do:
+>
+> 1. from client1 I issue a transaction containing one of the signatures, with a locktime e.g. 10 minutes from now and a sequence of 0. This transaction is now posted to the p2p network.
+>
+> 2. client2 discovers the transaction and that it will affect its wallet. It hence modifies the transaction to includes also the second signature, changes the sequence to 0xFFFFFFFF=final and the lock_time to 0 and retransmits the transaction.
+>
+> 3. The transaction is now valid and final and will be approved by the miners.
+>
+> However, for this setup to be possible, we need to reenable the replacement of transaction in the client....
+>
+> Anyone working on this now ?
+>
+> Alternatively, the transactions would need to be sent between clients using another protocol...
+>
+> Cheers,
+>
+> Michael
+>
+>
+>
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register now
+> http://p.sf.net/sfu/rsa-sfdev2dev1
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+
+From etotheipi at gmail.com  Wed Nov  9 15:22:57 2011
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Wed, 9 Nov 2011 10:22:57 -0500
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <4EBA9199.7050201@gmail.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+	<4EBA9199.7050201@gmail.com>
+Message-ID: <CALf2ePw2zcxrPFfQtJrDYSNWQ-rfNPv1R7LnH=8MHApe3_D1+Q@mail.gmail.com>
+
+Actually,  I'm not sure if your solution works,  because it relies on
+broadcasting a tx to the network that isn't valid.   I believe that the
+first tx in your proposal will be rejected and thus you'll need to exchange
+the tx's offline.
+
+However,  third-parties could pretty easily and conveniently host a service
+for this kind of exchange.
+
+--Sent from my overpriced smartphone
+On Nov 9, 2011 9:43 AM, "Alan Reiner" <etotheipi at gmail.com> wrote:
+
+> That's what my proposal was for, in BIP 0010:
+>
+> https://github.com/genjix/**bips/blob/master/bip-0010.md<https://github.com/genjix/bips/blob/master/bip-0010.md>
+>
+> However, I just found a minor problem with it that should be addressed if
+> we want to enable super-lightweight clients that only sign tx's without
+> needing the blockchain.  Simply that the TxIns don't contain the value of
+> the TxOuts they are spending, which means the dumb tx-signers with no
+> blockchain can't tell how much input there is.  They can only see the
+> output values and recipients, which means they can't figure out the tx fee,
+> or how much money is in each of the TxIns they are signing.
+>
+> And most users/clients will have access to the blockchain, so it's not a
+> dealbreaker.  But it's something to consider.  Otherwise, I think this is a
+> big step towards bringing this complicatedprotocol a little closer to
+> Earth...
+>
+>
+>
+>
+>
+>
+> On 11/09/2011 05:22 AM, Michael Gr?nager wrote:
+>
+>> Hi All,
+>>
+>> Along with the multisig/op_eval BIPs (11/12) I am considering how the
+>> actual client functionality could be.
+>>
+>> Some of you might already have the solution for this - if not I would
+>> like to propose the following...
+>>
+>> Lets consider the 2 of 3 multisig - and lets say I now have some coins
+>> hence only redeemable using 2 key signatures. So when I want to spend them
+>> I would do:
+>>
+>> 1. from client1 I issue a transaction containing one of the signatures,
+>> with a locktime e.g. 10 minutes from now and a sequence of 0. This
+>> transaction is now posted to the p2p network.
+>>
+>> 2. client2 discovers the transaction and that it will affect its wallet.
+>> It hence modifies the transaction to includes also the second signature,
+>> changes the sequence to 0xFFFFFFFF=final and the lock_time to 0 and
+>> retransmits the transaction.
+>>
+>> 3. The transaction is now valid and final and will be approved by the
+>> miners.
+>>
+>> However, for this setup to be possible, we need to reenable the
+>> replacement of transaction in the client....
+>>
+>> Anyone working on this now ?
+>>
+>> Alternatively, the transactions would need to be sent between clients
+>> using another protocol...
+>>
+>> Cheers,
+>>
+>> Michael
+>>
+>>
+>>
+>> ------------------------------**------------------------------**
+>> ------------------
+>> RSA(R) Conference 2012
+>> Save $700 by Nov 18
+>> Register now
+>> http://p.sf.net/sfu/rsa-**sfdev2dev1 <http://p.sf.net/sfu/rsa-sfdev2dev1>
+>> ______________________________**_________________
+>> Bitcoin-development mailing list
+>> Bitcoin-development at lists.**sourceforge.net<Bitcoin-development at lists.sourceforge.net>
+>> https://lists.sourceforge.net/**lists/listinfo/bitcoin-**development<https://lists.sourceforge.net/lists/listinfo/bitcoin-development>
+>>
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111109/5d8a635d/attachment.html>
+
+From gavinandresen at gmail.com  Wed Nov  9 19:13:54 2011
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Wed, 9 Nov 2011 14:13:54 -0500
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+Message-ID: <CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+
+> 1. from client1 I issue a transaction containing one of the signatures, with a locktime e.g. 10 minutes from now and a sequence of 0. This transaction is now posted to the p2p network.
+
+As Alan said, that won't work-- it will not be relayed across the
+network because it isn't a valid transaction until it has enough
+signatures.
+
+> Alternatively, the transactions would need to be sent between clients using another protocol...
+
+Formats and protocols for gathering signatures are in the TODO
+category-- Alan's BIP 10 is the next piece of the puzzle, maybe a
+standardized http/https RESTful API, or HTTP/JSON, or protocol buffers
+and raw sockets, or... something... solution (or solutions) built on
+top of that makes sense.
+
+I don't think partially-signed transactions belong on the main Bitcoin
+P2P network, mostly because I don't see any way of preventing somebody
+from endlessly spamming bogus, will-never-be-completed partial
+transactions just to be annoying.
+
+-- 
+--
+Gavin Andresen
+
+
+
+From gavinandresen at gmail.com  Wed Nov  9 20:02:23 2011
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Wed, 9 Nov 2011 15:02:23 -0500
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+Message-ID: <CABsx9T3ESoZ21h_V0a8PZAN4MS+KRZ8eVjKc47p9wgJmH0jt-g@mail.gmail.com>
+
+> I don't think partially-signed transactions belong on the main Bitcoin
+> P2P network, mostly because I don't see any way of preventing somebody
+> from endlessly spamming bogus, will-never-be-completed partial
+> transactions just to be annoying.
+
+... of course I write that and then start thinking about ways you
+COULD use the P2P network to distribute signatures, maybe by
+broadcasting (and paying fees for) complete transactions that contain
+extra signatures for the transaction that you want to sign.
+
+Here's a half-baked idea that might be brilliant or stupid:
+
++ Start with an escrow transaction, with 3 public keys.  I own one of the keys.
++ I broadcast a 'fee-only' transaction that pays 0 bitcoins to the key
+I own. But I add extra data to the scriptSig; something like:
+
+scriptSig:  <escrow_signature> <serialized_escrow_transaction> <sig> <pubkey>
+scriptPubKey: ...standard DUP HASH160 <pubkeyhash> ...etc
+nValue: 0
+
+The other parties to the escrow transaction could monitor the
+block-chain for transactions to my <pubkeyhash>, and get the signature
+and proposed "spend the funds in escrow" transaction from the
+scriptSig.
+
+.......
+
+"But won't that gunk up the block chain with more data?"
+
+Yup.  But the parties to the transaction will have to pay for the
+extra data they're including.
+
+And everything in the scriptSigs can, theoretically, be forgotten (or
+never sent) to most nodes on the network once the transaction is spent
+and is buried deep enough in the block chain.  (a nValue=0 transaction
+can be considered 'immediately spent').
+
+"Can you really put arbitrary stuff in the scriptSig?"
+
+Yup.  The IsStandard() check today allows up to 200 bytes, which
+wouldn't be enough for an extra signature and <serialized
+transaction>.
+
+The standard <sig> <pubkey> is about 150 bytes; part of the
+multi-signature proposal will be increasing that to 500 bytes to
+accomodate 3-signatures transactions.  A simple 1-input-1-output
+<serialized transaction> would be around 50 bytes or so.
+
+"Wouldn't it be cheaper/better to NOT use the block chain to
+distribute signatures?"
+
+Yup. The only advantage I see is it might be more anonymous to use the
+blockchain instead of directly connecting to, and finding out the IP
+address of, the parties involved in the transaction.
+
+
+-- 
+--
+Gavin Andresen
+
+
+
+From gronager at ceptacle.com  Wed Nov  9 20:03:44 2011
+From: gronager at ceptacle.com (=?iso-8859-1?Q?Michael_Gr=F8nager?=)
+Date: Wed, 9 Nov 2011 21:03:44 +0100
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+Message-ID: <200034A7-15F9-438F-A6B1-923A69348F55@ceptacle.com>
+
+Hi Gavin / Alan,
+
+Agree that we would also need to consider these "half" transaction valid. At least for the time being up to the lock_time, and one could have an extra constrain - that the lock_time should be within e.g. 30minutes that would avoid the will-never-be-completed cases.
+
+My main concern when it comes to introducing other protocols is that they might never be standard (I think a great number of clients will emerge - and this would be a thing to compete on). If it is part of the p2p network it will be a seamless standard and easy for everyone to use, even across different clients. But I share your concern on the 
+
+I can, however, also understand your worries, and some other constraints should be introduced to ensure that not even short time spamming is possible... 
+
+/M
+
+On 09/11/2011, at 20:13, Gavin Andresen wrote:
+
+>> 1. from client1 I issue a transaction containing one of the signatures, with a locktime e.g. 10 minutes from now and a sequence of 0. This transaction is now posted to the p2p network.
+> 
+> As Alan said, that won't work-- it will not be relayed across the
+> network because it isn't a valid transaction until it has enough
+> signatures.
+> 
+>> Alternatively, the transactions would need to be sent between clients using another protocol...
+> 
+> Formats and protocols for gathering signatures are in the TODO
+> category-- Alan's BIP 10 is the next piece of the puzzle, maybe a
+> standardized http/https RESTful API, or HTTP/JSON, or protocol buffers
+> and raw sockets, or... something... solution (or solutions) built on
+> top of that makes sense.
+> 
+> I don't think partially-signed transactions belong on the main Bitcoin
+> P2P network, mostly because I don't see any way of preventing somebody
+> from endlessly spamming bogus, will-never-be-completed partial
+> transactions just to be annoying.
+> 
+> -- 
+> --
+> Gavin Andresen
+
+
+
+
+From gronager at ceptacle.com  Wed Nov  9 20:31:44 2011
+From: gronager at ceptacle.com (=?iso-8859-1?Q?Michael_Gr=F8nager?=)
+Date: Wed, 9 Nov 2011 21:31:44 +0100
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <CABsx9T3ESoZ21h_V0a8PZAN4MS+KRZ8eVjKc47p9wgJmH0jt-g@mail.gmail.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+	<CABsx9T3ESoZ21h_V0a8PZAN4MS+KRZ8eVjKc47p9wgJmH0jt-g@mail.gmail.com>
+Message-ID: <E390E6EB-BE00-4F96-A4FB-05C39E2036BB@ceptacle.com>
+
+Crossing posts ;)
+
+I like your idea! - It adds a pricetag to distributing a signature - and - as you mention it will be part of the standard. It is only up to the clients if they want to support it or not, but it does give you 0-conf world wide instantaneous anonymously distribution of half-baked transactions...
+
+However, the parties will anyway need to know at least about each others public keys up front and hence the 0-conf might not be that important... Left is, as you said, some anonymity (not much extra though)...
+
+/M
+
+
+On 09/11/2011, at 21:02, Gavin Andresen wrote:
+
+>> I don't think partially-signed transactions belong on the main Bitcoin
+>> P2P network, mostly because I don't see any way of preventing somebody
+>> from endlessly spamming bogus, will-never-be-completed partial
+>> transactions just to be annoying.
+> 
+> ... of course I write that and then start thinking about ways you
+> COULD use the P2P network to distribute signatures, maybe by
+> broadcasting (and paying fees for) complete transactions that contain
+> extra signatures for the transaction that you want to sign.
+> 
+> Here's a half-baked idea that might be brilliant or stupid:
+> 
+> + Start with an escrow transaction, with 3 public keys.  I own one of the keys.
+> + I broadcast a 'fee-only' transaction that pays 0 bitcoins to the key
+> I own. But I add extra data to the scriptSig; something like:
+> 
+> scriptSig:  <escrow_signature> <serialized_escrow_transaction> <sig> <pubkey>
+> scriptPubKey: ...standard DUP HASH160 <pubkeyhash> ...etc
+> nValue: 0
+> 
+> The other parties to the escrow transaction could monitor the
+> block-chain for transactions to my <pubkeyhash>, and get the signature
+> and proposed "spend the funds in escrow" transaction from the
+> scriptSig.
+> 
+> .......
+> 
+> "But won't that gunk up the block chain with more data?"
+> 
+> Yup.  But the parties to the transaction will have to pay for the
+> extra data they're including.
+> 
+> And everything in the scriptSigs can, theoretically, be forgotten (or
+> never sent) to most nodes on the network once the transaction is spent
+> and is buried deep enough in the block chain.  (a nValue=0 transaction
+> can be considered 'immediately spent').
+> 
+> "Can you really put arbitrary stuff in the scriptSig?"
+> 
+> Yup.  The IsStandard() check today allows up to 200 bytes, which
+> wouldn't be enough for an extra signature and <serialized
+> transaction>.
+> 
+> The standard <sig> <pubkey> is about 150 bytes; part of the
+> multi-signature proposal will be increasing that to 500 bytes to
+> accomodate 3-signatures transactions.  A simple 1-input-1-output
+> <serialized transaction> would be around 50 bytes or so.
+> 
+> "Wouldn't it be cheaper/better to NOT use the block chain to
+> distribute signatures?"
+> 
+> Yup. The only advantage I see is it might be more anonymous to use the
+> blockchain instead of directly connecting to, and finding out the IP
+> address of, the parties involved in the transaction.
+> 
+> 
+> -- 
+> --
+> Gavin Andresen
+
+Michael Gronager, PhD
+Owner Ceptacle / NDGF Director, NORDUnet A/S
+Jens Juels Gade 33
+2100 Copenhagen E
+Mobile: +45 31 62 14 01
+E-mail: gronager at ceptacle.com
+
+
+
+
+
+From gavinandresen at gmail.com  Wed Nov  9 21:18:04 2011
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Wed, 9 Nov 2011 16:18:04 -0500
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <E390E6EB-BE00-4F96-A4FB-05C39E2036BB@ceptacle.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+	<CABsx9T3ESoZ21h_V0a8PZAN4MS+KRZ8eVjKc47p9wgJmH0jt-g@mail.gmail.com>
+	<E390E6EB-BE00-4F96-A4FB-05C39E2036BB@ceptacle.com>
+Message-ID: <CABsx9T2fGcLk477QagbyyPd3cFsOrLKRqG9_GKLf9nirh=Nocg@mail.gmail.com>
+
+One more thought on putting arbitrary stuff in the scriptSig:
+
+Miners could decide to revolt and remove the extra scriptSig
+information before including the transaction in their blocks. They'd
+still get the full transaction fee, and the transaction would still
+validate so the block would be accepted by everybody else.
+
+Come to think of it, if a node relaying transactions wanted to save
+bandwidth costs or be annoying, it could also strip off the extra
+information before forwarding it, so this isn't a reliable
+communication mechanism. It is probably a much better idea to use
+another protocol to gather signatures.
+
+-- 
+--
+Gavin Andresen
+
+
+
+From joel.kaartinen at gmail.com  Wed Nov  9 21:32:00 2011
+From: joel.kaartinen at gmail.com (Joel Joonatan Kaartinen)
+Date: Wed, 09 Nov 2011 23:32:00 +0200
+Subject: [Bitcoin-development] multisig,
+ op_eval and lock_time/sequence...
+In-Reply-To: <CABsx9T2fGcLk477QagbyyPd3cFsOrLKRqG9_GKLf9nirh=Nocg@mail.gmail.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+	<CABsx9T3ESoZ21h_V0a8PZAN4MS+KRZ8eVjKc47p9wgJmH0jt-g@mail.gmail.com>
+	<E390E6EB-BE00-4F96-A4FB-05C39E2036BB@ceptacle.com>
+	<CABsx9T2fGcLk477QagbyyPd3cFsOrLKRqG9_GKLf9nirh=Nocg@mail.gmail.com>
+Message-ID: <1320874320.27400.89.camel@mei>
+
+It's propably best to create a separate p2p network for off-band
+information like this. No need to involve the blockchain with it.
+
+- Joel
+
+On Wed, 2011-11-09 at 16:18 -0500, Gavin Andresen wrote:
+> One more thought on putting arbitrary stuff in the scriptSig:
+> 
+> Miners could decide to revolt and remove the extra scriptSig
+> information before including the transaction in their blocks. They'd
+> still get the full transaction fee, and the transaction would still
+> validate so the block would be accepted by everybody else.
+> 
+> Come to think of it, if a node relaying transactions wanted to save
+> bandwidth costs or be annoying, it could also strip off the extra
+> information before forwarding it, so this isn't a reliable
+> communication mechanism. It is probably a much better idea to use
+> another protocol to gather signatures.
+> 
+
+
+
+
+
+From theymos at mm.st  Wed Nov  9 22:13:36 2011
+From: theymos at mm.st (theymos)
+Date: Wed, 09 Nov 2011 16:13:36 -0600
+Subject: [Bitcoin-development] multisig,
+ op_eval and lock_time/sequence...
+In-Reply-To: <CABsx9T3ESoZ21h_V0a8PZAN4MS+KRZ8eVjKc47p9wgJmH0jt-g@mail.gmail.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com><CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+	<CABsx9T3ESoZ21h_V0a8PZAN4MS+KRZ8eVjKc47p9wgJmH0jt-g@mail.gmail.com>
+Message-ID: <1320876816.29760.140660996851709@webmail.messagingengine.com>
+
+For now I think requiring direct-connection negotiation is best for these kinds of things. A direct connection is OK in most cases, and more complicated schemes will be more likely to fail. Maybe the IP transactions protocol can be used.
+
+In the future, I imagine that users of ultra-lightweight clients will connect to a new P2P network built on top of the core Bitcoin network in order to receive block headers and info about sent/received transactions without leeching off of the few full nodes. This network could also be used for indirect transaction negotiation, which is similar to the goal of finding your own received transactions.
+
+On Wednesday, November 09, 2011 3:02 PM, "Gavin Andresen" <gavinandresen at gmail.com> wrote:
+> a nValue=0 transaction can be considered 'immediately spent'
+
+I believe it's possible to spend a 0-value output, so they can't be considered automatically spent.
+
+
+
+From etotheipi at gmail.com  Thu Nov 10 03:00:56 2011
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Wed, 09 Nov 2011 22:00:56 -0500
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <200034A7-15F9-438F-A6B1-923A69348F55@ceptacle.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+	<200034A7-15F9-438F-A6B1-923A69348F55@ceptacle.com>
+Message-ID: <4EBB3E68.6060402@gmail.com>
+
+The purpose of creating BIP 0010 now, is to encourage a standard that 
+developers /want/ to adopt, from the outset.  Every developer who is 
+planning to touch multi-signature transactions, is going to have to 
+solve the problem of multi-sig tx exchanges, eventually.  By offering an 
+excellent solution before they've started asking the question, there's a 
+good chance people will use it.   Hear me out...
+
+Protocols get fragmented when there's multiple competing ways to do 
+something, each having some advantages the others don't have.  This 
+leads to developers with differing priorities picking different ones, or 
+creating their own.   However, I believe that the problem BIP 0010 seeks 
+to solve is a fairly straightforward problem.  There's not a lot of 
+variety in the solutions that could compete against it.  People just 
+need a way to pass this data around, and they want it to be as 
+convenient to use, and as easy to implement as possible.  In that sense, 
+I think BIP 0010 (or some future variant) is fairly optimal as a 
+building block for higher-level protocols.
+
+If anyone has ideas for why someone would want to create a competing 
+idea to BIP 0010 (besides not being aware of it when they start), I'd 
+like to discuss it.  I'm fairly confident that any such ideas could just 
+be added to BIP 0010 and thus reset the question of why anyone would 
+need a competing idea.
+
+
+
+On 11/09/2011 03:03 PM, Michael Gr?nager wrote:
+> My main concern when it comes to introducing other protocols is that they might never be standard (I think a great number of clients will emerge - and this would be a thing to compete on). If it is part of the p2p network it will be a seamless standard and easy for everyone to use, even across different clients. But I share your concern on the
+>
+> /M
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111109/cad71620/attachment.html>
+
+From gronager at ceptacle.com  Thu Nov 10 09:55:55 2011
+From: gronager at ceptacle.com (=?iso-8859-1?Q?Michael_Gr=F8nager?=)
+Date: Thu, 10 Nov 2011 10:55:55 +0100
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <4EBB3E68.6060402@gmail.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+	<200034A7-15F9-438F-A6B1-923A69348F55@ceptacle.com>
+	<4EBB3E68.6060402@gmail.com>
+Message-ID: <CBFE8E7C-7A30-4450-A111-4EB413E068DF@ceptacle.com>
+
+Hi Alan,
+
+I have now read BIP0010 - one first idea is: add a link to it on the wiki (or remove all bip links from the wiki... - we don't want two places for BIPs...)
+
+I am not sure where you prefer the discussion on the content of the BIP - but now you get it here, but feel free to redirect...
+
+Likes:
+* inclusion of prevout txout scripts - could prove handy
+* that it is a proposal to do this similarly on all clients
+
+Dislikes:
+* the format - I guess I would prefer a normal JSON format - where the scripts gets populated step by step. As for the scriptPubKey (now an awful name...) it would be easy to just add it to the JSON, or have the prevouts simply be the actual txouts instead of {hash,n}.
+
+Comments:
+* it is good to have this proposal, but I think that once we see ways to communicate it they could very well radically steer how a format should look. Take e.g. the discussion we had with Gavin yesterday, if we had chosen to move in that direction BIP0010 would had been useless. So perhaps a bit premature?
+
+Cheers,
+
+Michael
+
+
+
+On 10/11/2011, at 04:00, Alan Reiner wrote:
+
+> The purpose of creating BIP 0010 now, is to encourage a standard that developers want to adopt, from the outset.  Every developer who is planning to touch multi-signature transactions, is going to have to solve the problem of multi-sig tx exchanges, eventually.  By offering an excellent solution before they've started asking the question, there's a good chance people will use it.   Hear me out...
+> 
+> Protocols get fragmented when there's multiple competing ways to do something, each having some advantages the others don't have.  This leads to developers with differing priorities picking different ones, or creating their own.   However, I believe that the problem BIP 0010 seeks to solve is a fairly straightforward problem.  There's not a lot of variety in the solutions that could compete against it.  People just need a way to pass this data around, and they want it to be as convenient to use, and as easy to implement as possible.  In that sense, I think BIP 0010 (or some future variant) is fairly optimal as a building block for higher-level protocols.  
+> 
+> If anyone has ideas for why someone would want to create a competing idea to BIP 0010 (besides not being aware of it when they start), I'd like to discuss it.  I'm fairly confident that any such ideas could just be added to BIP 0010 and thus reset the question of why anyone would need a competing idea.
+> 
+> 
+> 
+> On 11/09/2011 03:03 PM, Michael Gr?nager wrote:
+>> My main concern when it comes to introducing other protocols is that they might never be standard (I think a great number of clients will emerge - and this would be a thing to compete on). If it is part of the p2p network it will be a seamless standard and easy for everyone to use, even across different clients. But I share your concern on the 
+>> 
+>> /M
+>> 
+> 
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register now
+> http://p.sf.net/sfu/rsa-sfdev2dev1
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+Michael Gronager, PhD
+Owner Ceptacle / NDGF Director, NORDUnet A/S
+Jens Juels Gade 33
+2100 Copenhagen E
+Mobile: +45 31 62 14 01
+E-mail: gronager at ceptacle.com
+
+
+Michael Gronager, PhD
+Owner Ceptacle / NDGF Director, NORDUnet A/S
+Jens Juels Gade 33
+2100 Copenhagen E
+Mobile: +45 31 62 14 01
+E-mail: gronager at ceptacle.com
+
+
+
+
+
+From etotheipi at gmail.com  Thu Nov 10 12:56:45 2011
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Thu, 10 Nov 2011 07:56:45 -0500
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <CBFE8E7C-7A30-4450-A111-4EB413E068DF@ceptacle.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+	<200034A7-15F9-438F-A6B1-923A69348F55@ceptacle.com>
+	<4EBB3E68.6060402@gmail.com>
+	<CBFE8E7C-7A30-4450-A111-4EB413E068DF@ceptacle.com>
+Message-ID: <4EBBCA0D.9060906@gmail.com>
+
+Michael, thanks for taking time to read the proposal.  Responses are 
+inline, below.
+> I am not sure where you prefer the discussion on the content of the BIP - but now you get it here, but feel free to redirect...
+>
+> Likes:
+> * inclusion of prevout txout scripts - could prove handy
+> * that it is a proposal to do this similarly on all clients
+The txout scripts are not just handy, they /need/ to be included in the 
+txin scripts for signing.  By putting them there already, the parser 
+only has to blank out the others txins, add the hashcode, and pass it to 
+the ECDSA code for signing (if you're not familar with OP_CHECKSIG, see 
+my diagram here <https://bitcointalk.org/index.php?topic=29416.0>).  I 
+think this feature is *critical* to adoption, as it works for the most 
+lightweight clients that might not even contain blockheaders -- 
+everything you need to understand and sign the the transaction is 
+included (except for the txin values).
+
+For that reason, this doubles as a convenient way to do offline 
+wallets/signing:  you don't have to keep transporting 700 MB of 
+blockchain to the offline computer just so it can sign your transactions.
+> Dislikes:
+> * the format - I guess I would prefer a normal JSON format - where the scripts gets populated step by step. As for the scriptPubKey (now an awful name...) it would be easy to just add it to the JSON, or have the prevouts simply be the actual txouts instead of {hash,n}.
+I see the benefit of JSON for dynamic information with lots of optional 
+fields.  But this information is fairly static -- if there's extra 
+information developers need for this process, it can be added.  I don't 
+see a lot of variation in the amount/types of data to be included here.
+
+The core benefit follows PGP messages:  compact, easy-to-identify, 
+blocks of text, that can be included inline in an email as easily as it 
+can be supplied as a file/attachment, and only requires code that's 
+already available in a BTC developer toolbox.  I can even remove the 
+numsigs counter, as it's easy enough to search for the END-TXDP line.  
+Think about a non-developer opening a file and trying to identify it:  
+JSON looks like code, this looks like... "----BEGIN-TXDP---"  (now that 
+I think about it, "BEGIN-TRANSACTION-9fj3fsQ" might be better...)
+> Comments:
+> * it is good to have this proposal, but I think that once we see ways to communicate it they could very well radically steer how a format should look. Take e.g. the discussion we had with Gavin yesterday, if we had chosen to move in that direction BIP0010 would had been useless. So perhaps a bit premature?
+>
+If we start talking about in-blockchain techniques, I agree with you.  
+But If that idea is discarded, *all* out-of-band solutions are going to 
+require encoding this exact information somehow.  I think offering this 
+solution before developers start asking the question of how to do it is 
+exactly what's needed.
+
+-Alan
+> Cheers,
+>
+> Michael
+>
+>
+> On 10/11/2011, at 04:00, Alan Reiner wrote:
+>
+>> The purpose of creating BIP 0010 now, is to encourage a standard that developers want to adopt, from the outset.  Every developer who is planning to touch multi-signature transactions, is going to have to solve the problem of multi-sig tx exchanges, eventually.  By offering an excellent solution before they've started asking the question, there's a good chance people will use it.   Hear me out...
+>>
+>> Protocols get fragmented when there's multiple competing ways to do something, each having some advantages the others don't have.  This leads to developers with differing priorities picking different ones, or creating their own.   However, I believe that the problem BIP 0010 seeks to solve is a fairly straightforward problem.  There's not a lot of variety in the solutions that could compete against it.  People just need a way to pass this data around, and they want it to be as convenient to use, and as easy to implement as possible.  In that sense, I think BIP 0010 (or some future variant) is fairly optimal as a building block for higher-level protocols.
+>>
+>> If anyone has ideas for why someone would want to create a competing idea to BIP 0010 (besides not being aware of it when they start), I'd like to discuss it.  I'm fairly confident that any such ideas could just be added to BIP 0010 and thus reset the question of why anyone would need a competing idea.
+>>
+>>
+>>
+>> On 11/09/2011 03:03 PM, Michael Gr?nager wrote:
+>>> My main concern when it comes to introducing other protocols is that they might never be standard (I think a great number of clients will emerge - and this would be a thing to compete on). If it is part of the p2p network it will be a seamless standard and easy for everyone to use, even across different clients. But I share your concern on the
+>>>
+>>> /M
+>>>
+>> ------------------------------------------------------------------------------
+>> RSA(R) Conference 2012
+>> Save $700 by Nov 18
+>> Register now
+>> http://p.sf.net/sfu/rsa-sfdev2dev1
+>> _______________________________________________
+>> Bitcoin-development mailing list
+>> Bitcoin-development at lists.sourceforge.net
+>> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+> Michael Gronager, PhD
+> Owner Ceptacle / NDGF Director, NORDUnet A/S
+> Jens Juels Gade 33
+> 2100 Copenhagen E
+> Mobile: +45 31 62 14 01
+> E-mail: gronager at ceptacle.com
+>
+>
+> Michael Gronager, PhD
+> Owner Ceptacle / NDGF Director, NORDUnet A/S
+> Jens Juels Gade 33
+> 2100 Copenhagen E
+> Mobile: +45 31 62 14 01
+> E-mail: gronager at ceptacle.com
+>
+>
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111110/e0dfb1b0/attachment.html>
+
+From etotheipi at gmail.com  Thu Nov 10 16:11:19 2011
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Thu, 10 Nov 2011 11:11:19 -0500
+Subject: [Bitcoin-development] Wallet encryption issue
+Message-ID: <4EBBF7A7.8030708@gmail.com>
+
+Sorry guys, I just realized I should've posted this to the dev list 
+first, before/instead of putting it on the forums.
+
+    https://bitcointalk.org/index.php?topic=51474
+
+*I still have some of my private keys in plaintext. *I would guess that 
+BSDDB sometimes will "overwrite" data by just discarding a pointer to 
+the old data, and writing the replacement to a new location within the 
+file.  In that case, examining the file with a BSDDB library tool is not 
+going to find this problem.  You'll have to examine the raw binary file 
+as I did.  Instructions for verifying this problem are in the post.
+
+Can someone please verify that this is a real problem?  (and should we 
+maybe remove my post until there's a remediation plan?  This is problem 
+the best kind of problem to disclose after it's fixed)
+-Alan
+
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111110/5e93efa9/attachment.html>
+
+From zgenjix at yahoo.com  Thu Nov 10 19:35:00 2011
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Thu, 10 Nov 2011 11:35:00 -0800 (PST)
+Subject: [Bitcoin-development] BIP 0001 now active
+Message-ID: <1320953700.19661.YahooMailNeo@web121011.mail.ne1.yahoo.com>
+
+I put the status for BIP 0001 to active now. Let me know if there's any disagreements with this. I'm on Freenode under the nickname genjix
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111110/89bae7f6/attachment.html>
+
+From zgenjix at yahoo.com  Thu Nov 10 21:16:01 2011
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Thu, 10 Nov 2011 13:16:01 -0800 (PST)
+Subject: [Bitcoin-development] [RFC] BIP 14 - Protocol Version and User Agent
+Message-ID: <1320959761.36702.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+
+Hi,
+
+https://en.bitcoin.it/wiki/BIP_0014
+
+Thanks to Gavin Andresen for proof reading and suggesting clarifications. Thanks to Patrick Strateman for suggesting the hierarchical format and pointing out some flaws of browser user-agents to me.
+
+The timeline is written in the past tense since BIPs are meant to be readable in the future for explaining why we took certain decisions with bitcoin. A nice cache for future historians when bitcoin is ubiquitous ;)
+
+
+The next version 0.6 should be the protocol version which becomes peeled off from the current client. There are still some changes migrating into the protocol that need to be finished.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111110/e4da0fa6/attachment.html>
+
+From mike at plan99.net  Sat Nov 12 16:58:56 2011
+From: mike at plan99.net (Mike Hearn)
+Date: Sat, 12 Nov 2011 17:58:56 +0100
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <4EBBCA0D.9060906@gmail.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+	<200034A7-15F9-438F-A6B1-923A69348F55@ceptacle.com>
+	<4EBB3E68.6060402@gmail.com>
+	<CBFE8E7C-7A30-4450-A111-4EB413E068DF@ceptacle.com>
+	<4EBBCA0D.9060906@gmail.com>
+Message-ID: <CANEZrP2RrkJ-6A8fwhNX_xKYScrDqBYM1VgcoZFNLqX8GaQotQ@mail.gmail.com>
+
+Please don't create BIPs that don't have any actual implementation behind
+them. Design discussion is fine but the mailing list works for that.
+
+If I were going to implement escrow transactions in BitCoinJ it would not
+matter what was written here. I'd just implement the design I thought made
+sense. If that design was later adopted by others it can be documented and
+agreed upon in a BIP, just like a regular RFC.
+
+For what it's worth I would not attempt to send half-valid escrow
+transactions through the p2p network, not even using the overlay networks
+the protocol already supports. A correct escrow protocol requires the
+seller to challenge the dispute mediator with the public key to be sure
+they actually own it, and the simplest way to do that is to leverage the
+existing DNS/EV-SSL infrastructure with a "sign this nonce" HTTP request.
+
+BIPs should not be a place for people to come up with armchair designs,
+because a design with no corresponding implementation is likely to be full
+of problems. Let's revisit this once I can install some software on my
+laptop, my server, and a friends server, and do a 3-way mediated
+transaction between them.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111112/75bc0006/attachment.html>
+
+From etotheipi at gmail.com  Sat Nov 12 17:10:24 2011
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Sat, 12 Nov 2011 12:10:24 -0500
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <CANEZrP2RrkJ-6A8fwhNX_xKYScrDqBYM1VgcoZFNLqX8GaQotQ@mail.gmail.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>	<200034A7-15F9-438F-A6B1-923A69348F55@ceptacle.com>	<4EBB3E68.6060402@gmail.com>	<CBFE8E7C-7A30-4450-A111-4EB413E068DF@ceptacle.com>	<4EBBCA0D.9060906@gmail.com>
+	<CANEZrP2RrkJ-6A8fwhNX_xKYScrDqBYM1VgcoZFNLqX8GaQotQ@mail.gmail.com>
+Message-ID: <4EBEA880.7010608@gmail.com>
+
+Maybe I'm new to this, but this doesn't make any sense.  I thought the 
+point of the BIP was to collaborate to come up with a good solution.  
+That's exactly what I want to do before I implement it in my software.  
+After all, they are "Bitcoin Improvement *Proposals*."  It seems like 
+EXACTLY what a BIP is for... just no one needs/should use it until it 
+removes the "draft" marking.
+
+As for the protocol on top of it, my BIP was not intended to address 
+that.  It's only proposing how unsigned transactions can be serialized 
+and users can collect addresses.  Whatever system you want to implement 
+on top of it to exchange the data is up to the developer.  My only 
+motivation is that if the user clicks "Save this proposal to file", that 
+any client can use the resulting file, just the same way we serialize 
+any other blockdata that has a consistent representation.
+
+-Alan
+
+
+
+On 11/12/2011 11:58 AM, Mike Hearn wrote:
+> Please don't create BIPs that don't have any actual implementation 
+> behind them. Design discussion is fine but the mailing list works for 
+> that.
+>
+> If I were going to implement escrow transactions in BitCoinJ it would 
+> not matter what was written here. I'd just implement the design I 
+> thought made sense. If that design was later adopted by others it can 
+> be documented and agreed upon in a BIP, just like a regular RFC.
+>
+> For what it's worth I would not attempt to send half-valid escrow 
+> transactions through the p2p network, not even using the overlay 
+> networks the protocol already supports. A correct escrow protocol 
+> requires the seller to challenge the dispute mediator with the public 
+> key to be sure they actually own it, and the simplest way to do that 
+> is to leverage the existing DNS/EV-SSL infrastructure with a "sign 
+> this nonce" HTTP request.
+>
+> BIPs should not be a place for people to come up with armchair 
+> designs, because a design with no corresponding implementation is 
+> likely to be full of problems. Let's revisit this once I can install 
+> some software on my laptop, my server, and a friends server, and do a 
+> 3-way mediated transaction between them.
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111112/e36715ff/attachment.html>
+
+From mike at plan99.net  Sat Nov 12 17:16:02 2011
+From: mike at plan99.net (Mike Hearn)
+Date: Sat, 12 Nov 2011 18:16:02 +0100
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <4EBEA880.7010608@gmail.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+	<200034A7-15F9-438F-A6B1-923A69348F55@ceptacle.com>
+	<4EBB3E68.6060402@gmail.com>
+	<CBFE8E7C-7A30-4450-A111-4EB413E068DF@ceptacle.com>
+	<4EBBCA0D.9060906@gmail.com>
+	<CANEZrP2RrkJ-6A8fwhNX_xKYScrDqBYM1VgcoZFNLqX8GaQotQ@mail.gmail.com>
+	<4EBEA880.7010608@gmail.com>
+Message-ID: <CANEZrP0LERYWrHmxzZYvzNauVF09YjLkHbPB=uty9v5p3Wck1g@mail.gmail.com>
+
+BIPs are either "standards track" (affects everyone, represents consensus),
+"informational" (ie basically just summarizing the authors viewpoints on
+things) or "process".
+
+My point is you can't have a credible standards track BIP until something
+has been implemented end to end. I don't think it's a good plan to design
+these things in isolation. You'll end up with bizarre user experiences
+because of technical decisions taken months earlier that are now hard to
+reverse. A working end to end implementation gives you the confidence to
+say, yes, this is how it should work, because here's the demo and you can
+see it works very well and the code is clean.
+
+If your BIP is informational then no problems, but I don't think there's
+much point in informational BIPs to be honest - it's easier to just write
+an email or forum post summarizing your views on things. If you find it a
+useful framework to write your thoughts in that's OK, but don't expect
+implementors to follow what's written there just because it's a BIP. It
+carries no more weight than any other document would.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111112/249a034a/attachment.html>
+
+From etotheipi at gmail.com  Sat Nov 12 17:25:16 2011
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Sat, 12 Nov 2011 12:25:16 -0500
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <CANEZrP0LERYWrHmxzZYvzNauVF09YjLkHbPB=uty9v5p3Wck1g@mail.gmail.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>	<200034A7-15F9-438F-A6B1-923A69348F55@ceptacle.com>	<4EBB3E68.6060402@gmail.com>	<CBFE8E7C-7A30-4450-A111-4EB413E068DF@ceptacle.com>	<4EBBCA0D.9060906@gmail.com>	<CANEZrP2RrkJ-6A8fwhNX_xKYScrDqBYM1VgcoZFNLqX8GaQotQ@mail.gmail.com>	<4EBEA880.7010608@gmail.com>
+	<CANEZrP0LERYWrHmxzZYvzNauVF09YjLkHbPB=uty9v5p3Wck1g@mail.gmail.com>
+Message-ID: <4EBEABFC.2080802@gmail.com>
+
+Fair enough.  I'm not expecting anyone to just suddenly adopt BIP 0010 
+just because I published it to the wiki.  I put it there to get feedback 
+on what it might be missing, and maybe we can converge on a good 
+preliminary solution.  Then update it as we start playing with it and 
+find more features/fixes to add to it.
+
+Right now, I have actually implemented BIP 0010 in my own client 
+software (which is still a few weeks from even having an alpha version, 
+but nontheless I'm actually implementing it). I'm going to use TxDPs in 
+offline-wallet transactions, which is a nearly identical process (it's 
+just a 1-of-1 transaction).  As such, I will be interested to test with 
+some other client developers, whether they can easily use the TxDPs I 
+produce.
+
+I assume it doesn't bother you if I leave it the way it is, with the 
+acknowledgment that I know no one is adopting it yet (except for 
+myself).  It's informational, until we get a couple different clients, 
+or at least test setup to play with it.
+
+-Alan
+
+
+
+
+On 11/12/2011 12:16 PM, Mike Hearn wrote:
+> BIPs are either "standards track" (affects everyone, represents 
+> consensus), "informational" (ie basically just summarizing the authors 
+> viewpoints on things) or "process".
+>
+> My point is you can't have a credible standards track BIP until 
+> something has been implemented end to end. I don't think it's a good 
+> plan to design these things in isolation. You'll end up with bizarre 
+> user experiences because of technical decisions taken months earlier 
+> that are now hard to reverse. A working end to end implementation 
+> gives you the confidence to say, yes, this is how it should work, 
+> because here's the demo and you can see it works very well and the 
+> code is clean.
+>
+> If your BIP is informational then no problems, but I don't think 
+> there's much point in informational BIPs to be honest - it's easier to 
+> just write an email or forum post summarizing your views on things. If 
+> you find it a useful framework to write your thoughts in that's OK, 
+> but don't expect implementors to follow what's written there just 
+> because it's a BIP. It carries no more weight than any other document 
+> would.
+>
+>
+
+
+
+
+From mike at plan99.net  Sat Nov 12 17:38:06 2011
+From: mike at plan99.net (Mike Hearn)
+Date: Sat, 12 Nov 2011 18:38:06 +0100
+Subject: [Bitcoin-development] multisig,
+	op_eval and lock_time/sequence...
+In-Reply-To: <4EBEABFC.2080802@gmail.com>
+References: <BD206D96-C458-4DD7-92F6-32AE476C259A@ceptacle.com>
+	<CABsx9T3T7UZ-G9wsb_NDMBYpnnp9XBnjULmVVDgVXzEaUKn=5w@mail.gmail.com>
+	<200034A7-15F9-438F-A6B1-923A69348F55@ceptacle.com>
+	<4EBB3E68.6060402@gmail.com>
+	<CBFE8E7C-7A30-4450-A111-4EB413E068DF@ceptacle.com>
+	<4EBBCA0D.9060906@gmail.com>
+	<CANEZrP2RrkJ-6A8fwhNX_xKYScrDqBYM1VgcoZFNLqX8GaQotQ@mail.gmail.com>
+	<4EBEA880.7010608@gmail.com>
+	<CANEZrP0LERYWrHmxzZYvzNauVF09YjLkHbPB=uty9v5p3Wck1g@mail.gmail.com>
+	<4EBEABFC.2080802@gmail.com>
+Message-ID: <CANEZrP1O=A02KcQWNCLdjtaGGeKnWhP54H6n3aXBecE5Fdjfxg@mail.gmail.com>
+
+Sure, of course, as long as it's clearly labelled as just your thoughts, no
+issues.
+
+For dispute mediation the way I'd start is playing around with some UI
+design stuff and a toy protocol underneath. Once the process is smooth from
+the users POV (no seeing binary blobs disguised as text) then it should
+become clearer what steps the protocol needs and what order they need to
+come in.
+
+Specific feedback on this format - as far as I can tell the format
+represents a subset of the regular bitcoin transaction format? Couldn't you
+just serialize a Bitcoin CTransaction structure with the txins containing
+the output scripts?
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111112/847b4668/attachment.html>
+
+From mike at plan99.net  Sat Nov 12 19:31:37 2011
+From: mike at plan99.net (Mike Hearn)
+Date: Sat, 12 Nov 2011 20:31:37 +0100
+Subject: [Bitcoin-development] [RFC] BIP 14 - Protocol Version and User
+	Agent
+In-Reply-To: <1320959761.36702.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+References: <1320959761.36702.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+Message-ID: <CANEZrP19nb7E2zk-ZU=K++RcXCjzA6j9rh=Z4cJGqzDHarfv5A@mail.gmail.com>
+
+Looks pretty reasonable to me. If Gavin changes the mainline client to use
+this format I'll change BitcoinJ as well. It'll need a bit of API work so
+clients are sure to set it up properly.
+
+On Thu, Nov 10, 2011 at 10:16 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+
+> Hi,
+>
+> https://en.bitcoin.it/wiki/BIP_0014
+>
+> Thanks to Gavin Andresen for proof reading and suggesting clarifications.
+> Thanks to Patrick Strateman for suggesting the hierarchical format and
+> pointing out some flaws of browser user-agents to me.
+>
+> The timeline is written in the past tense since BIPs are meant to be
+> readable in the future for explaining why we took certain decisions with
+> bitcoin. A nice cache for future historians when bitcoin is ubiquitous ;)
+>
+> The next version 0.6 should be the protocol version which becomes peeled
+> off from the current client. There are still some changes migrating into
+> the protocol that need to be finished.
+>
+>
+>
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register now
+> http://p.sf.net/sfu/rsa-sfdev2dev1
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111112/9d598ea3/attachment.html>
+
+From zgenjix at yahoo.com  Sun Nov 13 20:52:53 2011
+From: zgenjix at yahoo.com (Amir Taaki)
+Date: Sun, 13 Nov 2011 12:52:53 -0800 (PST)
+Subject: [Bitcoin-development] [RFC] BIP 14 - Protocol Version and User
+	Agent
+In-Reply-To: <CANEZrP19nb7E2zk-ZU=K++RcXCjzA6j9rh=Z4cJGqzDHarfv5A@mail.gmail.com>
+References: <1320959761.36702.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+	<CANEZrP19nb7E2zk-ZU=K++RcXCjzA6j9rh=Z4cJGqzDHarfv5A@mail.gmail.com>
+Message-ID: <1321217573.68019.YahooMailNeo@web121004.mail.ne1.yahoo.com>
+
+Nice. I'll check with justmoon when I hopefully meet him at the conference. If all is OK, hopefully 0.6 will be the last protocol version bump for a while.
+
+
+
+________________________________
+From: Mike Hearn <mike at plan99.net>
+To: Amir Taaki <zgenjix at yahoo.com>
+Cc: "bitcoin-development at lists.sourceforge.net" <bitcoin-development at lists.sourceforge.net>
+Sent: Saturday, November 12, 2011 7:31 PM
+Subject: Re: [Bitcoin-development] [RFC] BIP 14 - Protocol Version and User Agent
+
+
+Looks pretty reasonable to me. If Gavin changes the mainline client to use this format I'll change BitcoinJ as well. It'll need a bit of API work so clients are sure to set it up properly.
+
+
+On Thu, Nov 10, 2011 at 10:16 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+
+Hi,
+>
+>
+>https://en.bitcoin.it/wiki/BIP_0014
+>
+>
+>Thanks to Gavin Andresen for proof reading and suggesting clarifications. Thanks to Patrick Strateman for suggesting the hierarchical format and pointing out some flaws of browser user-agents to me.
+>
+>
+>The timeline is written in the past tense since BIPs are meant to be readable in the future for explaining why we took certain decisions with bitcoin. A nice cache for future historians when bitcoin is ubiquitous ;)
+>
+>
+>
+>The next version 0.6 should be the protocol version which becomes peeled off from the current client. There are still some changes migrating into the protocol that need to be finished.
+>
+>
+>------------------------------------------------------------------------------
+>RSA(R) Conference 2012
+>Save $700 by Nov 18
+>Register now
+>http://p.sf.net/sfu/rsa-sfdev2dev1
+>_______________________________________________
+>Bitcoin-development mailing list
+>Bitcoin-development at lists.sourceforge.net
+>https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111113/a2a06f10/attachment.html>
+
+From moon at justmoon.de  Mon Nov 14 08:48:56 2011
+From: moon at justmoon.de (Stefan Thomas)
+Date: Mon, 14 Nov 2011 09:48:56 +0100
+Subject: [Bitcoin-development] [RFC] BIP 14 - Protocol Version and User
+ Agent
+In-Reply-To: <1321217573.68019.YahooMailNeo@web121004.mail.ne1.yahoo.com>
+References: <1320959761.36702.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+	<CANEZrP19nb7E2zk-ZU=K++RcXCjzA6j9rh=Z4cJGqzDHarfv5A@mail.gmail.com>
+	<1321217573.68019.YahooMailNeo@web121004.mail.ne1.yahoo.com>
+Message-ID: <4EC0D5F8.40506@justmoon.de>
+
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111114/f5f219de/attachment.html>
+
+From decker.christian at gmail.com  Mon Nov 14 12:09:23 2011
+From: decker.christian at gmail.com (Christian Decker)
+Date: Mon, 14 Nov 2011 13:09:23 +0100
+Subject: [Bitcoin-development] [RFC] BIP 14 - Protocol Version and User
+	Agent
+In-Reply-To: <4EC0D5F8.40506@justmoon.de>
+References: <1320959761.36702.YahooMailNeo@web121014.mail.ne1.yahoo.com>
+	<CANEZrP19nb7E2zk-ZU=K++RcXCjzA6j9rh=Z4cJGqzDHarfv5A@mail.gmail.com>
+	<1321217573.68019.YahooMailNeo@web121004.mail.ne1.yahoo.com>
+	<4EC0D5F8.40506@justmoon.de>
+Message-ID: <CALxbBHVS+m1evgkGEwdEYAjBwze3npKFfdhmfFW0eegoPeLzsg@mail.gmail.com>
+
+Same here of course, but I'll keep the String short and fixed. I still
+don't think there should be any reason for others to know my OS in order to
+communicate with me :-)
+
+On Mon, Nov 14, 2011 at 9:48 AM, Stefan Thomas <moon at justmoon.de> wrote:
+
+>  Nice. I'll check with justmoon when I hopefully meet him at the
+> conference.
+>
+>
+> It's all fine with me. As soon as the original client switches to the new
+> format, we will, too.
+>
+>
+>
+>
+> On 11/13/2011 09:52 PM, Amir Taaki wrote:
+>
+>  Nice. I'll check with justmoon when I hopefully meet him at the
+> conference. If all is OK, hopefully 0.6 will be the last protocol version
+> bump for a while.
+>
+>   ------------------------------
+> *From:* Mike Hearn <mike at plan99.net> <mike at plan99.net>
+> *To:* Amir Taaki <zgenjix at yahoo.com> <zgenjix at yahoo.com>
+> *Cc:* "bitcoin-development at lists.sourceforge.net"<bitcoin-development at lists.sourceforge.net>
+> <bitcoin-development at lists.sourceforge.net><bitcoin-development at lists.sourceforge.net>
+> *Sent:* Saturday, November 12, 2011 7:31 PM
+> *Subject:* Re: [Bitcoin-development] [RFC] BIP 14 - Protocol Version and
+> User Agent
+>
+> Looks pretty reasonable to me. If Gavin changes the mainline client to use
+> this format I'll change BitcoinJ as well. It'll need a bit of API work so
+> clients are sure to set it up properly.
+>
+>  On Thu, Nov 10, 2011 at 10:16 PM, Amir Taaki <zgenjix at yahoo.com> wrote:
+>
+>  Hi,
+>
+>  https://en.bitcoin.it/wiki/BIP_0014
+>
+>  Thanks to Gavin Andresen for proof reading and suggesting
+> clarifications. Thanks to Patrick Strateman for suggesting the hierarchical
+> format and pointing out some flaws of browser user-agents to me.
+>
+>  The timeline is written in the past tense since BIPs are meant to be
+> readable in the future for explaining why we took certain decisions with
+> bitcoin. A nice cache for future historians when bitcoin is ubiquitous ;)
+>
+>  The next version 0.6 should be the protocol version which becomes peeled
+> off from the current client. There are still some changes migrating into
+> the protocol that need to be finished.
+>
+>
+>
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register now
+> http://p.sf.net/sfu/rsa-sfdev2dev1
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+>
+>
+>
+>
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register nowhttp://p.sf.net/sfu/rsa-sfdev2dev1
+>
+>
+>
+> _______________________________________________
+> Bitcoin-development mailing listBitcoin-development at lists.sourceforge.nethttps://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+>
+>
+> ------------------------------------------------------------------------------
+> RSA(R) Conference 2012
+> Save $700 by Nov 18
+> Register now
+> http://p.sf.net/sfu/rsa-sfdev2dev1
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111114/bd9592dc/attachment.html>
+
+From luke at dashjr.org  Wed Nov 16 00:54:57 2011
+From: luke at dashjr.org (Luke-Jr)
+Date: Tue, 15 Nov 2011 19:54:57 -0500
+Subject: [Bitcoin-development] Icon licenses
+Message-ID: <201111151954.58877.luke@dashjr.org>
+
+As you noticed, we replaced most of the icons with license issues in
+Bitcoin-Qt... but I intentionally did NOT replace the ones you created, 
+assuming you would be willing to relicense them under the MIT (or similar) 
+license. Could you commit a license change for these icons, ideally before 
+0.5.0 final, please?
+
+Luke
+
+
+
+From walter at stani.sh  Wed Nov 16 03:11:55 2011
+From: walter at stani.sh (Walter Stanish)
+Date: Wed, 16 Nov 2011 11:11:55 +0800
+Subject: [Bitcoin-development] Announcement: Internet International Bank
+	Account Number (IIBAN)
+Message-ID: <CACwuEiNP+SkP8ba1cG59HdiYg2z=fqJZfPqi3J-rPTd97z9keg@mail.gmail.com>
+
+Payward Inc. has submitted the following draft to the IETF:
+ https://datatracker.ietf.org/doc/draft-iiban
+
+Abstract:
+   An Internet IBAN (IIBAN) identifies an internet-based financial
+   endpoint in a manner that is superset-compatible with the existing
+   European Committee for Banking Standards (ECBS) International Bank
+   Acccount Number (IBAN) standard [ISO13616].
+
+Regards,
+Walter Stanish
+Payward, Inc.
+
+
+
+From walter at stani.sh  Wed Nov 16 03:13:05 2011
+From: walter at stani.sh (Walter Stanish)
+Date: Wed, 16 Nov 2011 11:13:05 +0800
+Subject: [Bitcoin-development] Announcement: Internet Market Identification
+	Code (IMIC)
+Message-ID: <CACwuEiPM16NicMZgk4DpDqpgo6tu6vkqSqYcCWf3=smpHL7qQg@mail.gmail.com>
+
+Payward Inc. has submitted the following draft to the IETF:
+ https://datatracker.ietf.org/doc/draft-imic
+
+Abstract:
+   An Internet MIC (IMIC) identifies an internet-based financial market
+   in a manner that is superset-compatible with the ISO's existing
+   Market Identification Code (MIC) standard [ISO10383].
+
+Regards,
+Walter Stanish
+Payward, Inc.
+
+
+
+From gavinandresen at gmail.com  Wed Nov 16 16:34:28 2011
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Wed, 16 Nov 2011 11:34:28 -0500
+Subject: [Bitcoin-development] Release candidates: versions 0.4.1 and 0.5
+Message-ID: <CABsx9T2QUTzvC3cWOnc6Gc-EyCT-6hX4NO=-7yogzohRC+fn4w@mail.gmail.com>
+
+I need help sanity testing these:
+  https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.4.1/test/
+  https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.5.0/test/
+
+-- 
+--
+Gavin Andresen
+
+
+
+From tadas.varanavicius at gmail.com  Wed Nov 16 23:25:39 2011
+From: tadas.varanavicius at gmail.com (Tadas Varanavicius)
+Date: Thu, 17 Nov 2011 01:25:39 +0200
+Subject: [Bitcoin-development] Release candidates: versions 0.4.1 and 0.5
+In-Reply-To: <CABsx9T2QUTzvC3cWOnc6Gc-EyCT-6hX4NO=-7yogzohRC+fn4w@mail.gmail.com>
+References: <CABsx9T2QUTzvC3cWOnc6Gc-EyCT-6hX4NO=-7yogzohRC+fn4w@mail.gmail.com>
+Message-ID: <4EC44673.4080101@gmail.com>
+
+Hello,
+
+newbie here, thanks for patience.
+
+I start 0.5.0 without wallet.dat. It creates 100 new keys. I then 
+encrypt them. It should be now bug free and totally secure, so I back 
+the wallet up. I then click "new address", it doesn't use the old 2-100 
+addresses, instead generates a new batch, because it assumes the old 
+ones are leaked, but in fact they are not. I receive funds to my new 2nd 
+address (which is now not backed up). I lose the new wallet. Restore 
+from backup. Bitcoins lost forever?
+
+Sorry if false alarm, thanks.
+
+On 11/16/2011 06:34 PM, Gavin Andresen wrote:
+> I need help sanity testing these:
+>    https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.4.1/test/
+>    https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.5.0/test/
+>
+-- 
+Tadas Varanavi?ius
++37061529855
+
+
+
+
+From gavinandresen at gmail.com  Thu Nov 17 14:28:27 2011
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Thu, 17 Nov 2011 09:28:27 -0500
+Subject: [Bitcoin-development] There will be a release candidate 6...
+Message-ID: <CABsx9T2vRq++uqu=23YG86uQ=9ZpwjYv_8hOinWRyrd9YLv_PQ@mail.gmail.com>
+
+I got email from a tester who gave this feedback:
+
+> I think that user behaviour: encrypt wallet -> backup -> do some activity ->
+> restore backup -> BOOM. Is perfectly natural user behaviour and it will
+> happen. For example when generating a wallet on a secure computer and then
+> moving it to an insecure one.
+
+I agree that is likely to happen and, when it does, will be disastrous.
+So I'll be reworking the wallet encrypt/rewrite code today and
+creating a release candidate 6.
+
+My previous attempt (encrypt, invalidating keypool, then unlock and write
+a new keypool) resulted in unencrypted private keys in the new wallet.
+
+I think this will work, I'll implement and test today.
+
+Invalidate all the old keypool keys in the old wallet.Write new
+keypool keys to the old wallet.Encrypt all the keys in the old
+wallet.Rewrite the old wallet to create a new wallet.Shutdown/restart.
+IF ANYBODY IS WILLING TO HELP:
+
+There is still a mysterious problem with bdb throwing an exception
+when dbenv.close(0) is called during shutdown. If you can compile
+a -g version of bdb and then step through DbEnv::close in a debugger
+and tell me why it is throwing an exception that would be
+extremely helpful.
+-- 
+--
+Gavin Andresen
+
+
+
+From thiagocmartinsc at gmail.com  Thu Nov 17 15:33:01 2011
+From: thiagocmartinsc at gmail.com (=?ISO-2022-JP?B?TWFydGlueCAtIBskQiU4JSchPCVgJTobKEI=?=)
+Date: Thu, 17 Nov 2011 13:33:01 -0200
+Subject: [Bitcoin-development] Release candidates: versions 0.4.1 and 0.5
+In-Reply-To: <CABsx9T2QUTzvC3cWOnc6Gc-EyCT-6hX4NO=-7yogzohRC+fn4w@mail.gmail.com>
+References: <CABsx9T2QUTzvC3cWOnc6Gc-EyCT-6hX4NO=-7yogzohRC+fn4w@mail.gmail.com>
+Message-ID: <CAJSM8J1cpBYxYqXMbxxqPUCBt=wptZ9F9OLkvi_5cSW-xgrJsw@mail.gmail.com>
+
+Gavin,
+
+ Where is my "Bitcoin Address" within this new QT version?
+
+ The windows appear but, I can't find my bitcoin address.
+
+Cheers,
+Thiago
+
+On 16 November 2011 14:34, Gavin Andresen <gavinandresen at gmail.com> wrote:
+
+> I need help sanity testing these:
+>
+> https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.4.1/test/
+>
+> https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.5.0/test/
+>
+> --
+> --
+> Gavin Andresen
+>
+>
+> ------------------------------------------------------------------------------
+> All the data continuously generated in your IT infrastructure
+> contains a definitive record of customers, application performance,
+> security threats, fraudulent activity, and more. Splunk takes this
+> data and makes sense of it. IT sense. And common sense.
+> http://p.sf.net/sfu/splunk-novd2d
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111117/20eafb59/attachment.html>
+
+From thiagocmartinsc at gmail.com  Thu Nov 17 15:35:06 2011
+From: thiagocmartinsc at gmail.com (=?ISO-2022-JP?B?TWFydGlueCAtIBskQiU4JSchPCVgJTobKEI=?=)
+Date: Thu, 17 Nov 2011 13:35:06 -0200
+Subject: [Bitcoin-development] Release candidates: versions 0.4.1 and 0.5
+In-Reply-To: <CAJSM8J1cpBYxYqXMbxxqPUCBt=wptZ9F9OLkvi_5cSW-xgrJsw@mail.gmail.com>
+References: <CABsx9T2QUTzvC3cWOnc6Gc-EyCT-6hX4NO=-7yogzohRC+fn4w@mail.gmail.com>
+	<CAJSM8J1cpBYxYqXMbxxqPUCBt=wptZ9F9OLkvi_5cSW-xgrJsw@mail.gmail.com>
+Message-ID: <CAJSM8J31AWyfYqGV2jDwRfUB0-tKWGKS5ZBoOJCab_UR3bywqA@mail.gmail.com>
+
+I am so sorry about this email, just find it.
+
+2011/11/17 Martinx - ????? <thiagocmartinsc at gmail.com>
+
+> Gavin,
+>
+>  Where is my "Bitcoin Address" within this new QT version?
+>
+>  The windows appear but, I can't find my bitcoin address.
+>
+> Cheers,
+> Thiago
+>
+>
+> On 16 November 2011 14:34, Gavin Andresen <gavinandresen at gmail.com> wrote:
+>
+>> I need help sanity testing these:
+>>
+>> https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.4.1/test/
+>>
+>> https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.5.0/test/
+>>
+>> --
+>> --
+>> Gavin Andresen
+>>
+>>
+>> ------------------------------------------------------------------------------
+>> All the data continuously generated in your IT infrastructure
+>> contains a definitive record of customers, application performance,
+>> security threats, fraudulent activity, and more. Splunk takes this
+>> data and makes sense of it. IT sense. And common sense.
+>> http://p.sf.net/sfu/splunk-novd2d
+>> _______________________________________________
+>> Bitcoin-development mailing list
+>> Bitcoin-development at lists.sourceforge.net
+>> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>>
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111117/f9f2f212/attachment.html>
+
+From michael.offel at web.de  Thu Nov 17 15:35:36 2011
+From: michael.offel at web.de (Michael Offel)
+Date: Thu, 17 Nov 2011 15:35:36 -0000
+Subject: [Bitcoin-development] There will be a release candidate 6...
+In-Reply-To: <CABsx9T2vRq++uqu=23YG86uQ=9ZpwjYv_8hOinWRyrd9YLv_PQ@mail.gmail.com>
+References: <CABsx9T2vRq++uqu=23YG86uQ=9ZpwjYv_8hOinWRyrd9YLv_PQ@mail.gmail.com>
+Message-ID: <002d01cca53e$9552d1d0$bff87570$@offel@web.de>
+
+If you are going to support this use case, you should also notify the user
+on wallet changes that results in invalidated backup. For example whenever
+the key pool gets extended.
+
+-----Original Message-----
+From: Gavin Andresen [mailto:gavinandresen at gmail.com] 
+Sent: 17 November 2011 14:28
+To: Bitcoin Dev
+Subject: [Bitcoin-development] There will be a release candidate 6...
+
+I got email from a tester who gave this feedback:
+
+> I think that user behaviour: encrypt wallet -> backup -> do some 
+> activity -> restore backup -> BOOM. Is perfectly natural user 
+> behaviour and it will happen. For example when generating a wallet on 
+> a secure computer and then moving it to an insecure one.
+
+I agree that is likely to happen and, when it does, will be disastrous.
+So I'll be reworking the wallet encrypt/rewrite code today and creating a
+release candidate 6.
+
+My previous attempt (encrypt, invalidating keypool, then unlock and write a
+new keypool) resulted in unencrypted private keys in the new wallet.
+
+I think this will work, I'll implement and test today.
+
+Invalidate all the old keypool keys in the old wallet.Write new keypool keys
+to the old wallet.Encrypt all the keys in the old wallet.Rewrite the old
+wallet to create a new wallet.Shutdown/restart.
+IF ANYBODY IS WILLING TO HELP:
+
+There is still a mysterious problem with bdb throwing an exception when
+dbenv.close(0) is called during shutdown. If you can compile a -g version of
+bdb and then step through DbEnv::close in a debugger and tell me why it is
+throwing an exception that would be extremely helpful.
+--
+--
+Gavin Andresen
+
+----------------------------------------------------------------------------
+--
+All the data continuously generated in your IT infrastructure contains a
+definitive record of customers, application performance, security threats,
+fraudulent activity, and more. Splunk takes this data and makes sense of it.
+IT sense. And common sense.
+http://p.sf.net/sfu/splunk-novd2d
+_______________________________________________
+Bitcoin-development mailing list
+Bitcoin-development at lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+
+
+
+
+From thiagocmartinsc at gmail.com  Thu Nov 17 16:26:52 2011
+From: thiagocmartinsc at gmail.com (=?ISO-2022-JP?B?TWFydGlueCAtIBskQiU4JSchPCVgJTobKEI=?=)
+Date: Thu, 17 Nov 2011 14:26:52 -0200
+Subject: [Bitcoin-development] Release candidates: versions 0.4.1 and 0.5
+In-Reply-To: <CABsx9T2QUTzvC3cWOnc6Gc-EyCT-6hX4NO=-7yogzohRC+fn4w@mail.gmail.com>
+References: <CABsx9T2QUTzvC3cWOnc6Gc-EyCT-6hX4NO=-7yogzohRC+fn4w@mail.gmail.com>
+Message-ID: <CAJSM8J3CcuudWLF+gC=b9eBzdtfO1S0hCpW5FjLfWhdtqQgcyQ@mail.gmail.com>
+
+Hi,
+
+ Testing the 0.5.0 in Linux, I see a strange behaviour:
+
+ 1- Open qt-client, blockchain stops the downloading at 10%... Wait 30
+minutes... not reach 11%...
+
+ 2- Close and reopen the qt-client, blockchain start again at 0%... Normal!?
+
+ 3- Now the download of the blockchain is working, reach 15% and growing...
+
+ I have a open firewall for the Bitcoin protocol. My 0.4.0 client works
+just fine, with more than 30 connections at the same machine (but another
+Linux user).
+
+ Also, where can I find the number of connections using new Bitcoin-QT?
+
+Thanks!
+Thiago
+
+On 16 November 2011 14:34, Gavin Andresen <gavinandresen at gmail.com> wrote:
+
+> I need help sanity testing these:
+>
+> https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.4.1/test/
+>
+> https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.5.0/test/
+>
+> --
+> --
+> Gavin Andresen
+>
+>
+> ------------------------------------------------------------------------------
+> All the data continuously generated in your IT infrastructure
+> contains a definitive record of customers, application performance,
+> security threats, fraudulent activity, and more. Splunk takes this
+> data and makes sense of it. IT sense. And common sense.
+> http://p.sf.net/sfu/splunk-novd2d
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111117/74425cd9/attachment.html>
+
+From thiagocmartinsc at gmail.com  Thu Nov 17 18:43:22 2011
+From: thiagocmartinsc at gmail.com (=?ISO-2022-JP?B?TWFydGlueCAtIBskQiU4JSchPCVgJTobKEI=?=)
+Date: Thu, 17 Nov 2011 16:43:22 -0200
+Subject: [Bitcoin-development] Release candidates: versions 0.4.1 and 0.5
+In-Reply-To: <CAJSM8J3CcuudWLF+gC=b9eBzdtfO1S0hCpW5FjLfWhdtqQgcyQ@mail.gmail.com>
+References: <CABsx9T2QUTzvC3cWOnc6Gc-EyCT-6hX4NO=-7yogzohRC+fn4w@mail.gmail.com>
+	<CAJSM8J3CcuudWLF+gC=b9eBzdtfO1S0hCpW5FjLfWhdtqQgcyQ@mail.gmail.com>
+Message-ID: <CAJSM8J19++22nahZo4nxQOt-TMwhWfdFiFcx_1bdFimBDbt4Fw@mail.gmail.com>
+
+Guys,
+
+ The bidcoin-qt for Linux does not have the Bitcoin icon at the Desktop
+Pager (Ubuntu Oneiric 11.10).
+
+ This is a cosmetic change.
+
+Best,
+Thiago
+
+2011/11/17 Martinx - ????? <thiagocmartinsc at gmail.com>
+
+> Hi,
+>
+>  Testing the 0.5.0 in Linux, I see a strange behaviour:
+>
+>  1- Open qt-client, blockchain stops the downloading at 10%... Wait 30
+> minutes... not reach 11%...
+>
+>  2- Close and reopen the qt-client, blockchain start again at 0%...
+> Normal!?
+>
+>  3- Now the download of the blockchain is working, reach 15% and growing...
+>
+>  I have a open firewall for the Bitcoin protocol. My 0.4.0 client works
+> just fine, with more than 30 connections at the same machine (but another
+> Linux user).
+>
+>  Also, where can I find the number of connections using new Bitcoin-QT?
+>
+> Thanks!
+> Thiago
+>
+> On 16 November 2011 14:34, Gavin Andresen <gavinandresen at gmail.com> wrote:
+>
+>> I need help sanity testing these:
+>>
+>> https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.4.1/test/
+>>
+>> https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.5.0/test/
+>>
+>> --
+>> --
+>> Gavin Andresen
+>>
+>>
+>> ------------------------------------------------------------------------------
+>> All the data continuously generated in your IT infrastructure
+>> contains a definitive record of customers, application performance,
+>> security threats, fraudulent activity, and more. Splunk takes this
+>> data and makes sense of it. IT sense. And common sense.
+>> http://p.sf.net/sfu/splunk-novd2d
+>> _______________________________________________
+>> Bitcoin-development mailing list
+>> Bitcoin-development at lists.sourceforge.net
+>> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>>
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111117/8aa6cc20/attachment.html>
+
+From michael at ndrix.org  Thu Nov 17 20:16:57 2011
+From: michael at ndrix.org (Michael Hendricks)
+Date: Thu, 17 Nov 2011 13:16:57 -0700
+Subject: [Bitcoin-development] Release candidates: versions 0.4.1 and 0.5
+In-Reply-To: <CAJSM8J3CcuudWLF+gC=b9eBzdtfO1S0hCpW5FjLfWhdtqQgcyQ@mail.gmail.com>
+References: <CABsx9T2QUTzvC3cWOnc6Gc-EyCT-6hX4NO=-7yogzohRC+fn4w@mail.gmail.com>
+	<CAJSM8J3CcuudWLF+gC=b9eBzdtfO1S0hCpW5FjLfWhdtqQgcyQ@mail.gmail.com>
+Message-ID: <CAFHuXub-t3uZVthMXoqHVN=WG4z4E8dMVyjcCWegM5gRqSjxfQ@mail.gmail.com>
+
+2011/11/17 Martinx - ????? <thiagocmartinsc at gmail.com>
+
+> Testing the 0.5.0 in Linux, I see a strange behaviour:
+>
+>  1- Open qt-client, blockchain stops the downloading at 10%... Wait 30
+> minutes... not reach 11%...
+>
+>  2- Close and reopen the qt-client, blockchain start again at 0%...
+> Normal!?
+>
+>  3- Now the download of the blockchain is working, reach 15% and growing...
+>
+
+I've noticed this same behavior with 0.5 release candidates.  I remember
+seeing it with 0.4 also, so I think it's not a regression.  I haven't yet
+pinned down the cause.  It would be nice to fix; especially for those
+downloading the blockchain for the first time.
+
+ Also, where can I find the number of connections using new Bitcoin-QT?
+>
+
+Hover over the signal icon in the lower right corner.  The icon looks like
+a cellphone signal indicator.  The number of connections is displayed in a
+tooltip.
+
+-- 
+Michael
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111117/534407c9/attachment.html>
+
+From jordanmack at parhelic.com  Thu Nov 17 20:24:16 2011
+From: jordanmack at parhelic.com (Jordan Mack)
+Date: Thu, 17 Nov 2011 12:24:16 -0800
+Subject: [Bitcoin-development] Release candidates: versions 0.4.1 and 0.5
+In-Reply-To: <4EC56CF2.1070704@parhelic.com>
+References: <CABsx9T2QUTzvC3cWOnc6Gc-EyCT-6hX4NO=-7yogzohRC+fn4w@mail.gmail.com>
+	<4EC56CF2.1070704@parhelic.com>
+Message-ID: <4EC56D70.9070103@parhelic.com>
+
+I'm getting an intermittent crashes on bitcoin-qt.exe when doing RPC 
+commands. I seem to be able to get it to occur most frequently when I 
+send a bunch of RPC commands in rapid succession. I have never 
+encountered it with "getbalance", but I have with some other commands. 
+Sending a single letter as the command seems to trigger the crash most 
+often.
+
+I was unable to generate the crash using 0.4.1.
+
+I was unable to find an issue logged for this, although I wonder if it 
+is related to https://github.com/bitcoin/bitcoin/issues/639
+
+Can anyone make suggestion on any other debug information I can gather 
+before submitting an issue?
+
+
+
+Windows 7 x64
+Bitcoin 0.5 rc5
+
+Faulting application name: bitcoin-qt.exe, version: 0.0.0.0, time stamp: 
+0x4d44aa00
+Faulting module name: bitcoin-qt.exe, version: 0.0.0.0, time stamp: 
+0x4d44aa00
+Exception code: 0x40000015
+Fault offset: 0x00e4b7fa
+Faulting process id: 0xf80
+Faulting application start time: 0x01cca56065158dac
+Faulting application path: 
+C:\Users\jmack\Desktop\bitcoin-0.5.0rc5-win32\bitcoin-qt.exe
+Faulting module path: 
+C:\Users\jmack\Desktop\bitcoin-0.5.0rc5-win32\bitcoin-qt.exe
+Report Id: 050b54aa-1155-11e1-86c0-f46d0496aff0
+
+
+
+On 11/16/2011 8:34 AM, Gavin Andresen wrote:
+ > I need help sanity testing these:
+ > 
+https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.4.1/test/
+ > 
+https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.5.0/test/
+ >
+
+
+
+
+From gavinandresen at gmail.com  Sat Nov 19 16:20:48 2011
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Sat, 19 Nov 2011 11:20:48 -0500
+Subject: [Bitcoin-development] Need help testing/debugging: Linux64
+Message-ID: <CABsx9T2KkFC9_sibE4gYdd2JCTSSdbVQcOmK1nbKFYns820_7A@mail.gmail.com>
+
+There is one issue holding up a 0.5.0/0.4.1 final release:  I've seen
+a couple of bug reports of crashes on startup when re-encrypting
+previously encrypted wallets on Linux64 systems.
+
+I've tried to reproduce on Ubuntu 10.10 server and "it worked for me"
+-- so I need help figuring out what is going on (is it only bitcoin-qt
+that is crashing? Is Ubuntu OK but other linux variations broken?
+etc)
+
+-- 
+--
+Gavin Andresen
+
+
+
+From pieter.wuille at gmail.com  Mon Nov 21 02:34:30 2011
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Mon, 21 Nov 2011 03:34:30 +0100
+Subject: [Bitcoin-development] Compressed public keys
+Message-ID: <20111121023428.GA23065@ulyssis.org>
+
+Hello all,
+
+I just submitted a pull request (#649) that enables the use of compressed
+public keys in Bitcoin. As discovered by roconnor (IRC), this is possible
+in such a way that old clients verify and relay them without problems.
+They are supported by default by OpenSSL, and all alternative
+implementations that use OpenSSL should support these keys just fine as
+well.
+
+Compressed public keys are 33 bytes long, and contain the same information
+as normal 65-byte keys. They only contain the X coordinate of the point,
+while the value of the Y-coordinate is reconstructed upon use. This
+requires some CPU, but only a fraction of the cost of verifying a
+signature.
+
+In theory, one private key now corresponds to two public keys, and thus
+two different addresses. As this would probably cause confusion, this
+implementation chooses only one of them (at key generation time). All
+keys generated when -compressedpubkeys is active, are compressed, and
+their reported address is that corresponding to its compressed pubkey.
+
+Things that need attention:
+* Do all client implementations support it?
+* How to represent secrets for compressed pubkeys?
+* send-to-pubkey transactions are untested, for now
+
+-- 
+Pieter
+
+
+
+From pieter.wuille at gmail.com  Mon Nov 21 11:48:20 2011
+From: pieter.wuille at gmail.com (Pieter Wuille)
+Date: Mon, 21 Nov 2011 12:48:20 +0100
+Subject: [Bitcoin-development] Compressed public keys
+In-Reply-To: <20111121023428.GA23065@ulyssis.org>
+References: <20111121023428.GA23065@ulyssis.org>
+Message-ID: <20111121114819.GB7261@ulyssis.org>
+
+On Mon, Nov 21, 2011 at 03:34:28AM +0100, Pieter Wuille wrote:
+> Hello all,
+> 
+> Things that need attention:
+> * Do all client implementations support it?
+
+To help in testing this: this address corresponds to a compressed
+public key:
+http://blockexplorer.com/testnet/address/mwUyUCWRp9WqyNgrGAbghs7KjTL8zjFNKN
+
+-- 
+Pieter
+
+
+
+From thiagocmartinsc at gmail.com  Mon Nov 21 16:28:03 2011
+From: thiagocmartinsc at gmail.com (=?ISO-2022-JP?B?TWFydGlueCAtIBskQiU4JSchPCVgJTobKEI=?=)
+Date: Mon, 21 Nov 2011 14:28:03 -0200
+Subject: [Bitcoin-development] Need help testing/debugging: Linux64
+In-Reply-To: <CABsx9T2KkFC9_sibE4gYdd2JCTSSdbVQcOmK1nbKFYns820_7A@mail.gmail.com>
+References: <CABsx9T2KkFC9_sibE4gYdd2JCTSSdbVQcOmK1nbKFYns820_7A@mail.gmail.com>
+Message-ID: <CAJSM8J3Pmht+8qoHgZTa6u=CnZKLeH1aBy31nfAoLdAHPXrZQw@mail.gmail.com>
+
+Gavin,
+
+ I try to reproduce the error by doing this (Ubuntu 11.10 64bits):
+
+ rm -rf ~/bitcoin # CAUTION
+ ./bitcoin-0.4.0-linux/bin/64/bitcoin
+
+ * Encrypt my wallet
+ * Close Bitcoin 0.4.0
+
+ Next open Bitcoin 0.5.0rc7:
+ ./bitcoin-0.5.0rc7-linux/bin/64/bitcoin-qt
+
+ * Automatic wallet upgrade (I guess) working... No crashs...
+
+Best,
+Thiago
+
+On 19 November 2011 14:20, Gavin Andresen <gavinandresen at gmail.com> wrote:
+
+> There is one issue holding up a 0.5.0/0.4.1 final release:  I've seen
+> a couple of bug reports of crashes on startup when re-encrypting
+> previously encrypted wallets on Linux64 systems.
+>
+> I've tried to reproduce on Ubuntu 10.10 server and "it worked for me"
+> -- so I need help figuring out what is going on (is it only bitcoin-qt
+> that is crashing? Is Ubuntu OK but other linux variations broken?
+> etc)
+>
+> --
+> --
+> Gavin Andresen
+>
+>
+> ------------------------------------------------------------------------------
+> All the data continuously generated in your IT infrastructure
+> contains a definitive record of customers, application performance,
+> security threats, fraudulent activity, and more. Splunk takes this
+> data and makes sense of it. IT sense. And common sense.
+> http://p.sf.net/sfu/splunk-novd2d
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111121/66834c93/attachment.html>
+
+From gavinandresen at gmail.com  Tue Nov 22 01:06:27 2011
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Mon, 21 Nov 2011 20:06:27 -0500
+Subject: [Bitcoin-development] State of Bitcoin Development: November Brain
+	Dump
+Message-ID: <CABsx9T2w7X1WJAMe6yuGcpZegb5G9Tjawt-Uk7d2RH7GAgoJaQ@mail.gmail.com>
+
+It has been a busy month; here's what I'm thinking about:
+
+? It's great to get 0.5 out; congratulations to Wladimir for doing a
+great job with the new GUI.
+
+? The wallet encryption bug was embarrassing and stressful, and chewed
+up a lot of my time over the past couple of weeks. Bugs happen, but
+I've been spending time thinking about what I can do differently to
+make it less likely major bugs slip into releases.
+
+Finding the money to hire some professional QA people to help create
+test plans and then execute them (the test plans, not the QA people)
+is one possible answer. If you have experience finding funding for
+open source projects (or know somebody who does) I'd like to talk with
+you--  I would much rather spend my time writing code and thinking
+about technical issues instead of trying to figure out if advertising
+or sponsorship or a Donate menu entry in the client is a reasonable
+way to get more testing resources for the project.
+
+Last month I mentioned I was thinking about Organization; there is a
+non-profit organization forming to handle Bitcoin PR and marketing,
+which takes care of one big area of work.
+
+? The BIP (Bitcoin Improvement Proposal) process seems to be working
+well, with good proposals and good discussions (both here and on the
+Forums):
+  https://en.bitcoin.it/wiki/Bitcoin_Improvement_Proposals
+
+Things I think are high priority but am not planning on working on:
+
+? Implement BIP 14 (separate the protocol and client versions)
+
+? Rework/rethink wallet handling:  I think we could do a much better
+job with both encryption and backups.
+
+? Work on higher-level multi-signature/multi-device transaction
+approval; I really want a version of bitcoin-qt that requires me to
+poke an "OK" button on my iPhone before it can send coins.
+
+? Code clean-up; I'd like to see more small code refactors that moves
+non-performance-critical code from .h files to .cpp files, makes
+classes  more self-contained, etc. "Rename the world" or "change every
+single file"  pull requests are hard to deal with because there is
+never a good time  to pull them, but a steady stream of "makes the
+code a little bit easier  to work with" would be a Good Thing.
+Especially if you submit unit  tests for whatever you touch...
+
+
+Thinks I think are high priority and AM planning on working on; if any
+of them inspire you, feel free to steal them from me, I still have too
+many things on my TODO list:
+
+? Create a pull request for OP_EVAL/multisignature transactions
+
+? Back-port OP_EVAL/multisig to 0.3/0.4 and release patches to  make
+it easy for the big mining pools to support it, so the network  is
+ready for multisig/multi-device transactions.
+
+? Work on the 'headers-only' branch, so users have a better first-time
+experience.
+
+??I want to start doing some internal re-architecting, and I think
+porting my old monitor transactions/blocks patch to use Boost.Signals
+might be a good place to start.  The internal pieces are pretty
+obvious (GUI, database, network, wallet, transaction validation, and
+block-chain handling) and I think starting to rearchitect to use
+Boost.Signals for internal communications would be a big step towards
+more re-usable code.
+
+? Get back to the cross-platform testing infrastructure tool, and lots
+of good and  bad blockchains that can be used for cross-platform
+testing.
+
+
+I'm probably forgetting several things, but I think that's enough for
+now. If you're going to the conference in Prague, have fun!  Please
+figure out all the hard questions while you're there, and report
+back....
+
+-------------------
+
+Previous Brain Dump:
+https://sourceforge.net/mailarchive/message.php?msg_id=28223657
+
+-- 
+--
+Gavin Andresen
+
+
+
+From luke at dashjr.org  Tue Nov 22 01:11:46 2011
+From: luke at dashjr.org (Luke-Jr)
+Date: Mon, 21 Nov 2011 20:11:46 -0500
+Subject: [Bitcoin-development] State of Bitcoin Development: November
+	Brain Dump
+In-Reply-To: <CABsx9T2w7X1WJAMe6yuGcpZegb5G9Tjawt-Uk7d2RH7GAgoJaQ@mail.gmail.com>
+References: <CABsx9T2w7X1WJAMe6yuGcpZegb5G9Tjawt-Uk7d2RH7GAgoJaQ@mail.gmail.com>
+Message-ID: <201111212011.47683.luke@dashjr.org>
+
+On Monday, November 21, 2011 8:06:27 PM Gavin Andresen wrote:
+> Finding the money to hire some professional QA people to help create
+> test plans and then execute them (the test plans, not the QA people)
+> is one possible answer.
+
+Not prioritizing some unannounced "release schedule" over getting bugs fixed 
+before making the release is another part of the answer, at least.
+
+
+
+From andyparkins at gmail.com  Wed Nov 23 10:35:42 2011
+From: andyparkins at gmail.com (Andy Parkins)
+Date: Wed, 23 Nov 2011 10:35:42 +0000
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+Message-ID: <201111231035.48690.andyparkins@gmail.com>
+
+Hello,
+
+One problem with Bitcoin is that if large numbers of miners suddenly switch 
+off, the network takes a long time to adapt (since the adaption time is a 
+function of blocks generated, and the block generation rate has changed).  The 
+same problem exists in the other direction, but an increased generation rate 
+for a little while doesn't really do any harm.
+
+I had this idea as a way of completely normalising the block generation rate, 
+regardless of network power.  I hesitate to offer it, as I get shouted down a 
+lot, but what the hell...
+
+Let's imagine that the whole network shares a clock (which it does already).  
+Let's abandon the idea of a target difficulty.  Instead, every node just 
+generates the most difficulty block it can.  Simultaneously, every node is 
+listening for "the most difficult block generated before time T"; with T being 
+picked to be the block generation rate (10 minutes).
+
+Every node is therefore generating blocks and comparing not against some 
+moving average determined target, but rather against the most difficult 
+recently received block.  If the generated block is harder than the received 
+block, then it gets broadcast.
+
+Clearly, early on in the block, the traffic would be high, but that could be 
+limited with a bit of intelligence -- there's no point broadcasting your best 
+blocks in minute 0 of the current block... you know everyone will beat it, as 
+it was so easy.  So the rule would be broadcasts only start at T/2 plus a 
+little randomisation.  There wouldn't be that many because someone will have 
+generated a pretty good block by chance in the first half, and that will 
+quickly stop anybody else from bothering to broadcast their easier block.  
+There is no advantage to broadcasting a lesser block, so there is no incentive 
+to cheat.
+
+As always: the most difficult chain wins; and blocks with out-of-bounds times 
+are rejected regardless of difficulty.  Everyone therefore has an incentive to 
+base their next block on the block with highest difficulty from the previous 
+period.
+
+The block period is now guaranteed to be 10 minutes (or in fact, whatever 
+period you like, there is no danger at all in changing it to 2 minutes); and 
+there is no change of block generation rate with network power.  Changes in 
+network power merely adjust the average difficulty of the best block per 
+period.  The cost is higher network traffic, because there are block 
+broadcasts that don't necessarily make it to the end.  However, there's no 
+need to broadcast the full block, only the header.  If that block turns out to 
+be the winner, then the other nodes will request the full block at the end of 
+the period, and will check it's valid.  If it's not then the next highest on 
+the list will be requested.  So again, 
+
+I recognise that this is a pretty large change to make; and so don't really 
+expect it to happen.  Perhaps one day though... when all the wishlist items go 
+into one huge protocol overhaul.
+
+
+
+Andy
+-- 
+Dr Andy Parkins
+andyparkins at gmail.com
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 198 bytes
+Desc: This is a digitally signed message part.
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111123/3a6d159f/attachment.sig>
+
+From timon.elviejo at gmail.com  Wed Nov 23 11:25:43 2011
+From: timon.elviejo at gmail.com (=?ISO-8859-1?Q?Jorge_Tim=F3n?=)
+Date: Wed, 23 Nov 2011 12:25:43 +0100
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <201111231035.48690.andyparkins@gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+Message-ID: <CAGQP0AEXrp3=j8WkQkUzJRhZYF6VxCsFz_ADXE8uz+d2YLfNcw@mail.gmail.com>
+
+2011/11/23, Andy Parkins <andyparkins at gmail.com>:
+> Let's abandon the idea of a target difficulty.  Instead, every node just
+ > generates the most difficulty block it can.  Simultaneously, every node is
+ > listening for "the most difficult block generated before time T"; with T
+ > being
+ > picked to be the block generation rate (10 minutes).
+
+A miner could try to obtain more difficulty out of time and cheat its
+reported datetime (T).
+
+Jorge Tim?n
+
+
+
+From andyparkins at gmail.com  Wed Nov 23 11:30:58 2011
+From: andyparkins at gmail.com (Andy Parkins)
+Date: Wed, 23 Nov 2011 11:30:58 +0000
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <CAGQP0AEXrp3=j8WkQkUzJRhZYF6VxCsFz_ADXE8uz+d2YLfNcw@mail.gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<CAGQP0AEXrp3=j8WkQkUzJRhZYF6VxCsFz_ADXE8uz+d2YLfNcw@mail.gmail.com>
+Message-ID: <201111231130.58785.andyparkins@gmail.com>
+
+On 2011 November 23 Wednesday, Jorge Tim?n wrote:
+> 2011/11/23, Andy Parkins <andyparkins at gmail.com>:
+> > Let's abandon the idea of a target difficulty.  Instead, every node just
+> > 
+>  > generates the most difficulty block it can.  Simultaneously, every node
+>  > is listening for "the most difficult block generated before time T";
+>  > with T being
+>  > picked to be the block generation rate (10 minutes).
+> 
+> A miner could try to obtain more difficulty out of time and cheat its
+> reported datetime (T).
+
+Just as with the current system.
+
+The defence is that on receipt of a block, its timestamp is checked against 
+the node's own clock and averaged network clock.  Blocks out of that band are 
+rejected.
+
+
+Andy
+-- 
+Dr Andy Parkins
+andyparkins at gmail.com
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 198 bytes
+Desc: This is a digitally signed message part.
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111123/87748873/attachment.sig>
+
+From timon.elviejo at gmail.com  Wed Nov 23 11:51:00 2011
+From: timon.elviejo at gmail.com (=?ISO-8859-1?Q?Jorge_Tim=F3n?=)
+Date: Wed, 23 Nov 2011 12:51:00 +0100
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <201111231130.58785.andyparkins@gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<CAGQP0AEXrp3=j8WkQkUzJRhZYF6VxCsFz_ADXE8uz+d2YLfNcw@mail.gmail.com>
+	<201111231130.58785.andyparkins@gmail.com>
+Message-ID: <CAGQP0AEZ9CUNd9ERyMsx741bqjLptY4pPRU6EmxQcD7kR8bdbw@mail.gmail.com>
+
+With the current system, the timestamp can also be cheated, but miners
+have no direct incentive to do it. With your system, they increase
+their probability of mining a block by putting a false timestamp.
+Also, where's the network clock you're talking about? Isn't it the
+timestamps in the blockchain?
+
+
+
+2011/11/23, Andy Parkins <andyparkins at gmail.com>:
+> On 2011 November 23 Wednesday, Jorge Tim?n wrote:
+>> 2011/11/23, Andy Parkins <andyparkins at gmail.com>:
+>> > Let's abandon the idea of a target difficulty.  Instead, every node just
+>> >
+>>  > generates the most difficulty block it can.  Simultaneously, every node
+>>  > is listening for "the most difficult block generated before time T";
+>>  > with T being
+>>  > picked to be the block generation rate (10 minutes).
+>>
+>> A miner could try to obtain more difficulty out of time and cheat its
+>> reported datetime (T).
+>
+> Just as with the current system.
+>
+> The defence is that on receipt of a block, its timestamp is checked against
+> the node's own clock and averaged network clock.  Blocks out of that band
+> are
+> rejected.
+>
+>
+> Andy
+> --
+> Dr Andy Parkins
+> andyparkins at gmail.com
+>
+
+
+-- 
+Jorge Tim?n
+
+
+
+From decker.christian at gmail.com  Wed Nov 23 12:10:55 2011
+From: decker.christian at gmail.com (Christian Decker)
+Date: Wed, 23 Nov 2011 13:10:55 +0100
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <CAGQP0AEZ9CUNd9ERyMsx741bqjLptY4pPRU6EmxQcD7kR8bdbw@mail.gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<CAGQP0AEXrp3=j8WkQkUzJRhZYF6VxCsFz_ADXE8uz+d2YLfNcw@mail.gmail.com>
+	<201111231130.58785.andyparkins@gmail.com>
+	<CAGQP0AEZ9CUNd9ERyMsx741bqjLptY4pPRU6EmxQcD7kR8bdbw@mail.gmail.com>
+Message-ID: <CALxbBHVEvCqun0aX_9awGhW39h5cx0jLPx2ptoesBcmKGO-_Dw@mail.gmail.com>
+
+First of all I do agree that a method for adjusting the difficulty in a
+huge power drop is needed (I don't see it so much in power rises).
+
+The current block generation with a fixed difficulty was chosen because it
+it clear when to adjust and to what target difficulty it has to be
+adjusted. If we were to use synchronized time windows and select the
+hardest block it gets incredibly complicated as synchronization is not
+possible in distributed systems. Even the smallest drift would allow for
+forks in the chain all over the place. Furthermore the delay in propagation
+will also cause forks.
+
+If 1/2 of the network see one block as the hardest, and for the rest of the
+network it came too late then we'll have a fork that stays with us quite a
+while.
+
+The block chain is described as a timestamp server in the paper, but it is
+more of a proof-of-existence before, as the contained timestamp cannot be
+trusted anyway.
+
+Regards,
+Chris
+
+2011/11/23 Jorge Tim?n <timon.elviejo at gmail.com>
+
+> With the current system, the timestamp can also be cheated, but miners
+> have no direct incentive to do it. With your system, they increase
+> their probability of mining a block by putting a false timestamp.
+> Also, where's the network clock you're talking about? Isn't it the
+> timestamps in the blockchain?
+>
+>
+>
+> 2011/11/23, Andy Parkins <andyparkins at gmail.com>:
+> > On 2011 November 23 Wednesday, Jorge Tim?n wrote:
+> >> 2011/11/23, Andy Parkins <andyparkins at gmail.com>:
+> >> > Let's abandon the idea of a target difficulty.  Instead, every node
+> just
+> >> >
+> >>  > generates the most difficulty block it can.  Simultaneously, every
+> node
+> >>  > is listening for "the most difficult block generated before time T";
+> >>  > with T being
+> >>  > picked to be the block generation rate (10 minutes).
+> >>
+> >> A miner could try to obtain more difficulty out of time and cheat its
+> >> reported datetime (T).
+> >
+> > Just as with the current system.
+> >
+> > The defence is that on receipt of a block, its timestamp is checked
+> against
+> > the node's own clock and averaged network clock.  Blocks out of that band
+> > are
+> > rejected.
+> >
+> >
+> > Andy
+> > --
+> > Dr Andy Parkins
+> > andyparkins at gmail.com
+> >
+>
+>
+> --
+> Jorge Tim?n
+>
+>
+> ------------------------------------------------------------------------------
+> All the data continuously generated in your IT infrastructure
+> contains a definitive record of customers, application performance,
+> security threats, fraudulent activity, and more. Splunk takes this
+> data and makes sense of it. IT sense. And common sense.
+> http://p.sf.net/sfu/splunk-novd2d
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111123/1d2aa84d/attachment.html>
+
+From andyparkins at gmail.com  Wed Nov 23 12:54:41 2011
+From: andyparkins at gmail.com (Andy Parkins)
+Date: Wed, 23 Nov 2011 12:54:41 +0000
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <CAGQP0AEZ9CUNd9ERyMsx741bqjLptY4pPRU6EmxQcD7kR8bdbw@mail.gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<201111231130.58785.andyparkins@gmail.com>
+	<CAGQP0AEZ9CUNd9ERyMsx741bqjLptY4pPRU6EmxQcD7kR8bdbw@mail.gmail.com>
+Message-ID: <201111231254.41426.andyparkins@gmail.com>
+
+On 2011 November 23 Wednesday, Jorge Tim?n wrote:
+> With the current system, the timestamp can also be cheated, but miners
+> have no direct incentive to do it. With your system, they increase
+> their probability of mining a block by putting a false timestamp.
+> Also, where's the network clock you're talking about? Isn't it the
+> timestamps in the blockchain?
+
+(1) The "probability of mining a block" is old-think.  The probability of 
+mining a block is 100% in my system.  Instead, it becomes "the probability of 
+your block being the hardest" and that requires actual hashing power 
+regardless of the timestamp you write on the block.  I could write that my 
+block was generated next year; but I can't fake the hashing power it needs to 
+generate one year's worth of hashes.
+
+If chain difficulty were summed correctly (sum(log(difficulty)), I guess), 
+then time makes not the slightest difference anyway.  You can issue blocks at 
+any time with any difficulty, and the "hardest" chain always wins.  The block 
+period can be anything, and it is only the block reward that makes it 
+necessary to pick a particular period for block issuing (even that could be 
+worked around I guess with a variable reward, but why bother?).
+
+(2) For the network clock; see util.cpp:GetAdjustedTime().
+
+(3) Current clients do have an incentive: more time.  The more time they get, 
+the more hashes they can try.  The current client already checks the 
+timestamp:
+
+  main.cpp:CBlock::CheckBlock()
+
+    // Check timestamp
+    if (GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
+        return error("CheckBlock() : block timestamp too far in the future");
+
+My suggestion only requires that the two hour window be reduced; and a lower 
+limit to be added.  Also: while the miners have an incentive to lie about the 
+time, the nodes they broadcast to have an incentive to reject mistimed blocks, 
+so you won't gain much by lying to your peers since your block won't be 
+accepted -- the incentive is therefore removed.
+
+Note: my system also prevents an attack that is possible with current bitcoin: 
+recalculating the entire chain.  Let's say Visa want to take over bitcoin.  
+They buy enough computing power to significantly beat the current bitcoin 
+network; then they start recalculating the entire block chain; since early 
+blocks were low difficulty, it's not that hard to do.  Once they overtake the 
+real chain, they have effectively undone all previous transactions.  (I'm not 
+suggesting this is likely; and it's actually mitigated by the hard-coded block 
+hashes).  The point is that blocks are only generatable for the time when the 
+rest of the network is willing to add them to the chain.
+
+
+
+Andy
+
+-- 
+Dr Andy Parkins
+andyparkins at gmail.com
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 198 bytes
+Desc: This is a digitally signed message part.
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111123/c91e1106/attachment.sig>
+
+From andyparkins at gmail.com  Wed Nov 23 13:13:12 2011
+From: andyparkins at gmail.com (Andy Parkins)
+Date: Wed, 23 Nov 2011 13:13:12 +0000
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <CALxbBHVEvCqun0aX_9awGhW39h5cx0jLPx2ptoesBcmKGO-_Dw@mail.gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<CAGQP0AEZ9CUNd9ERyMsx741bqjLptY4pPRU6EmxQcD7kR8bdbw@mail.gmail.com>
+	<CALxbBHVEvCqun0aX_9awGhW39h5cx0jLPx2ptoesBcmKGO-_Dw@mail.gmail.com>
+Message-ID: <201111231313.12534.andyparkins@gmail.com>
+
+On 2011 November 23 Wednesday, Christian Decker wrote:
+
+> The current block generation with a fixed difficulty was chosen because it
+> it clear when to adjust and to what target difficulty it has to be
+> adjusted. If we were to use synchronized time windows and select the
+> hardest block it gets incredibly complicated as synchronization is not
+> possible in distributed systems. Even the smallest drift would allow for
+> forks in the chain all over the place. Furthermore the delay in propagation
+> will also cause forks.
+> 
+> If 1/2 of the network see one block as the hardest, and for the rest of the
+> network it came too late then we'll have a fork that stays with us quite a
+> while.
+> 
+> The block chain is described as a timestamp server in the paper, but it is
+> more of a proof-of-existence before, as the contained timestamp cannot be
+> trusted anyway.
+
+These are reasonable objections.  My counter is this:
+
+Let's view block difficulty as a measure of time, not time itself.  The 
+timestamp is merely a convenience for the block.  You cannot fake the 
+computing power needed for a particular difficulty; so the hardest chain 
+always wins (note: hardest chain).
+
+If I am a miner, I have two choices:
+
+  (a) try to replace the top block on the current hardest chain
+  (b) try to append to the current hardest chain
+
+Either of these is acceptable; but in case (a) I have to generate a more 
+difficult block to replace it; in case (b), at the start of the window, any 
+difficulty is acceptable (however, I'm competing with other miners, so _any_ 
+difficulty won't beat them).
+
+The rule then is that you're trying to win the one block reward that is 
+available every 10 minutes; and your peers will be rejecting blocks with 
+timestamps that are lies.
+
+Perhaps an example...
+
+ - I (a node), download the blockchain
+ - The blockchain has N potential heads.  Each of those heads has a time, t
+   and a sum_of_difficulty.
+ - The next block reward is going to go to the highest difficulty with
+   t < timestamp < (t + T) _and_ verified timestamp (i.e. not received more
+   than, say 5 minutes, from its claimed timestamp).
+ - I can choose any head to start generating from, but given that it's the
+   highest difficulty chain that's going to win the next reward (not the 
+   highest difficulty block), I will surely pick the most difficult?
+ - A rogue miner then issues a block with a fake timestamp; it actually
+   generated at (t + T + 5) but claims (t + 5).  Should I start using
+   that block as my new head?  Obviously not, because my peers might decide
+   that it is a lie and reject it because it was received too late, making my
+   work useless.  It is in my interest to pick a head that is honest.
+
+Resolving forks is easy:
+
+ - 50 coins every ten minutes only
+ - most difficult chain wins
+
+I'm certainly not saying it's a simple change.  There are certainly areas I 
+haven't thought about, and could be game-overs; but I do like the idea of 
+there being no target difficulty, and instead the blocks are issued at a fixed 
+ten minute rate (or rather the rewards are).
+
+
+Andy
+
+-- 
+Dr Andy Parkins
+andyparkins at gmail.com
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 198 bytes
+Desc: This is a digitally signed message part.
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111123/7405827f/attachment.sig>
+
+From decker.christian at gmail.com  Wed Nov 23 14:38:55 2011
+From: decker.christian at gmail.com (Christian Decker)
+Date: Wed, 23 Nov 2011 15:38:55 +0100
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <201111231313.12534.andyparkins@gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<CAGQP0AEZ9CUNd9ERyMsx741bqjLptY4pPRU6EmxQcD7kR8bdbw@mail.gmail.com>
+	<CALxbBHVEvCqun0aX_9awGhW39h5cx0jLPx2ptoesBcmKGO-_Dw@mail.gmail.com>
+	<201111231313.12534.andyparkins@gmail.com>
+Message-ID: <CALxbBHW2KGv=sEvYqpGGsy8jjJ3+yE02BegwPhjGapuT9z7v_Q@mail.gmail.com>
+
+Just brainstorming here, no idea if this would work:
+
+   - Pick any old block
+   - Create a chain fork by creating simpler blocks on top of your chosen
+   one
+   - The chain will not be accepted by others
+   - At some point you might find an incredibly hard block that makes your
+   forked chain the hardest one in the network
+   - Suddenly all your blocks are valid and you force people to switch to
+   your forked chain
+
+If this is possible it would allow you to revoke all transactions and claim
+all the mined coins since you forked. My point is that the notion of
+hardest chain is not so simple.
+
+The difficulty of invalidating a chain is dramatically reduced with your
+time window approach, by not requiring a given difficulty, and relying on
+synchronized time windows.
+
+Regards,
+Chris
+
+On Wed, Nov 23, 2011 at 2:13 PM, Andy Parkins <andyparkins at gmail.com> wrote:
+
+> On 2011 November 23 Wednesday, Christian Decker wrote:
+>
+> > The current block generation with a fixed difficulty was chosen because
+> it
+> > it clear when to adjust and to what target difficulty it has to be
+> > adjusted. If we were to use synchronized time windows and select the
+> > hardest block it gets incredibly complicated as synchronization is not
+> > possible in distributed systems. Even the smallest drift would allow for
+> > forks in the chain all over the place. Furthermore the delay in
+> propagation
+> > will also cause forks.
+> >
+> > If 1/2 of the network see one block as the hardest, and for the rest of
+> the
+> > network it came too late then we'll have a fork that stays with us quite
+> a
+> > while.
+> >
+> > The block chain is described as a timestamp server in the paper, but it
+> is
+> > more of a proof-of-existence before, as the contained timestamp cannot be
+> > trusted anyway.
+>
+> These are reasonable objections.  My counter is this:
+>
+> Let's view block difficulty as a measure of time, not time itself.  The
+> timestamp is merely a convenience for the block.  You cannot fake the
+> computing power needed for a particular difficulty; so the hardest chain
+> always wins (note: hardest chain).
+>
+> If I am a miner, I have two choices:
+>
+>  (a) try to replace the top block on the current hardest chain
+>  (b) try to append to the current hardest chain
+>
+> Either of these is acceptable; but in case (a) I have to generate a more
+> difficult block to replace it; in case (b), at the start of the window, any
+> difficulty is acceptable (however, I'm competing with other miners, so
+> _any_
+> difficulty won't beat them).
+>
+> The rule then is that you're trying to win the one block reward that is
+> available every 10 minutes; and your peers will be rejecting blocks with
+> timestamps that are lies.
+>
+> Perhaps an example...
+>
+>  - I (a node), download the blockchain
+>  - The blockchain has N potential heads.  Each of those heads has a time, t
+>   and a sum_of_difficulty.
+>  - The next block reward is going to go to the highest difficulty with
+>   t < timestamp < (t + T) _and_ verified timestamp (i.e. not received more
+>   than, say 5 minutes, from its claimed timestamp).
+>  - I can choose any head to start generating from, but given that it's the
+>   highest difficulty chain that's going to win the next reward (not the
+>   highest difficulty block), I will surely pick the most difficult?
+>  - A rogue miner then issues a block with a fake timestamp; it actually
+>   generated at (t + T + 5) but claims (t + 5).  Should I start using
+>   that block as my new head?  Obviously not, because my peers might decide
+>   that it is a lie and reject it because it was received too late, making
+> my
+>   work useless.  It is in my interest to pick a head that is honest.
+>
+> Resolving forks is easy:
+>
+>  - 50 coins every ten minutes only
+>  - most difficult chain wins
+>
+> I'm certainly not saying it's a simple change.  There are certainly areas I
+> haven't thought about, and could be game-overs; but I do like the idea of
+> there being no target difficulty, and instead the blocks are issued at a
+> fixed
+> ten minute rate (or rather the rewards are).
+>
+>
+> Andy
+>
+> --
+> Dr Andy Parkins
+> andyparkins at gmail.com
+>
+>
+> ------------------------------------------------------------------------------
+> All the data continuously generated in your IT infrastructure
+> contains a definitive record of customers, application performance,
+> security threats, fraudulent activity, and more. Splunk takes this
+> data and makes sense of it. IT sense. And common sense.
+> http://p.sf.net/sfu/splunk-novd2d
+> _______________________________________________
+> Bitcoin-development mailing list
+> Bitcoin-development at lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/bitcoin-development
+>
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111123/9dfcdfc0/attachment.html>
+
+From gavinandresen at gmail.com  Wed Nov 23 15:09:10 2011
+From: gavinandresen at gmail.com (Gavin Andresen)
+Date: Wed, 23 Nov 2011 10:09:10 -0500
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <CALxbBHW2KGv=sEvYqpGGsy8jjJ3+yE02BegwPhjGapuT9z7v_Q@mail.gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<CAGQP0AEZ9CUNd9ERyMsx741bqjLptY4pPRU6EmxQcD7kR8bdbw@mail.gmail.com>
+	<CALxbBHVEvCqun0aX_9awGhW39h5cx0jLPx2ptoesBcmKGO-_Dw@mail.gmail.com>
+	<201111231313.12534.andyparkins@gmail.com>
+	<CALxbBHW2KGv=sEvYqpGGsy8jjJ3+yE02BegwPhjGapuT9z7v_Q@mail.gmail.com>
+Message-ID: <CABsx9T0VH5i0HrEjxfxxtzO2MtmN7UEyAUXoq9puc-1nKw3G4Q@mail.gmail.com>
+
+On Wed, Nov 23, 2011 at 9:38 AM, Christian Decker
+<decker.christian at gmail.com> wrote:
+> At some point you might find an incredibly hard block that makes your forked
+> chain the hardest one in the network
+
+Seems to me that's the real problem with any "hardest block found in X
+minutes" scheme.
+
+If I get lucky and find a really extremely hard block then I have an
+incentive to keep it secret and build a couple more blocks on top of
+it, then announce them all at the same time.
+
+If the rest of the network rejects my longer chain because I didn't
+announce the extremely hard block in a timely fashion... then how
+could the network ever recover from a real network split?  A network
+split/rejoin will look exactly the same.
+
+Bitcoin as-is doesn't have the "I got lucky and found an extremely
+hard block" problem because the difficulty TARGET is used to compute
+chain difficulty, not the actual hashes found.
+
+
+---
+
+PS: I proposed a different method for dealing with large hash power
+drops for the testnet on the Forums yesterday, and am testing it
+today.
+
+-- 
+--
+Gavin Andresen
+
+
+
+From timon.elviejo at gmail.com  Wed Nov 23 15:10:40 2011
+From: timon.elviejo at gmail.com (=?ISO-8859-1?Q?Jorge_Tim=F3n?=)
+Date: Wed, 23 Nov 2011 16:10:40 +0100
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <201111231254.41426.andyparkins@gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<201111231130.58785.andyparkins@gmail.com>
+	<CAGQP0AEZ9CUNd9ERyMsx741bqjLptY4pPRU6EmxQcD7kR8bdbw@mail.gmail.com>
+	<201111231254.41426.andyparkins@gmail.com>
+Message-ID: <CAGQP0AEQukQYB5Bmn-XfK3G0hm0q9r2YDL5W=zy+eBY7Vufb8g@mail.gmail.com>
+
+2011/11/23, Andy Parkins <andyparkins at gmail.com>:
+> On 2011 November 23 Wednesday, Jorge Tim?n wrote:
+>> With the current system, the timestamp can also be cheated, but miners
+>> have no direct incentive to do it. With your system, they increase
+>> their probability of mining a block by putting a false timestamp.
+>> Also, where's the network clock you're talking about? Isn't it the
+>> timestamps in the blockchain?
+>
+> (1) The "probability of mining a block" is old-think.  The probability of
+> mining a block is 100% in my system.  Instead, it becomes "the probability
+> of
+> your block being the hardest" and that requires actual hashing power
+> regardless of the timestamp you write on the block.  I could write that my
+> block was generated next year; but I can't fake the hashing power it needs
+> to
+> generate one year's worth of hashes.
+
+Well, I meant "the probability of  your block being the hardest".
+What a miner can do is hash the block (cheating the timestamp) for 2
+more minutes than the rest of the people and then send it to the other
+nodes. Nodes cannot possibly know when did you hashed the block only
+by looking at their clock when they receive it, because there's also
+network latency.
+
+> (2) For the network clock; see util.cpp:GetAdjustedTime().
+
+1) This is part of the satoshi client but not the protocol. A miner
+can rewrite this part of the code and there won't be anything in the
+chain that contradicts the protocol.
+
+2) I haven't read the code but I'm pretty sure that's not a perfect
+decentralized clock.
+
+I will be more specific. Where's the network clock in the chain (in
+the protocol)?
+
+-- 
+Jorge Tim?n
+
+
+
+From andyparkins at gmail.com  Wed Nov 23 15:11:07 2011
+From: andyparkins at gmail.com (Andy Parkins)
+Date: Wed, 23 Nov 2011 15:11:07 +0000
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <CALxbBHW2KGv=sEvYqpGGsy8jjJ3+yE02BegwPhjGapuT9z7v_Q@mail.gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<201111231313.12534.andyparkins@gmail.com>
+	<CALxbBHW2KGv=sEvYqpGGsy8jjJ3+yE02BegwPhjGapuT9z7v_Q@mail.gmail.com>
+Message-ID: <201111231511.14980.andyparkins@gmail.com>
+
+On 2011 November 23 Wednesday, Christian Decker wrote:
+> Just brainstorming here, no idea if this would work:
+> 
+>    - Pick any old block
+>    - Create a chain fork by creating simpler blocks on top of your chosen
+>    one
+>    - The chain will not be accepted by others
+>    - At some point you might find an incredibly hard block that makes your
+>    forked chain the hardest one in the network
+>    - Suddenly all your blocks are valid and you force people to switch to
+>    your forked chain
+> 
+> If this is possible it would allow you to revoke all transactions and claim
+> all the mined coins since you forked. My point is that the notion of
+> hardest chain is not so simple.
+
+The above is a problem in either system (mine or current).  If I can make a 
+"hardest chain", then I have indeed reverted all the existing transactions. 
+
+Look at CBlock::AddToBlockIndex(), 
+
+    if (pindexNew->bnChainWork > bnBestChainWork)
+        if (!SetBestChain(txdb, pindexNew))
+            return false;
+
+If the received block has higher total chain work than the current best chain 
+work; then the new block becomes the head of the best chain.  The chain work 
+being calculated like this (I've abbreviated for the email):
+
+  pindexNew->bnChainWork = pprev->bnChainWork + pindexNew->GetBlockWork()
+
+I'm not entirely convinced that this method of totalling chain work is the 
+best (it's a sum of exponentials I think); but that's a different issue.
+
+> The difficulty of invalidating a chain is dramatically reduced with your
+> time window approach, by not requiring a given difficulty, and relying on
+> synchronized time windows.
+
+I don't see that it is reduced; it is the same.  Hashes are hashes.  A given 
+difficulty isn't required, but a higher difficulty beats a lower difficulty.  
+So whatever the hashing power of the network at that moment, it's used.  That 
+makes the chain more secure, not less.
+
+
+
+Andy
+
+-- 
+Dr Andy Parkins
+andyparkins at gmail.com
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 198 bytes
+Desc: This is a digitally signed message part.
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111123/270594a5/attachment.sig>
+
+From andyparkins at gmail.com  Wed Nov 23 15:29:45 2011
+From: andyparkins at gmail.com (Andy Parkins)
+Date: Wed, 23 Nov 2011 15:29:45 +0000
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <CAGQP0AEQukQYB5Bmn-XfK3G0hm0q9r2YDL5W=zy+eBY7Vufb8g@mail.gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<201111231254.41426.andyparkins@gmail.com>
+	<CAGQP0AEQukQYB5Bmn-XfK3G0hm0q9r2YDL5W=zy+eBY7Vufb8g@mail.gmail.com>
+Message-ID: <201111231529.46154.andyparkins@gmail.com>
+
+On 2011 November 23 Wednesday, Jorge Tim?n wrote:
+
+> Well, I meant "the probability of  your block being the hardest".
+> What a miner can do is hash the block (cheating the timestamp) for 2
+> more minutes than the rest of the people and then send it to the other
+> nodes. Nodes cannot possibly know when did you hashed the block only
+> by looking at their clock when they receive it, because there's also
+> network latency.
+
+True enough; but then the same is true for everyone else.  If the window is 2 
+minutes after the stated time, then everyone _can_ wait until the end of that 
+window.  However, they risk their block being rejected by their peers, and 
+their efforts are wasted.  In fact, it can be guaranteed by making the accept 
+window zero.  There is then no reason to carry on computing after the reward 
+window closes, since you know your peers will reject it.
+
+> > (2) For the network clock; see util.cpp:GetAdjustedTime().
+> 
+> 1) This is part of the satoshi client but not the protocol. A miner
+> can rewrite this part of the code and there won't be anything in the
+> chain that contradicts the protocol.
+
+Well yes.  What does that matter?  It's only a way of calculating an average 
+time.  The node can use any clock it wants, as long as the block time is 
+verified by the peers.
+
+> 2) I haven't read the code but I'm pretty sure that's not a perfect
+> decentralized clock.
+
+It definitely isn't.  NTP is mentioned in the source as an alternative.
+
+> I will be more specific. Where's the network clock in the chain (in
+> the protocol)?
+
+It's nothing to do with the protocol; it's an individual miner choosing 
+whether to accept or reject a block based on the timestamp it claims, and the 
+current time as the miner sees it.  For the sake of compatibility, the clients 
+currently choose to use a community clock as "current", as established from 
+the time they receive from peers in the "version" message (it actually holds 
+offsets between them, which is pretty bad, as a long-connected client will 
+drift).  They don't have to, but if miners aren't using time that approximates 
+what their peers are using, under my system, their blocks would be rejected: 
+so an incentive to use that "community clock" exists.
+
+
+
+Andy
+
+-- 
+Dr Andy Parkins
+andyparkins at gmail.com
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 198 bytes
+Desc: This is a digitally signed message part.
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111123/aa9881ec/attachment.sig>
+
+From etotheipi at gmail.com  Wed Nov 23 15:35:06 2011
+From: etotheipi at gmail.com (Alan Reiner)
+Date: Wed, 23 Nov 2011 10:35:06 -0500
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <CABsx9T0VH5i0HrEjxfxxtzO2MtmN7UEyAUXoq9puc-1nKw3G4Q@mail.gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>	<CAGQP0AEZ9CUNd9ERyMsx741bqjLptY4pPRU6EmxQcD7kR8bdbw@mail.gmail.com>	<CALxbBHVEvCqun0aX_9awGhW39h5cx0jLPx2ptoesBcmKGO-_Dw@mail.gmail.com>	<201111231313.12534.andyparkins@gmail.com>	<CALxbBHW2KGv=sEvYqpGGsy8jjJ3+yE02BegwPhjGapuT9z7v_Q@mail.gmail.com>
+	<CABsx9T0VH5i0HrEjxfxxtzO2MtmN7UEyAUXoq9puc-1nKw3G4Q@mail.gmail.com>
+Message-ID: <4ECD12AA.6080605@gmail.com>
+
+I can substantiate Gavin's point quite powerfully: a couple months ago I 
+did a search for the "hardest" block in the network and found a *very 
+**impressive* one:
+
+https://bitcointalk.org/index.php?topic=29675.0
+
+That block has a difficulty of **36 billion** when the network had a 
+difficulty of **1.5 million**, which is 24,000 times harder than the 
+target.  If we were going by the /actual /hardest chain instead 
+target-based-hardest chain, /then this block produced in July would 
+might still represent the longest chain!/
+
+Yes, that means that whichever miner produced this block, could've held 
+onto it for 2-4 months without doing anything else, and then broadcast 
+it to fork the blockchain from a block produced months ago.  That's not 
+theoretical, that's real data in the blockchain and it would be a disaster.
+
+-Alan
+
+
+
+On 11/23/2011 10:09 AM, Gavin Andresen wrote:
+> On Wed, Nov 23, 2011 at 9:38 AM, Christian Decker
+> <decker.christian at gmail.com>  wrote:
+>> At some point you might find an incredibly hard block that makes your forked
+>> chain the hardest one in the network
+> Seems to me that's the real problem with any "hardest block found in X
+> minutes" scheme.
+>
+> If I get lucky and find a really extremely hard block then I have an
+> incentive to keep it secret and build a couple more blocks on top of
+> it, then announce them all at the same time.
+>
+> If the rest of the network rejects my longer chain because I didn't
+> announce the extremely hard block in a timely fashion... then how
+> could the network ever recover from a real network split?  A network
+> split/rejoin will look exactly the same.
+>
+> Bitcoin as-is doesn't have the "I got lucky and found an extremely
+> hard block" problem because the difficulty TARGET is used to compute
+> chain difficulty, not the actual hashes found.
+>
+>
+> ---
+>
+> PS: I proposed a different method for dealing with large hash power
+> drops for the testnet on the Forums yesterday, and am testing it
+> today.
+>
+
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111123/c80449ce/attachment.html>
+
+From timon.elviejo at gmail.com  Wed Nov 23 15:38:30 2011
+From: timon.elviejo at gmail.com (=?ISO-8859-1?Q?Jorge_Tim=F3n?=)
+Date: Wed, 23 Nov 2011 16:38:30 +0100
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <201111231529.46154.andyparkins@gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<201111231254.41426.andyparkins@gmail.com>
+	<CAGQP0AEQukQYB5Bmn-XfK3G0hm0q9r2YDL5W=zy+eBY7Vufb8g@mail.gmail.com>
+	<201111231529.46154.andyparkins@gmail.com>
+Message-ID: <CAGQP0AGWTa-iRsryMZnFxnMEPRdy_hm+P+FUN9jBVK0F+AgVDA@mail.gmail.com>
+
+But the protocol must have a deterministic way to determine if a block
+must be accepted or rejected.
+I don't know what NTP is, but if you can have a perfect distributed
+clock your proposal may work.
+
+2011/11/23, Andy Parkins <andyparkins at gmail.com>:
+> On 2011 November 23 Wednesday, Jorge Tim?n wrote:
+>
+>> Well, I meant "the probability of  your block being the hardest".
+>> What a miner can do is hash the block (cheating the timestamp) for 2
+>> more minutes than the rest of the people and then send it to the other
+>> nodes. Nodes cannot possibly know when did you hashed the block only
+>> by looking at their clock when they receive it, because there's also
+>> network latency.
+>
+> True enough; but then the same is true for everyone else.  If the window is
+> 2
+> minutes after the stated time, then everyone _can_ wait until the end of
+> that
+> window.  However, they risk their block being rejected by their peers, and
+> their efforts are wasted.  In fact, it can be guaranteed by making the
+> accept
+> window zero.  There is then no reason to carry on computing after the reward
+> window closes, since you know your peers will reject it.
+>
+>> > (2) For the network clock; see util.cpp:GetAdjustedTime().
+>>
+>> 1) This is part of the satoshi client but not the protocol. A miner
+>> can rewrite this part of the code and there won't be anything in the
+>> chain that contradicts the protocol.
+>
+> Well yes.  What does that matter?  It's only a way of calculating an average
+> time.  The node can use any clock it wants, as long as the block time is
+> verified by the peers.
+>
+>> 2) I haven't read the code but I'm pretty sure that's not a perfect
+>> decentralized clock.
+>
+> It definitely isn't.  NTP is mentioned in the source as an alternative.
+>
+>> I will be more specific. Where's the network clock in the chain (in
+>> the protocol)?
+>
+> It's nothing to do with the protocol; it's an individual miner choosing
+> whether to accept or reject a block based on the timestamp it claims, and
+> the
+> current time as the miner sees it.  For the sake of compatibility, the
+> clients
+> currently choose to use a community clock as "current", as established from
+> the time they receive from peers in the "version" message (it actually holds
+> offsets between them, which is pretty bad, as a long-connected client will
+> drift).  They don't have to, but if miners aren't using time that
+> approximates
+> what their peers are using, under my system, their blocks would be rejected:
+> so an incentive to use that "community clock" exists.
+>
+>
+>
+> Andy
+>
+> --
+> Dr Andy Parkins
+> andyparkins at gmail.com
+>
+
+
+-- 
+Jorge Tim?n
+
+
+
+From andyparkins at gmail.com  Wed Nov 23 15:39:10 2011
+From: andyparkins at gmail.com (Andy Parkins)
+Date: Wed, 23 Nov 2011 15:39:10 +0000
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <CABsx9T0VH5i0HrEjxfxxtzO2MtmN7UEyAUXoq9puc-1nKw3G4Q@mail.gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<CALxbBHW2KGv=sEvYqpGGsy8jjJ3+yE02BegwPhjGapuT9z7v_Q@mail.gmail.com>
+	<CABsx9T0VH5i0HrEjxfxxtzO2MtmN7UEyAUXoq9puc-1nKw3G4Q@mail.gmail.com>
+Message-ID: <201111231539.11080.andyparkins@gmail.com>
+
+On 2011 November 23 Wednesday, Gavin Andresen wrote:
+
+> Bitcoin as-is doesn't have the "I got lucky and found an extremely
+> hard block" problem because the difficulty TARGET is used to compute
+> chain difficulty, not the actual hashes found.
+
+Good points.  I don't think I have a response to that one.
+
+I saw the "I got lucky" result as a benefit, as it made it harder to fork the 
+chain.  We got an advantage from the luck.
+
+I'll have to abandon this suggestion.  It's not going to work.
+
+Thanks for the feedback everyone.
+
+
+
+Andy
+
+-- 
+Dr Andy Parkins
+andyparkins at gmail.com
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 198 bytes
+Desc: This is a digitally signed message part.
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111123/b3a137b0/attachment.sig>
+
+From joel.kaartinen at gmail.com  Wed Nov 23 16:26:30 2011
+From: joel.kaartinen at gmail.com (Joel Joonatan Kaartinen)
+Date: Wed, 23 Nov 2011 18:26:30 +0200
+Subject: [Bitcoin-development] Addressing rapid changes in mining power
+In-Reply-To: <201111231539.11080.andyparkins@gmail.com>
+References: <201111231035.48690.andyparkins@gmail.com>
+	<CALxbBHW2KGv=sEvYqpGGsy8jjJ3+yE02BegwPhjGapuT9z7v_Q@mail.gmail.com>
+	<CABsx9T0VH5i0HrEjxfxxtzO2MtmN7UEyAUXoq9puc-1nKw3G4Q@mail.gmail.com>
+	<201111231539.11080.andyparkins@gmail.com>
+Message-ID: <1322065590.27400.232.camel@mei>
+
+On Wed, 2011-11-23 at 15:39 +0000, Andy Parkins wrote:
+> On 2011 November 23 Wednesday, Gavin Andresen wrote:
+> 
+> > Bitcoin as-is doesn't have the "I got lucky and found an extremely
+> > hard block" problem because the difficulty TARGET is used to compute
+> > chain difficulty, not the actual hashes found.
+> 
+> Good points.  I don't think I have a response to that one.
+
+If there's an upper bound on the difficulty a block is accepted to have
+(even if it would've passed with significantly higher difficulty), that
+could solve this issue. For example, take the median (or average) of the
+past 2016 blocks and don't value any new block for more than maybe 4
+times as difficult as that. 
+
+> I saw the "I got lucky" result as a benefit, as it made it harder to fork the 
+> chain.  We got an advantage from the luck.
+> 
+> I'll have to abandon this suggestion.  It's not going to work.
+> 
+> Thanks for the feedback everyone.
+
+Don't be so hasty with that :)
+
+- Joel
+
+
+
+
+From mike at plan99.net  Fri Nov 25 14:38:15 2011
+From: mike at plan99.net (Mike Hearn)
+Date: Fri, 25 Nov 2011 15:38:15 +0100
+Subject: [Bitcoin-development] [ANNOUNCE] BitCoinJ 0.3
+In-Reply-To: <CAFhH=NbqOPiZOGgY4GG7WsQNF81M55wyzaiu-gPypVT+Lab8gg@mail.gmail.com>
+References: <CAFhH=NZNypgBWaBGkOey8rQJ9Dqc-u0zTGKw7khGBFKTOqj4xA@mail.gmail.com>
+	<CAFhH=NbqOPiZOGgY4GG7WsQNF81M55wyzaiu-gPypVT+Lab8gg@mail.gmail.com>
+Message-ID: <CANEZrP0hP+C48jgMAg9gy7j3ewLpQJBah6aq=x93JJrT1EJHMA@mail.gmail.com>
+
+Perhaps a bit off-topic for this list, maybe there should be a
+software/services announcements list? Anyway ...
+
+I'm happy to announce version 0.3 of the leading Java implementation of the
+Bitcoin protocol. BitCoinJ is a widely used library that forms the
+foundation of projects as diverse as the Android Bitcoin
+Wallet<https://market.android.com/details?id=de.schildbach.wallet&hl=en>,
+the p2p network status graphs <http://bitcoinstatus.rowit.co.uk/>,
+MultiBit<http://multibit.org/>
+, PoolServerJ <http://poolserverj.org/> and more.
+
+You can get it either from our Maven
+repository<http://code.google.com/p/bitcoinj/wiki/UsingMaven>or the
+downloads
+section <http://code.google.com/p/bitcoinj/downloads/list> of the website.
+
+New in this release:
+
+   - Many bugfixes, robustness and test suite improvements.
+   - Major optimizations to reduce parsing overhead, most protocol messages
+   are now parsed on demand.
+   - A new PeerGroup API that handles the management of multiple peer
+   connections.
+   - Switched to using Maven for the build process, removed the bundled
+   Bouncy Castle as a result. You can now depend on BitCoinJ using Maven if
+   you don't need any special patches.
+   - A bunch of new APIs to make writing Bitcoin apps easier.
+
+This release would not have been possible without the major contributions
+from:
+
+*Steve Coughlan*, who contributed many parsing improvements and
+optimizations
+*Miron Cuperman*, who did significant work on the PeerGroup API
+*Andreas Schildbach*, developer of the Android wallet, who as always
+reported many bugs and useful suggestions for improvement
+*Gary Rowe and Jonny Hegheim*, who set up the continuous build and Maven
+infrastructure
+
+What's next? The next release will focus on "more of the same", that is,
+fixing bugs and filling out missing features so projects using the library
+don't feel any need to patch their local copy of the library. By popular
+request we'll be switching from Subversion to git. We'll also introduce a
+stable wallet format that isn't dependent on Java serialization, and
+timestamp key creation to resolve some issues with clients that ship block
+chain copies. And finally of course, whatever is contributed by the
+community.
+
+thanks
+/mike
+
+-- 
+Google Switzerland GmbH
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20111125/1d2a4036/attachment.html>
+

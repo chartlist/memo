@@ -1,0 +1,2817 @@
+From rusty at rustcorp.com.au  Fri Jul  1 03:25:17 2016
+From: rusty at rustcorp.com.au (Rusty Russell)
+Date: Fri, 01 Jul 2016 12:55:17 +0930
+Subject: [bitcoin-dev] BIP 151 use of HMAC_SHA512
+In-Reply-To: <CAEM=y+XKQZVz6UieB-nDy_C9xTmXiBB3-atuuZkxzmPoSVPOJw@mail.gmail.com>
+References: <87h9cecad5.fsf@rustcorp.com.au>
+	<577224E8.6070307@jonasschnelli.ch>
+	<8760ssdd1u.fsf@rustcorp.com.au>
+	<CAEM=y+XKQZVz6UieB-nDy_C9xTmXiBB3-atuuZkxzmPoSVPOJw@mail.gmail.com>
+Message-ID: <87oa6iavky.fsf@rustcorp.com.au>
+
+Ethan Heilman <eth3rs at gmail.com> writes:
+>>It's also not clear to me why the HMAC, vs just SHA256(key|cipher-type|mesg).  But that's probably just my crypto ignorance...
+>
+> SHA256(key|cipher-type|mesg) is an extremely insecure MAC because of
+> the length extension property of SHA256.
+>
+> If I have a tag y = SHA256(key|cipher-type|mesg), I can without
+> knowing key or msg compute a value y' such that
+> y' = SHA256(key|cipher-type|mesg|any values I want).
+
+Not quite, there's an important subtlety that SHA256 appends the
+bitlength, so you can only create:
+
+y' = SHA256(key|cipher-type|mesg|padding|bitlength|any values I want).
+
+But we're not using this for a MAC in BIP151, we're using this to
+generate the encryption keys.
+
+Arthur Chen <arthur.chen at btcc.com> said:
+> HMAC has proven security property.
+> It is still secure even when underlying crypto hashing function has
+> collision resistant weakness.
+> For example, MD5 is considered completely insecure now, but HMAC-MD5 is
+> still considered secure.
+> When in doubt, we should always use HMAC for MAC(Message Authentication
+> Code) rather than custom construction
+
+Bitcoin already relies on SHA256's robustness, but again, we don't need
+a MAC here.
+
+I'm happy to buy "we just copied ssh" if that's the answer, and I can't
+see anything wrong with using HMAC here, it just seems odd...
+
+Thanks!
+Rusty.
+
+From zooko at z.cash  Fri Jul  1 22:42:19 2016
+From: zooko at z.cash (Zooko Wilcox)
+Date: Fri, 1 Jul 2016 22:42:19 +0000
+Subject: [bitcoin-dev] BIP 151 use of HMAC_SHA512
+In-Reply-To: <87oa6iavky.fsf@rustcorp.com.au>
+References: <87h9cecad5.fsf@rustcorp.com.au>
+	<577224E8.6070307@jonasschnelli.ch>
+	<8760ssdd1u.fsf@rustcorp.com.au>
+	<CAEM=y+XKQZVz6UieB-nDy_C9xTmXiBB3-atuuZkxzmPoSVPOJw@mail.gmail.com>
+	<87oa6iavky.fsf@rustcorp.com.au>
+Message-ID: <CADorodhC=UvQmiNVSd91dA57PyYydDH+uUUp_Aj5CsN-EG-e4g@mail.gmail.com>
+
+I haven't been able to find the beginning of this thread, so apologies
+if I've misunderstood what this is for, but it _sounds_ like we're
+re-inventing HKDF.
+
+I'd recommend reading the paper about HKDF. It stands out among crypto
+papers for having a nice clear justification for each of its design
+decisions, so you can see why they did it (very slightly) differently
+than the various constructions proposed up-thread.
+
+https://eprint.iacr.org/2010/264
+
+Also, of course, it is a great idea to re-use a standard
+(https://tools.ietf.org/html/rfc5869) and widely-understood crypto
+algorithm to reduce risk of both cryptographer errors and implementor
+errors.
+
+Of course, the cost of that is the you sometimes end up computing
+something that is a tiny bit more complicated or inefficient than a
+custom algorithm for our current use case. IMHO that's a cheap price
+to pay.
+
+Regards,
+
+Zooko
+
+From cp368202 at ohiou.edu  Sat Jul  2 09:44:00 2016
+From: cp368202 at ohiou.edu (Chris Priest)
+Date: Sat, 2 Jul 2016 02:44:00 -0700
+Subject: [bitcoin-dev] BIP 151
+In-Reply-To: <CAJowKg+tOoEEeVh2sh3oZbnJ3dO_h4n9eBaUeZ+ys2RPD+s2vQ@mail.gmail.com>
+References: <87h9cecad5.fsf@rustcorp.com.au>
+	<1E86A00F-0609-4DBC-9543-94AE04CC13C9@voskuil.org>
+	<577234A4.3030808@jonasschnelli.ch>
+	<CAAS2fgQFqHBdbym4GMAV-mdcEWR1SdGc3av0mDu65keKP9Ak6g@mail.gmail.com>
+	<AB9C1C8F-7369-42CC-8551-7E03B16D5229@voskuil.org>
+	<CAAS2fgT4V72vj17qTLu7pz5EQ60bqnggeDnTP5ASdwYxpuNpWw@mail.gmail.com>
+	<CB6D8DF2-3EB7-4A12-8861-494D1DBC3D93@voskuil.org>
+	<CAJowKg+tOoEEeVh2sh3oZbnJ3dO_h4n9eBaUeZ+ys2RPD+s2vQ@mail.gmail.com>
+Message-ID: <CAAcC9yv21XDK9T4gFNN=sUMtC7k50Tc=2gCXtazhaTsV_s2=zQ@mail.gmail.com>
+
+On 6/30/16, Erik Aronesty via bitcoin-dev
+<bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+> I would like to see a PGP-like "web of trust" proposal for both the
+> security of the bitcoin network itself /and/ (eventually) of things like
+> transmission of bitcoin addresses.
+>
+> Something where nodes of any kind (full, spv, mobile wallets) can
+> /optionally/ accumulate trust over time and are capable of verifying the
+> identity of other nodes in that web.
+>
+
+Isn't the system already functioning in this way already? Bitcoin
+exchanges and block explorers already have a reputation earned by so
+many years of serving the community. Their HTTPS certificate acts like
+a public/private key, and when your wallet makes a request to their
+server, the keys are automatically checked for validity by the
+underlying http library.
+
+From pete at petertodd.org  Sat Jul  2 18:43:50 2016
+From: pete at petertodd.org (Peter Todd)
+Date: Sat, 2 Jul 2016 14:43:50 -0400
+Subject: [bitcoin-dev] Code Review: The Consensus Critical Parts of
+ Segwit by Peter Todd
+In-Reply-To: <8AE6D76F-7808-4897-9F44-A83790545EE4@xbt.hk>
+References: <8AE6D76F-7808-4897-9F44-A83790545EE4@xbt.hk>
+Message-ID: <20160702184350.GA16656@fedora-21-dvm>
+
+On Wed, Jun 29, 2016 at 12:22:45AM +0800, Johnson Lau via bitcoin-dev wrote:
+> Thanks for Peter Todd?s detailed report:
+> https://petertodd.org/2016/segwit-consensus-critical-code-review
+> 
+> I have the following response.
+> 
+> >Since the reserve value is only a single, 32-byte value, we?re setting ourselves up for the same problem again7.
+> 
+> Please note that unlimited space has been reserved after the witness commitment:
+> 
+>   block.vtx[0].vout[o].scriptPubKey.size() >= 38
+> 
+>  Which means anything after 38 bytes has no consensus meaning. Any new consensus critical commitments/metadata could be put there. Anyway, there is no efficient way to add a new commitment with softfork.
+
+Sure - equally you could say you could add additional commitments as other
+coinbase txouts.
+
+My point is that the extensible commitment - specifically the thing described
+in the BIP - can't be easily used for the purpose of extending segwit due to a
+design flaw.
+
+> > the fact that we do this has a rather odd result: a transaction spending a witness output with an unknown version is valid even if the transaction doesn?t have any witnesses!
+> 
+> I don?t see any reason to have such check. We simply leave unknown witness program as any-one-can-spend without looking at the witness, as described in BIP141.
+
+It will lead to a special case in code that does things with witness
+transactions, as we can spend a witness output without a witness.
+
+> > Bizzarely segwit has an additonal pay-to-witness-pubkey-hashP2WPKH that lets you use a 160-bit (20 byte) commitment??
+> 
+> Since ~90% of current transactions are P2PKH, we expect many people will keep using this type of transaction in the future. P2WPKH gives the same level of security as P2PKH, and smaller scriptPubKey.
+> 
+> >give users the option instead to choose to accept the less secure 160-bit commitment if their use-case doesn?t need the full 256-bit security level
+> 
+> This is actually discussed on the mailing list. P2WSH with multi-sig is subject to birthday attack, and therefore 256-bit is used to provide 128-bit security. P2WPKH is used as single sig and therefore 160-bit is enough.
+
+I'm aware of that - there are many P2SH scripts where birthday attacks are not
+an issue. In fact, _most_ usage of P2SH right now - multifactor wallets -
+doesn't have a birthday attack problem.
+
+> >Secondly, if you are going to give a 160-bit commitment option, you don?t need the extra level of indirection in the P2SH case: just make the segwit redeemScript be: <version> <serialized witness script>
+> 
+> Something wrong here? In P2WPKH, the witness is <sig> <pubkey>
+
+Huh? That still another level of indirection.
+
+Anyway, the right argument against my proposal for pay-to-pubkey-hash
+functionality, is that taking into account the witness discount, my proposal is
+slightly less efficient. In P2WPKH in P2SH the witness program in the
+redeemScript is 22 bytes:
+
+    <1-byte version> <1-byte length> <20 byte pubkey hash>
+
+And the witness len(sig) + 34 bytes:
+
+    <sig> <1 byte length> <33 bytes pubkey>
+
+Taking into account the discount, that results in 22*4 + 34 + len(sig) = 122 bytes + len(sig)
+
+My proposal would have a 37 byte redeemScript:
+
+    <1-byte version> <1-byte witness script length> {<1-byte pubkey length> <33 byte pubkey> OP_CHECKSIG}
+
+and a len(sig) length witness:
+
+    <sig>
+
+Taking into account the discount, that results in 37*4 + len(sig) = 148 bytes + len(sig)
+Meanwhile for any more complex script, you'd certainly want to use the 256-bit
+hash instead, due to the witness discount.
+
+This suggests an obvious alternative: let users choose to use 160-bit security,
+and make 256-bit and 160-bit witness programm commitments just be different
+hash functions. P2PKH functionality implemented this way would be a single
+extra byte vs. special-casing it.
+
+Thus you could summarize the argument for the P2PKH special case as "We don't
+want to make it possible to use 160-bit commitments for multisig, which _might_
+need 256-bit security. But we do want to special-case pubkeys to save a few
+bytes."
+
+> >The only downside is the serialized witness script is constrained to 520 bytes max
+> 
+> 520 is the original limit. BIP141 tries to mimic the existing behaviour as much as possible. Anyway, normally nothing in the current scripts should use a push with more than 75 bytes
+
+No, you're quite confused at my point: the witness script is otherwise
+constrained to 10,000 bytes, as the first item in the witness is special-cased
+for version 0 to be not be subject to the 520 byte rule.
+
+> >we haven?t explicitly ensured that signatures for the new signature hash can?t be reused for the old signature hash
+> 
+> How could that be? That?d be a hash collision.
+
+Nope. The problem is it might not be a hash collission, if the actual bytes
+signed can be interpreted in two different ways, by different types of
+signature hashes.
+
+This is the same reason the signmessage functionality prepends the message
+being signed with the "Bitcoin Signed Message:\n" magic string.
+
+-- 
+https://petertodd.org 'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 455 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160702/3df077cb/attachment.sig>
+
+From jl2012 at xbt.hk  Sat Jul  2 19:20:42 2016
+From: jl2012 at xbt.hk (Johnson Lau)
+Date: Sun, 3 Jul 2016 03:20:42 +0800
+Subject: [bitcoin-dev] Code Review: The Consensus Critical Parts of
+	Segwit by Peter Todd
+In-Reply-To: <20160702184350.GA16656@fedora-21-dvm>
+References: <8AE6D76F-7808-4897-9F44-A83790545EE4@xbt.hk>
+	<20160702184350.GA16656@fedora-21-dvm>
+Message-ID: <9E7B8E07-4F98-42DD-8A35-C55DAF78271F@xbt.hk>
+
+
+> 
+>>> the fact that we do this has a rather odd result: a transaction spending a witness output with an unknown version is valid even if the transaction doesn?t have any witnesses!
+>> 
+>> I don?t see any reason to have such check. We simply leave unknown witness program as any-one-can-spend without looking at the witness, as described in BIP141.
+> 
+> It will lead to a special case in code that does things with witness
+> transactions, as we can spend a witness output without a witness.
+
+It is trivial to softfork a new rule to require the witness must not be empty for a witness output. However, does it really make the code simpler?
+> 
+> Thus you could summarize the argument for the P2PKH special case as "We don't
+> want to make it possible to use 160-bit commitments for multisig, which _might_
+> need 256-bit security. But we do want to special-case pubkeys to save a few
+> bytes.?
+
+Actually I would like to see even shorter hash and pubkey to be used. Storing 1 BTC for a few months does not really require the security level of P2PKH.
+
+> 
+>>> we haven?t explicitly ensured that signatures for the new signature hash can?t be reused for the old signature hash
+>> 
+>> How could that be? That?d be a hash collision.
+> 
+> Nope. The problem is it might not be a hash collission, if the actual bytes
+> signed can be interpreted in two different ways, by different types of
+> signature hashes.
+> 
+> This is the same reason the signmessage functionality prepends the message
+> being signed with the "Bitcoin Signed Message:\n" magic string.
+> 
+
+In BIP143 sig, first 4 bytes is nVersion, and the next 32 bytes (hashPrevouts) is a hash of all prevouts. (in the case of ANYONECANPAY, the bytes following would be zero, as you proposed)
+
+In the original sig, first 4 bytes in nVersion, next 4 bytes is number of inputs, and the next 32 bytes is a txid.
+
+For a signature to be valid for both schemes, the last 28 bytes of the hashPrevouts must also be the first 28 bytes of a valid txid. This is already impossible. And this is just one of the many collisions required. In such case SHA256 would be insecure and adding a zero after the nVersion as you suggest would not be helpful at all.
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 671 bytes
+Desc: Message signed with OpenPGP using GPGMail
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160703/08937db5/attachment.sig>
+
+From arthur.chen at btcc.com  Mon Jul  4 01:23:14 2016
+From: arthur.chen at btcc.com (Arthur Chen)
+Date: Mon, 4 Jul 2016 01:23:14 +0000
+Subject: [bitcoin-dev] BIP 151 use of HMAC_SHA512
+In-Reply-To: <CADorodhC=UvQmiNVSd91dA57PyYydDH+uUUp_Aj5CsN-EG-e4g@mail.gmail.com>
+References: <87h9cecad5.fsf@rustcorp.com.au>
+	<577224E8.6070307@jonasschnelli.ch>
+	<8760ssdd1u.fsf@rustcorp.com.au>
+	<CAEM=y+XKQZVz6UieB-nDy_C9xTmXiBB3-atuuZkxzmPoSVPOJw@mail.gmail.com>
+	<87oa6iavky.fsf@rustcorp.com.au>
+	<CADorodhC=UvQmiNVSd91dA57PyYydDH+uUUp_Aj5CsN-EG-e4g@mail.gmail.com>
+Message-ID: <CAP+0UNJ9mBCWCNf_kSo+4xJWjmO=eVmrrRi7=dD9_zmU2h3cDw@mail.gmail.com>
+
+I strongly agree!
+In crypto we should always follow well-studied open standard rather than
+custom construction.
+
+On Fri, Jul 1, 2016 at 10:42 PM, Zooko Wilcox via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> I haven't been able to find the beginning of this thread, so apologies
+> if I've misunderstood what this is for, but it _sounds_ like we're
+> re-inventing HKDF.
+>
+> I'd recommend reading the paper about HKDF. It stands out among crypto
+> papers for having a nice clear justification for each of its design
+> decisions, so you can see why they did it (very slightly) differently
+> than the various constructions proposed up-thread.
+>
+> https://eprint.iacr.org/2010/264
+>
+> Also, of course, it is a great idea to re-use a standard
+> (https://tools.ietf.org/html/rfc5869) and widely-understood crypto
+> algorithm to reduce risk of both cryptographer errors and implementor
+> errors.
+>
+> Of course, the cost of that is the you sometimes end up computing
+> something that is a tiny bit more complicated or inefficient than a
+> custom algorithm for our current use case. IMHO that's a cheap price
+> to pay.
+>
+> Regards,
+>
+> Zooko
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+
+
+
+-- 
+Xuesong (Arthur) Chen
+Senior Principle Engineer
+BlockChain Technologist
+BTCC
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160704/01f4de23/attachment.html>
+
+From arthur.chen at btcc.com  Mon Jul  4 01:44:30 2016
+From: arthur.chen at btcc.com (Arthur Chen)
+Date: Mon, 4 Jul 2016 01:44:30 +0000
+Subject: [bitcoin-dev] BIP 151 use of HMAC_SHA512
+In-Reply-To: <CAP+0UNJ9mBCWCNf_kSo+4xJWjmO=eVmrrRi7=dD9_zmU2h3cDw@mail.gmail.com>
+References: <87h9cecad5.fsf@rustcorp.com.au>
+	<577224E8.6070307@jonasschnelli.ch>
+	<8760ssdd1u.fsf@rustcorp.com.au>
+	<CAEM=y+XKQZVz6UieB-nDy_C9xTmXiBB3-atuuZkxzmPoSVPOJw@mail.gmail.com>
+	<87oa6iavky.fsf@rustcorp.com.au>
+	<CADorodhC=UvQmiNVSd91dA57PyYydDH+uUUp_Aj5CsN-EG-e4g@mail.gmail.com>
+	<CAP+0UNJ9mBCWCNf_kSo+4xJWjmO=eVmrrRi7=dD9_zmU2h3cDw@mail.gmail.com>
+Message-ID: <CAP+0UNJ77tdC+HK=x4CtYuTECoqzcMMOd8B38O1hnD5gwoNC5Q@mail.gmail.com>
+
+https://www.schneier.com/crypto-gram/archives/1998/1015.html#cipherdesign
+
+On Mon, Jul 4, 2016 at 1:23 AM, Arthur Chen <arthur.chen at btcc.com> wrote:
+
+> I strongly agree!
+> In crypto we should always follow well-studied open standard rather than
+> custom construction.
+>
+> On Fri, Jul 1, 2016 at 10:42 PM, Zooko Wilcox via bitcoin-dev <
+> bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+>> I haven't been able to find the beginning of this thread, so apologies
+>> if I've misunderstood what this is for, but it _sounds_ like we're
+>> re-inventing HKDF.
+>>
+>> I'd recommend reading the paper about HKDF. It stands out among crypto
+>> papers for having a nice clear justification for each of its design
+>> decisions, so you can see why they did it (very slightly) differently
+>> than the various constructions proposed up-thread.
+>>
+>> https://eprint.iacr.org/2010/264
+>>
+>> Also, of course, it is a great idea to re-use a standard
+>> (https://tools.ietf.org/html/rfc5869) and widely-understood crypto
+>> algorithm to reduce risk of both cryptographer errors and implementor
+>> errors.
+>>
+>> Of course, the cost of that is the you sometimes end up computing
+>> something that is a tiny bit more complicated or inefficient than a
+>> custom algorithm for our current use case. IMHO that's a cheap price
+>> to pay.
+>>
+>> Regards,
+>>
+>> Zooko
+>> _______________________________________________
+>> bitcoin-dev mailing list
+>> bitcoin-dev at lists.linuxfoundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>
+>
+>
+>
+> --
+> Xuesong (Arthur) Chen
+> Senior Principle Engineer
+> BlockChain Technologist
+> BTCC
+>
+
+
+
+-- 
+Xuesong (Arthur) Chen
+Senior Principle Engineer
+BlockChain Technologist
+BTCC
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160704/a5d96302/attachment.html>
+
+From dev at jonasschnelli.ch  Mon Jul  4 06:37:45 2016
+From: dev at jonasschnelli.ch (Jonas Schnelli)
+Date: Mon, 4 Jul 2016 08:37:45 +0200
+Subject: [bitcoin-dev] BIP 151 use of HMAC_SHA512
+In-Reply-To: <CADorodhC=UvQmiNVSd91dA57PyYydDH+uUUp_Aj5CsN-EG-e4g@mail.gmail.com>
+References: <87h9cecad5.fsf@rustcorp.com.au>
+	<577224E8.6070307@jonasschnelli.ch> <8760ssdd1u.fsf@rustcorp.com.au>
+	<CAEM=y+XKQZVz6UieB-nDy_C9xTmXiBB3-atuuZkxzmPoSVPOJw@mail.gmail.com>
+	<87oa6iavky.fsf@rustcorp.com.au>
+	<CADorodhC=UvQmiNVSd91dA57PyYydDH+uUUp_Aj5CsN-EG-e4g@mail.gmail.com>
+Message-ID: <577A0439.5000506@jonasschnelli.ch>
+
+> I haven't been able to find the beginning of this thread, so apologies
+> if I've misunderstood what this is for, but it _sounds_ like we're
+> re-inventing HKDF.
+
+> I'd recommend reading the paper about HKDF. It stands out among crypto
+> papers for having a nice clear justification for each of its design
+> decisions, so you can see why they did it (very slightly) differently
+> than the various constructions proposed up-thread.
+
+Thanks Zooko
+
+I think HKDF instead of a single HMAC_SHA512 seams reasonable and
+something we should consider.
+
+I'll try to evaluate the implications of using HKDF over HMAC_SHA512 and
+will update the BIP if there are no concerns about it.
+
+</jonas>
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 819 bytes
+Desc: OpenPGP digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160704/029dc8b2/attachment.sig>
+
+From dev at jonasschnelli.ch  Mon Jul  4 06:47:05 2016
+From: dev at jonasschnelli.ch (Jonas Schnelli)
+Date: Mon, 4 Jul 2016 08:47:05 +0200
+Subject: [bitcoin-dev] BIP 151 use of HMAC_SHA512
+In-Reply-To: <CAP+0UNJ77tdC+HK=x4CtYuTECoqzcMMOd8B38O1hnD5gwoNC5Q@mail.gmail.com>
+References: <87h9cecad5.fsf@rustcorp.com.au>
+	<577224E8.6070307@jonasschnelli.ch> <8760ssdd1u.fsf@rustcorp.com.au>
+	<CAEM=y+XKQZVz6UieB-nDy_C9xTmXiBB3-atuuZkxzmPoSVPOJw@mail.gmail.com>
+	<87oa6iavky.fsf@rustcorp.com.au>
+	<CADorodhC=UvQmiNVSd91dA57PyYydDH+uUUp_Aj5CsN-EG-e4g@mail.gmail.com>
+	<CAP+0UNJ9mBCWCNf_kSo+4xJWjmO=eVmrrRi7=dD9_zmU2h3cDw@mail.gmail.com>
+	<CAP+0UNJ77tdC+HK=x4CtYuTECoqzcMMOd8B38O1hnD5gwoNC5Q@mail.gmail.com>
+Message-ID: <577A0669.7040208@jonasschnelli.ch>
+
+Hi Arthur
+> 
+>     I strongly agree!
+>     In crypto we should always follow well-studied open standard rather
+>     than custom construction.
+
+I totally agree.
+BIP151 does not introduce new cipher types.
+The BIP uses ECDH together with ChaCha20-Poly1305 at openssh.
+Both very well known and broad used crypo.
+
+/jonas
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 819 bytes
+Desc: OpenPGP digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160704/97fb8245/attachment.sig>
+
+From pete at petertodd.org  Mon Jul  4 23:27:15 2016
+From: pete at petertodd.org (Peter Todd)
+Date: Mon, 4 Jul 2016 19:27:15 -0400
+Subject: [bitcoin-dev] Code Review: The Consensus Critical Parts of
+ Segwit by Peter Todd
+In-Reply-To: <9E7B8E07-4F98-42DD-8A35-C55DAF78271F@xbt.hk>
+References: <8AE6D76F-7808-4897-9F44-A83790545EE4@xbt.hk>
+	<20160702184350.GA16656@fedora-21-dvm>
+	<9E7B8E07-4F98-42DD-8A35-C55DAF78271F@xbt.hk>
+Message-ID: <20160704232715.GA21569@fedora-21-dvm>
+
+On Sun, Jul 03, 2016 at 03:20:42AM +0800, Johnson Lau wrote:
+> >>> the fact that we do this has a rather odd result: a transaction spending a witness output with an unknown version is valid even if the transaction doesn?t have any witnesses!
+> >> 
+> >> I don?t see any reason to have such check. We simply leave unknown witness program as any-one-can-spend without looking at the witness, as described in BIP141.
+> > 
+> > It will lead to a special case in code that does things with witness
+> > transactions, as we can spend a witness output without a witness.
+> 
+> It is trivial to softfork a new rule to require the witness must not be empty for a witness output. However, does it really make the code simpler?
+
+The Bitcoin Core codebase, no, but it does reduce the number of special cases
+other codebases have to contend with.
+
+Probably not worth changing now, but it was I think a weird design choice to
+make.
+
+> > Thus you could summarize the argument for the P2PKH special case as "We don't
+> > want to make it possible to use 160-bit commitments for multisig, which _might_
+> > need 256-bit security. But we do want to special-case pubkeys to save a few
+> > bytes.?
+> 
+> Actually I would like to see even shorter hash and pubkey to be used. Storing 1 BTC for a few months does not really require the security level of P2PKH.
+
+How short? 128 bits? 80 bits? 64 bits?
+
+It's hard to know what's the point where you're going to risk massive losses
+due to theft... and as we've seen with the DAO, those kinds of losses can lead
+to very undesirable pressure for devs to act as a central authority and
+intervene.
+
+> >>> we haven?t explicitly ensured that signatures for the new signature hash can?t be reused for the old signature hash
+> >> 
+> >> How could that be? That?d be a hash collision.
+> > 
+> > Nope. The problem is it might not be a hash collission, if the actual bytes
+> > signed can be interpreted in two different ways, by different types of
+> > signature hashes.
+> > 
+> > This is the same reason the signmessage functionality prepends the message
+> > being signed with the "Bitcoin Signed Message:\n" magic string.
+> > 
+> 
+> In BIP143 sig, first 4 bytes is nVersion, and the next 32 bytes (hashPrevouts) is a hash of all prevouts. (in the case of ANYONECANPAY, the bytes following would be zero, as you proposed)
+> 
+> In the original sig, first 4 bytes in nVersion, next 4 bytes is number of inputs, and the next 32 bytes is a txid.
+> 
+> For a signature to be valid for both schemes, the last 28 bytes of the hashPrevouts must also be the first 28 bytes of a valid txid. This is already impossible. And this is just one of the many collisions required. In such case SHA256 would be insecure and adding a zero after the nVersion as you suggest would not be helpful at all.
+
+Why isn't this carefully documented in the BIPs then?
+
+Again, as I said in my summary:
+
+    In a number of places we either have a belt, or suspenders, when given the
+    importance of this code we?d rather have both a belt and suspenders.
+
+Tagged hashing is an excellent way to absolutely sure that signatures can't be
+reused in different contexts; if it happens to be overkill in a specific
+context, the overhead of hashing another few bytes is trivial; the gain of
+being absolutely sure you haven't missed a vulnerability can't be easily
+dismissed.
+
+Equally, I think in most cases simply XORing the digest obtained by hashing
+with a magic tag prior to using it (e.g. by signing it) should be sufficient
+for signature applications, and the overhead of doing that is ~zero.
+Essentially you can think of the magic tag that's XORed with the raw digest as
+making clear the intent of the signature: "this is why I think I'm signing this
+digest"
+
+However, the XOR option does have one potentially big downside in other
+contexts, like general use in committed data structures: it's incompatible with
+timestamping schemes like OpenTimestamps that rely on all operations being
+cryptographically secure.
+
+-- 
+https://petertodd.org 'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 455 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160704/8235c4f2/attachment.sig>
+
+From pete at petertodd.org  Tue Jul  5 17:46:36 2016
+From: pete at petertodd.org (Peter Todd)
+Date: Tue, 5 Jul 2016 13:46:36 -0400
+Subject: [bitcoin-dev] BIP Number Request: Open Asset
+In-Reply-To: <201605260353.06939.luke@dashjr.org>
+References: <CA+1nnrmZAdzBn-FMBVMGtp4n7bbG8W0VEGvi1WopS-M49zBXpw@mail.gmail.com>
+	<201605260353.06939.luke@dashjr.org>
+Message-ID: <20160705174636.GA24068@fedora-21-dvm>
+
+On Thu, May 26, 2016 at 03:53:04AM +0000, Luke Dashjr via bitcoin-dev wrote:
+> On Thursday, May 26, 2016 2:50:26 AM Nicolas Dorier via bitcoin-dev wrote:
+> >   Author: Flavien Charlon <flavien at charlon.net>
+
+What's the status of this BIP? Will it be assigned?
+
+-- 
+https://petertodd.org 'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 455 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160705/bf9a3ca7/attachment.sig>
+
+From luke at dashjr.org  Wed Jul  6 01:22:19 2016
+From: luke at dashjr.org (Luke Dashjr)
+Date: Wed, 6 Jul 2016 01:22:19 +0000
+Subject: [bitcoin-dev] BIP Number Request: Open Asset
+In-Reply-To: <20160705174636.GA24068@fedora-21-dvm>
+References: <CA+1nnrmZAdzBn-FMBVMGtp4n7bbG8W0VEGvi1WopS-M49zBXpw@mail.gmail.com>
+	<201605260353.06939.luke@dashjr.org>
+	<20160705174636.GA24068@fedora-21-dvm>
+Message-ID: <201607060122.20593.luke@dashjr.org>
+
+On Tuesday, July 05, 2016 5:46:36 PM Peter Todd wrote:
+> On Thu, May 26, 2016 at 03:53:04AM +0000, Luke Dashjr via bitcoin-dev wrote:
+> > On Thursday, May 26, 2016 2:50:26 AM Nicolas Dorier via bitcoin-dev wrote:
+> > >   Author: Flavien Charlon <flavien at charlon.net>
+> 
+> What's the status of this BIP? Will it be assigned?
+
+I was waiting for clarification on the Author thing, but Nicholas hasn't 
+responded yet. I am unaware of any reason NOT to assign it, and there appear 
+to be no objections, so let's call it BIP 160.
+
+Luke
+
+From macwhyte at gmail.com  Wed Jul  6 02:14:57 2016
+From: macwhyte at gmail.com (James MacWhyte)
+Date: Wed, 06 Jul 2016 02:14:57 +0000
+Subject: [bitcoin-dev] BIP Number Request: Open Asset
+In-Reply-To: <201607060122.20593.luke@dashjr.org>
+References: <CA+1nnrmZAdzBn-FMBVMGtp4n7bbG8W0VEGvi1WopS-M49zBXpw@mail.gmail.com>
+	<201605260353.06939.luke@dashjr.org>
+	<20160705174636.GA24068@fedora-21-dvm>
+	<201607060122.20593.luke@dashjr.org>
+Message-ID: <CAH+Axy5A-_oDoPjabyzzAF8kVq9DsFwonEYPp9EU+Hf_BP1-DA@mail.gmail.com>
+
+I'm curious to hear the answers to the questions Luke asked earlier. I also
+read through the documentation and wasn't convinced it was thought out well
+enough to actually build something on top of, but there's no reason it
+can't get a number as a work-in-progress.
+
+I hope it does continue to get worked on, though. The lack of response or
+discussion worries me that it might become an abandoned project.
+
+On Tue, Jul 5, 2016, 18:32 Luke Dashjr via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> On Tuesday, July 05, 2016 5:46:36 PM Peter Todd wrote:
+> > On Thu, May 26, 2016 at 03:53:04AM +0000, Luke Dashjr via bitcoin-dev
+> wrote:
+> > > On Thursday, May 26, 2016 2:50:26 AM Nicolas Dorier via bitcoin-dev
+> wrote:
+> > > >   Author: Flavien Charlon <flavien at charlon.net>
+> >
+> > What's the status of this BIP? Will it be assigned?
+>
+> I was waiting for clarification on the Author thing, but Nicholas hasn't
+> responded yet. I am unaware of any reason NOT to assign it, and there
+> appear
+> to be no objections, so let's call it BIP 160.
+>
+> Luke
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160706/bbb89dc6/attachment.html>
+
+From alex.mizrahi at gmail.com  Wed Jul  6 06:49:00 2016
+From: alex.mizrahi at gmail.com (Alex Mizrahi)
+Date: Wed, 6 Jul 2016 09:49:00 +0300
+Subject: [bitcoin-dev] BIP Number Request: Open Asset
+In-Reply-To: <CAH+Axy5A-_oDoPjabyzzAF8kVq9DsFwonEYPp9EU+Hf_BP1-DA@mail.gmail.com>
+References: <CA+1nnrmZAdzBn-FMBVMGtp4n7bbG8W0VEGvi1WopS-M49zBXpw@mail.gmail.com>
+	<201605260353.06939.luke@dashjr.org>
+	<20160705174636.GA24068@fedora-21-dvm>
+	<201607060122.20593.luke@dashjr.org>
+	<CAH+Axy5A-_oDoPjabyzzAF8kVq9DsFwonEYPp9EU+Hf_BP1-DA@mail.gmail.com>
+Message-ID: <CAE28kUQ_rX4LtwU0oohABUv0-rCXRhtObkboJxdvwx44fCeEyA@mail.gmail.com>
+
+> I'm curious to hear the answers to the questions Luke asked earlier. I
+> also read through the documentation and wasn't convinced it was thought out
+> well enough to actually build something on top of,
+>
+There are many colored coin protocols in use. OpenAssets is probably the
+most popular one, but it has many critical flaws IMHO.
+https://github.com/bitcoinx/colored-coin-tools/wiki/OpenAssets-deficiencies
+
+
+> but there's no reason it can't get a number as a work-in-progress.
+>
+The protocol is not a work-in-progress, it is already in use, you cannot
+change it without breaking stuff.
+The doc can be improved, though. There is a lot of fluff but the actual
+important stuff gets just few ambiguous sentences.
+
+I hope it does continue to get worked on, though. The lack of response or
+> discussion worries me that it might become an abandoned project.
+>
+
+The original author, Flavien, have abandoned it, he now does a private
+blockchain thing, OpenChain.
+There are others who still use OpenAssets, e.g. Nicolas, but the protocol
+can't be changed.
+
+There are other colored coin protocols in existence/in development, though.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160706/154adabd/attachment.html>
+
+From luke at dashjr.org  Fri Jul 15 16:08:51 2016
+From: luke at dashjr.org (Luke Dashjr)
+Date: Fri, 15 Jul 2016 16:08:51 +0000
+Subject: [bitcoin-dev] Status updates for BIP 9, 68, 112, and 113
+Message-ID: <201607151608.52063.luke@dashjr.org>
+
+Daniel Cousens opened the issue a few weeks ago, that BIP 9 should progress to 
+Accepted stage. However, as an informational BIP, it is not entirely clear on 
+whether it falls in the Draft/Accepted/Final classification of proposals 
+requiring implementation, or the Draft/Active classification like process 
+BIPs. Background of this discussion is at:
+    https://github.com/bitcoin/bips/pull/413
+(Discussion on the GitHub BIPs repo is *NOT* recommended, hence bringing this 
+topic to the mailing list)
+
+Reviewing the criteria for status changes, my opinion is that:
+- BIPs 68, 112, 113, and 141 are themselves implementations of BIP 9
+-- therefore, BIP 9 falls under the Draft/Accepted/Final class
+- BIPs 68, 112, and 113 have been deployed to the network successfully
+-- therefore, BIP 9 has satisfied the conditions of not only Accepted status,
+   but also Final status
+-- therefore, BIPs 68, 112, and 113 also ought to be Final status
+
+If there are no objections, I plan to update the status to Final for BIPs 9, 
+68, 112, and 113 in one month. Since all four BIPs are currently Draft, I also 
+need at least one author from each BIP to sign-off on promoting them to (and 
+beyond) Accepted.
+
+BIP   9: Pieter Wuille <pieter.wuille at gmail.com>
+         Peter Todd <pete at petertodd.org>
+         Greg Maxwell <greg at xiph.org>
+         Rusty Russell <rusty at rustcorp.com.au>
+
+BIP  68: Mark Friedenbach <mark at friedenbach.org>
+         BtcDrak <btcdrak at gmail.com>
+         Nicolas Dorier <nicolas.dorier at gmail.com>
+         kinoshitajona <kinoshitajona at gmail.com>
+
+BIP 112: BtcDrak <btcdrak at gmail.com>
+         Mark Friedenbach <mark at friedenbach.org>
+         Eric Lombrozo <elombrozo at gmail.com>
+
+BIP 113: Thomas Kerin <me at thomaskerin.io>
+         Mark Friedenbach <mark at friedenbach.org>
+
+From pete at petertodd.org  Fri Jul 15 16:31:12 2016
+From: pete at petertodd.org (Peter Todd)
+Date: Fri, 15 Jul 2016 12:31:12 -0400
+Subject: [bitcoin-dev] Status updates for BIP 9, 68, 112, and 113
+In-Reply-To: <201607151608.52063.luke@dashjr.org>
+References: <201607151608.52063.luke@dashjr.org>
+Message-ID: <20160715163112.GA9125@fedora-21-dvm>
+
+On Fri, Jul 15, 2016 at 04:08:51PM +0000, Luke Dashjr via bitcoin-dev wrote:
+> Daniel Cousens opened the issue a few weeks ago, that BIP 9 should progress to 
+> Accepted stage. However, as an informational BIP, it is not entirely clear on 
+> whether it falls in the Draft/Accepted/Final classification of proposals 
+> requiring implementation, or the Draft/Active classification like process 
+> BIPs. Background of this discussion is at:
+>     https://github.com/bitcoin/bips/pull/413
+> (Discussion on the GitHub BIPs repo is *NOT* recommended, hence bringing this 
+> topic to the mailing list)
+
+As of writing the text of BIP68 says:
+
+    'This BIP is to be deployed by "versionbits" BIP9 using bit 0.'
+
+Essentially including BIP9 as part of the BIP68 standard; BIP68 could have
+equally been written by including some or all of the text of BIP9. If it had
+done that, that text would be part of a "Standard BIP" rather than
+"Informational BIP", thus I'll argue that BIP9 should also be a "Standard BIP"
+
+Also, note that if we ever modified BIP9, we'd most likely do so with a new
+BIP, and in soft-forks using that new standard, would refer to the new BIP #.
+
+> Reviewing the criteria for status changes, my opinion is that:
+> - BIPs 68, 112, 113, and 141 are themselves implementations of BIP 9
+> -- therefore, BIP 9 falls under the Draft/Accepted/Final class
+> - BIPs 68, 112, and 113 have been deployed to the network successfully
+> -- therefore, BIP 9 has satisfied the conditions of not only Accepted status,
+>    but also Final status
+> -- therefore, BIPs 68, 112, and 113 also ought to be Final status
+> 
+> If there are no objections, I plan to update the status to Final for BIPs 9, 
+> 68, 112, and 113 in one month. Since all four BIPs are currently Draft, I also 
+> need at least one author from each BIP to sign-off on promoting them to (and 
+> beyond) Accepted.
+> 
+> BIP   9: Pieter Wuille <pieter.wuille at gmail.com>
+>          Peter Todd <pete at petertodd.org>
+>          Greg Maxwell <greg at xiph.org>
+>          Rusty Russell <rusty at rustcorp.com.au>
+
+ACK "Final" status.
+
+-- 
+https://petertodd.org 'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 455 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160715/6424d10a/attachment.sig>
+
+From bram at bittorrent.com  Fri Jul 15 23:00:57 2016
+From: bram at bittorrent.com (Bram Cohen)
+Date: Fri, 15 Jul 2016 16:00:57 -0700
+Subject: [bitcoin-dev] Merkle trees and mountain ranges
+In-Reply-To: <20160618230143.GA25017@fedora-21-dvm>
+References: <CA+KqGkosGrWQ2Lpg3Ptc+UyidK7H4_HLQ_QWx2DOAFRmLkv4zQ@mail.gmail.com>
+	<20160616001040.GA5026@fedora-21-dvm>
+	<CA+KqGkqAHcU2PzEX6OmorXRBQ22eF_QBYYqUDS1v_ZvevhLCuQ@mail.gmail.com>
+	<20160616032612.GA7792@fedora-21-dvm>
+	<CA+KqGkqA2WnvBEck3kv6p2no-9wzNVCTNA-MGw=Jg=gMGfrxUQ@mail.gmail.com>
+	<20160617043435.GA12800@fedora-21-dvm>
+	<CA+KqGkpRmeKyo6TFpe+uUCdJSina+ARraNd0dkHSb2Hpx5dYuw@mail.gmail.com>
+	<20160618230143.GA25017@fedora-21-dvm>
+Message-ID: <CA+KqGkoxRdCas2hWdbD92Z-HjnS9PTPVQu=oSwUT261S+4y4cw@mail.gmail.com>
+
+On Sat, Jun 18, 2016 at 4:01 PM, Peter Todd <pete at petertodd.org> wrote:
+
+>
+>
+Have you seen how BLAKE2 omits padding when the data to be hashed happens
+> to be
+> exactly one block in size? It's significantly faster than SHA256, and
+> that's a
+> standard part of the algorithm already.
+>
+
+That's very convenient! I didn't know it, but had 'look up how blake2 does
+padding' in my list of stuff to do. I'm leaning heavily towards using
+blake2b at this point, at least for internal hashing.
+
+
+>
+> > At the root there's a branch block. It consists of all nodes up to some
+> > fixed depth - let's say 12 - with that depth set so that it roughly fits
+> > within a single memory page. Branch blocks are arranged with the nodes in
+> > fixed position defined by the prefix they correspond to, and the
+> terminals
+> > have outpointers to other blocks. Because they're all clustered
+> together, a
+> > lookup or update will only require a single
+>
+> A single....?
+>
+
+Okay, I've figured out the root cause of general confusion here. It's
+mostly my fault.
+
+There are a few different media on which data can be stored, with different
+properties in terms of how long it takes to retrieve data from them, and
+how much of a readahead they typically have. I was misreading the l2 cache
+size as the main memory readahead amount, which is... probably wrong? The
+readahead properties of memory aren't well documented and apparently vary a
+lot. On SSDs it typically pulls down a kilobyte at once and they call them
+pages, hence my use of that term above. But since my real point is that my
+implementation should act as a silver bullet which can have acceptable
+performance even on extremely bad devices, I'll give an analysis of how
+well it works when everything is stored on a regular spinning hard drive.
+
+Let's say you're storing 100 million items, which will fit within 10
+gigabytes. If you set the block depths to about 10 bits they'll be about
+32K, and if you set the size of leaf blocks to be about the same then
+memory efficiency will be good because the leaf blocks will store twigs of
+about 2^7 in size while having 2^10 space so they'll fit reasonably. Almost
+everything will be three blocks from root, so updates will generally
+require two disk seeks (plus one more for a write but those are generally
+faster because they get batched.)
+
+For latency numbers, I'm going off these:
+https://gist.github.com/jboner/2841832
+
+If the blockchain is very full of simple transactions and a disk seek takes
+15 milliseconds, then going with the assumption that a block is about 600
+seconds and the blockchain can handle 4 transactions per second and each of
+them is 3 updates (one utxo spent plus two new ones created) that's 15 *
+600 * 4 * 3 * 2 milliseconds per block, or about 200 seconds per block, so
+if the uxto roots trail by a few blocks even a ludicrously underpowered
+node could keep up.
+
+On an SSD keeping up is completely trivial, the problem becomes one of how
+quickly you can validate an entire blockchain history. There a read takes
+about 0.15 milliseconds and you have to do 5 of them instead of 2 because
+the natural memory block size is 4k, so it's about 1 millisecond per
+update, or 600 * 4 * 3 total time for each block, which is about 7 seconds.
+That's large enough that making the utxo root trail by two blocks is still
+a good idea, but small enough that it isn't a big factor in the cost of
+running a node. It's enough that validating a complete block history might
+take a while though, and even validating just the last year would take a
+few days. This is very conservative and it's assuming that *everything* is
+kept on an SSD though. If the numbers work better and a few layers are kept
+in regular memory validating a whole year of history might only take a few
+hours.
+
+Hopefully that all makes a fairly good case that raw merkle tree utxo root
+trailing by a few blocks is a viable strategy. The data structures in the
+MMR proposal are fairly complicated and the analysis of them talks in
+somewhat vague terms about things being fast and slow. A similar analysis
+of the MMR proposal specifying storage media and expectations of latency
+numbers would clarify the reasoning a lot.
+
+(By the way, sorry for the slow response - I got preempted by a bunch of
+other work duties.)
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160715/1202d694/attachment.html>
+
+From sean at z.cash  Wed Jul 20 04:35:39 2016
+From: sean at z.cash (Sean Bowe)
+Date: Tue, 19 Jul 2016 22:35:39 -0600
+Subject: [bitcoin-dev] BIP draft: HTLC transactions
+Message-ID: <CAKazn3mKUMMz0wyqTsgbkd4mBLgvG2PXziXhgRTi4hX_ApbPhg@mail.gmail.com>
+
+I'm requesting feedback for Hash Time-Locked Contract (HTLC) transactions
+in Bitcoin.
+
+HTLC transactions allow you to pay for the preimage of a hash. CSV/CLTV can
+be used to recover your funds if the other party is not cooperative. These
+scripts take the following general form:
+
+    [HASHOP] <digest> OP_EQUAL
+    OP_IF
+        <seller pubkey>
+    OP_ELSE
+        <num> [TIMEOUTOP] OP_DROP <buyer pubkey>
+    OP_ENDIF
+    OP_CHECKSIG
+
+These transactions are useful for both the Lightning network and in
+zero-knowledge contingent payments. This very script (using CLTV and
+SHA256) was used as part of our "pay-to-sudoku" ZKCP demo earlier this
+year: https://github.com/zcash/pay-to-sudoku
+
+Members of the community have expressed the desire for a BIP to submitted
+in coordination with changes to Bitcoin Core that support these
+transactions in the wallet.
+
+Please review my draft BIP here:
+https://gist.github.com/ebfull/8306903041d46e4119a39442f72a3741
+
+An implementation is being worked on here:
+https://github.com/bitcoin/bitcoin/pull/7601
+
+Thanks!
+
+Sean Bowe
+Zcash
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160719/2976c883/attachment.html>
+
+From pete at petertodd.org  Wed Jul 20 05:46:54 2016
+From: pete at petertodd.org (Peter Todd)
+Date: Wed, 20 Jul 2016 01:46:54 -0400
+Subject: [bitcoin-dev] BIP draft: HTLC transactions
+In-Reply-To: <CAKazn3mKUMMz0wyqTsgbkd4mBLgvG2PXziXhgRTi4hX_ApbPhg@mail.gmail.com>
+References: <CAKazn3mKUMMz0wyqTsgbkd4mBLgvG2PXziXhgRTi4hX_ApbPhg@mail.gmail.com>
+Message-ID: <20160720054654.GA1420@fedora-21-dvm>
+
+On Tue, Jul 19, 2016 at 10:35:39PM -0600, Sean Bowe via bitcoin-dev wrote:
+> I'm requesting feedback for Hash Time-Locked Contract (HTLC) transactions
+> in Bitcoin.
+> 
+> HTLC transactions allow you to pay for the preimage of a hash. CSV/CLTV can
+> be used to recover your funds if the other party is not cooperative. These
+> scripts take the following general form:
+> 
+>     [HASHOP] <digest> OP_EQUAL
+>     OP_IF
+>         <seller pubkey>
+>     OP_ELSE
+>         <num> [TIMEOUTOP] OP_DROP <buyer pubkey>
+>     OP_ENDIF
+>     OP_CHECKSIG
+
+Note that because you're hashing the top item on the stack regardless
+scriptSig's that satisfy HTLC's are malleable: that top stack item can be
+changed anything in the digest-not-provided case and the script still passes.
+
+-- 
+https://petertodd.org 'peter'[:-1]@petertodd.org
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 455 bytes
+Desc: Digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160720/87cd5733/attachment.sig>
+
+From luke at dashjr.org  Wed Jul 20 06:17:39 2016
+From: luke at dashjr.org (Luke Dashjr)
+Date: Wed, 20 Jul 2016 06:17:39 +0000
+Subject: [bitcoin-dev] BIP draft: HTLC transactions
+In-Reply-To: <20160720054654.GA1420@fedora-21-dvm>
+References: <CAKazn3mKUMMz0wyqTsgbkd4mBLgvG2PXziXhgRTi4hX_ApbPhg@mail.gmail.com>
+	<20160720054654.GA1420@fedora-21-dvm>
+Message-ID: <201607200617.40917.luke@dashjr.org>
+
+On Wednesday, July 20, 2016 5:46:54 AM Peter Todd via bitcoin-dev wrote:
+> On Tue, Jul 19, 2016 at 10:35:39PM -0600, Sean Bowe via bitcoin-dev wrote:
+> > I'm requesting feedback for Hash Time-Locked Contract (HTLC) transactions
+> > in Bitcoin.
+> > 
+> > HTLC transactions allow you to pay for the preimage of a hash. CSV/CLTV
+> > can be used to recover your funds if the other party is not cooperative.
+> > These
+> > 
+> > scripts take the following general form:
+> >     [HASHOP] <digest> OP_EQUAL
+> >     OP_IF
+> >     
+> >         <seller pubkey>
+> >     
+> >     OP_ELSE
+> >     
+> >         <num> [TIMEOUTOP] OP_DROP <buyer pubkey>
+> >     
+> >     OP_ENDIF
+> >     OP_CHECKSIG
+> 
+> Note that because you're hashing the top item on the stack regardless
+> scriptSig's that satisfy HTLC's are malleable: that top stack item can be
+> changed anything in the digest-not-provided case and the script still
+> passes.
+
+OP_SIZE
+OP_IF
+  [HASHOP] <digest> OP_EQUALVERIFY
+  <seller pubkey>
+OP_ELSE
+  <num> [TIMEOUTOP]
+  <buyer pubkey>
+OP_ENDIF
+OP_CHECKSIG
+
+
+From laanwj at gmail.com  Wed Jul 20 08:07:02 2016
+From: laanwj at gmail.com (Wladimir J. van der Laan)
+Date: Wed, 20 Jul 2016 10:07:02 +0200
+Subject: [bitcoin-dev] Bitcoin Core 0.13.0 release candidate 1 available
+Message-ID: <20160720080702.GA24608@amethyst.visucore.com>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Binaries for bitcoin Core version 0.13.0rc1 are available from:
+
+    https://bitcoin.org/bin/bitcoin-core-0.13.0/test.rc1/
+
+Source code can be found on github under the signed tag
+
+    https://github.com/bitcoin/bitcoin/tree/v0.13.0rc1
+
+This is a release candidate for a new major version release, bringing new
+features, bug fixes, as well as other improvements.
+
+Preliminary release notes for the release can be found at
+
+    https://github.com/bitcoin/bitcoin/blob/0.13/doc/release-notes.md
+
+Release candidates are test versions for releases. When no critical problems
+are found, this release candidate will be tagged as 0.13.0.
+
+Please report bugs using the issue tracker at github:
+
+    https://github.com/bitcoin/bitcoin/issues
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBCgAGBQJXjzAsAAoJEHSBCwEjRsmmv48IALAQw9GTDt63ST9dWBdlB1uz
+9JOxIZLsd/u9lcBUMzUoLRsdYVu/OTJKoDDD1vE6YmtO+FLEYJgqKjkaIE1AzxD+
+kwKP4KemZEsbk/e+eywZB1MKHvLyYY/W31k5kjQm8iDNNQs+1jJEfvgaZzdLBA2L
+vKRPYg7P+maBWa7m6LjoUZFvjXfZ6eu80QjsH6ujM3aObQOmcAM1bgOCDH7sqzH8
+ckgyUJlSWzJyTgdKEUapMoHdCiHyb7axZHAICIsOR7DPVsLc1oiAmxAfyKJvKIhm
+0hclCziCu6I38dVqbAFcuwHaTD/dgyN92lanoB67XxExY1y+IP1RW5qc2Bt+wew=
+=RJAl
+-----END PGP SIGNATURE-----
+
+From ethan.scruples at gmail.com  Tue Jul 26 12:47:25 2016
+From: ethan.scruples at gmail.com (Moral Agent)
+Date: Tue, 26 Jul 2016 08:47:25 -0400
+Subject: [bitcoin-dev] Reasons to add sync flags to Bitcoin
+Message-ID: <CACiOHGxpTEOzUBovuJstNEVQOpD+Yv0JivuyeOFsba_jhdyydw@mail.gmail.com>
+
+I posted this to /r/bitcoin yesterday but it got minimal comments. One uses
+suggested I try the mailing list so here it is:
+
+The idea presented here could have the following benefits:
+
+1. Improve mining decentralization
+2. Reduce variance in mining profitability
+3. Reduce or eliminate SPV mined blocks
+4. Reduce or eliminate empty blocks, smoothing out resource usage
+5. Reduce or eliminate the latency bottleneck on throughput
+6. Make transaction stuffing by miners be either obvious or costly
+7. Gives miners something to do while they wait for attractive transactions
+to appear
+8. Can be easily done with a soft fork
+
+#Basic idea:
+
+Ideally, all miners would begin hashing the next block at exactly the same
+time. Miners with a head start are more profitable, and the techniques that
+help miners receive and validate blocks quickly create centralization
+pressure.
+
+What if there was something that acted like the starting flag at a race,
+which could suddenly wave and cause all of the miners to simultaneously
+begin hashing the next block?
+
+#Implementation:
+
+Let a sync flag be a message consisting of:
+
+1. Hash of the previous block.
+2. Bitcoin address
+3. Nonce
+
+This tiny message could propagate through the network at maximum speed. If
+miners had to include the hash of this flag in the next block, then all
+miners wait for this flag, and when it suddenly spread through the network,
+all miners could simultaneously begin hashing the next block.
+
+The sync flag should not be produced too quickly. You want to give everyone
+enough time to be ready to hash the next block. Let's say that the hash of
+the sync flag is a proof of work that is targeted for 2 minutes.
+
+To fund this proof of work, the protocol is modified to demand that the
+block produced 10 blocks after the sync flag must allocate 25% of the block
+reward to the address published by the sync flag. In this way, sync flags
+are produced in 2 minutes, and blocks are produced in 8 minutes, with 10
+minutes total.
+
+
+Illustration 1: https://s32.postimg.org/wzg0hs8lx/sync_flag.png)
+
+Illustration 2: https://s32.postimg.org/vc5y9yz4l/sync_flag2.png
+
+
+#Explanation of reasons:
+
+**Improve mining decentralization**
+
+One factor driving centralization is the imperative miners have to achieve
+low latency in receiving and validating blocks. To achieve low latency, it
+helps a lot if you have expensive low-latency internet connections, curated
+network topologies, and large pools that have a plausible chance of finding
+consecutive blocks. If miners are expected (or forced) to validate a block
+prior to mining on top of it, the rational end game would be to outsource
+the validation step to a trusted third party specialist who can choose
+optimal locations on the globe to serve their (multiple?) mining pool
+clients. These are all less decentralized than the mining situation Satoshi
+and others imagined.
+
+**Reduce variance in mining revenue**
+
+Currently, there are about 144 opportunities per day for a pool or solo
+miner to see any revenue at all. With sync flags, that number doubles to
+288. Sync flags are only worth 25% of what a block is worth, but this still
+represents a significant reduction in variance. This variance is one factor
+causing solo miners to group into pools, and large pools to be more
+attractive than small pools.
+
+**Reduce or eliminate SPV mined blocks**
+
+One way miners have sought to make
+full-block-transmission-and-validation-latency irrelevant has been through
+"SPV" mining or "Head-first" mining. There is some evidence that these
+techniques may be widely used, and that badgering the miners about it is an
+ineffective strategy to stop them.
+
+In SPV mining, a miner would simply accept any block header that shows the
+correct proof of work. All other validation is entrusted to other miners.
+This practice is quite dangerous as the SPV miners can wander off on some
+invalid chain, taking SPV nodes with them. If this occurs during a soft
+fork, these blind miners can also fool unupgraded fully validating nodes
+into following them.
+
+"Head-first" mining means that miners start hashing as soon as they receive
+the block header with the correct POW, but they simultaneously validate the
+block, and abandon it if is not valid. I consider this to be pretty safe,
+as it strictly limits the length of an invalid chain that can result from
+mining without validating. However, "Head-first" mining can plausibly
+generate 2 or 3 confirmations of an invalid block. It would be nice if such
+confirmations did not happen.
+
+The sync flag technique is similar to head-first mining, but rather than
+hashing the next block while they wait for transmission and validation of
+the prior block, they hash the sync flag. Nodes can differentiate between
+sync flags and blocks, and can ignore sync flags when counting
+confirmations.
+
+**Reduce or eliminate empty blocks, smoothing out resource usage**
+
+Empty blocks are another consequence of SPV or Headfirst mining, because
+the miner cannot safely include any transactions in the block they are
+hashing until they have validated the prior block. By delaying the start of
+hashing the next block until after validation, miners would not have this
+reason to mine empty blocks.
+
+**Reduce or eliminate the latency bottleneck on throughput**
+
+Centralization pressure due to latency issues has been a major
+preoccupation over the last year. If latency mattered much less, it could
+represent a scalability improvement that could enable higher throughput.
+
+**Make transaction stuffing by miners be either obvious or costly**
+
+Currently, the entire block reward goes to the miner who mines it. One
+unfortunate consequence of this is that it does not cost the miner anything
+to covertly stuff the block with transactions. These transactions would pay
+fees and be indistinguishable from ordinary transactions, but the fees are
+paid by the miner and then immediately returned to the miner.
+
+With sync flags, the miner must share these transaction fees with the
+address contained in the sync flag 10 blocks prior. This means that if the
+miner gives the transactions a normal looking fee, they will incur a cost
+that will be paid to the sync flag. If the miner wants to avoid this, they
+must give their stuffing transactions a zero fee, which provides evidence
+that they are stuffing.
+
+Also, when miners stuff with transactions using a zero fee, they cannot
+manipulate the perception of how much fee it takes to get into a block.
+
+Note that miners could still try to covertly stuff blocks that will pay a
+sync flag that they themselves created. if this is a big concern, it can be
+addressed by forcing blocks to pay multiple sync flags.
+
+**Gives miners something to do while they wait for attractive transactions
+to appear**
+
+>From the Montreal scaling workshop last year, we have [this talk](
+https://scalingbitcoin.org/montreal2015/presentations/Day1/13-miles-carlsten-Mind-the-Gap.pdf)
+which worried that as the block subsidy reduced and transactions became a
+more important fraction of miner revenue, it would be rational for miners
+to turn off their mining equipment for a "gap" phase after a block is
+found, to allow time to pass as more lucrative transactions entered the
+mempool.
+
+I don't know whether this will actually happen. The presence of a suitable
+backlog of transactions would help prevent this dynamic from emerging. But
+if such idling behavior was the optima mining strategy, it could create a
+serious vulnerability. Idle hands are the devil's workshop as the saying
+goes, and idle miners represent a pool of inert hashpower that is available
+to rent for all kinds of destabilizing purposes. It would be better to put
+those miners to profitable work mining a sync flag while they wait.
+
+Also, this creates a more efficient price discovery mechanism for
+transactions, because you allow transactions paying high fees time to
+arrive to the marketplace, rather than take whatever anyone is offering
+because all the "good" transactions got gobbled up in the prior block.
+
+**Can be easily done with a soft fork**
+
+Although a hard fork would be more efficient, sync flags could be easily
+implemented using a soft fork by introducing the following rule:
+
+Every block must include a transaction which pays 25% of the block reward
+to the address given by the 10th previous sync flag, and commits to the
+hash of the 1st previous sync flag.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160726/28026960/attachment.html>
+
+From tomz at freedommail.ch  Tue Jul 26 13:51:56 2016
+From: tomz at freedommail.ch (Tom)
+Date: Tue, 26 Jul 2016 15:51:56 +0200
+Subject: [bitcoin-dev] Reasons to add sync flags to Bitcoin
+In-Reply-To: <CACiOHGxpTEOzUBovuJstNEVQOpD+Yv0JivuyeOFsba_jhdyydw@mail.gmail.com>
+References: <CACiOHGxpTEOzUBovuJstNEVQOpD+Yv0JivuyeOFsba_jhdyydw@mail.gmail.com>
+Message-ID: <1659997.Te2m0CHHuS@garp>
+
+> #Basic idea:
+> 
+> Ideally, all miners would begin hashing the next block at exactly the same
+> time. Miners with a head start are more profitable, and the techniques that
+> help miners receive and validate blocks quickly create centralization
+> pressure.
+> 
+> What if there was something that acted like the starting flag at a race,
+> which could suddenly wave and cause all of the miners to simultaneously
+> begin hashing the next block?
+> 
+> #Implementation:
+> 
+> Let a sync flag be a message consisting of:
+> 
+> 1. Hash of the previous block.
+> 2. Bitcoin address
+> 3. Nonce
+> 
+> This tiny message could propagate through the network at maximum speed. If
+> miners had to include the hash of this flag in the next block, then all
+> miners wait for this flag, and when it suddenly spread through the network,
+> all miners could simultaneously begin hashing the next block.
+
+What you describe in this part of your message can be done with no forks 
+whatsoever and I think that this is enough. Don't really see the reason for 
+any change in funding.
+
+The idea of sending out a block header is essentially what I called 
+"optimistic mining" and has been described in more detail in my blog here;
+http://zander.github.io/posts/Innovation%20-%20OnlineScaling/
+
+The video explains with graphics too...
+
+You may find this interesting :)
+
+From erik at q32.com  Tue Jul 26 17:27:22 2016
+From: erik at q32.com (Erik Aronesty)
+Date: Tue, 26 Jul 2016 13:27:22 -0400
+Subject: [bitcoin-dev] Reasons to add sync flags to Bitcoin
+In-Reply-To: <1659997.Te2m0CHHuS@garp>
+References: <CACiOHGxpTEOzUBovuJstNEVQOpD+Yv0JivuyeOFsba_jhdyydw@mail.gmail.com>
+	<1659997.Te2m0CHHuS@garp>
+Message-ID: <CAJowKgLw+0LZJkQ-F2xi_t11dpJoWvTDQnyMjFPB+XfD98RvYw@mail.gmail.com>
+
+   - Flags will be mined selfishly, and not published until the advantage
+   gained from withholding is less than the mining reward.  This effect may
+   kill the decentralization features, since big miners will be the only ones
+   that can selfish-mine flags.  Indeed, collusion would be encouraged... just
+   ship the flag to the miners you do business with, and no one else.   At the
+   expense of loss of flag revenue, your in-group would gain a massive
+   advantage in main-chain mining.
+
+
+On Tue, Jul 26, 2016 at 9:51 AM, Tom via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> > #Basic idea:
+> >
+> > Ideally, all miners would begin hashing the next block at exactly the
+> same
+> > time. Miners with a head start are more profitable, and the techniques
+> that
+> > help miners receive and validate blocks quickly create centralization
+> > pressure.
+> >
+> > What if there was something that acted like the starting flag at a race,
+> > which could suddenly wave and cause all of the miners to simultaneously
+> > begin hashing the next block?
+> >
+> > #Implementation:
+> >
+> > Let a sync flag be a message consisting of:
+> >
+> > 1. Hash of the previous block.
+> > 2. Bitcoin address
+> > 3. Nonce
+> >
+> > This tiny message could propagate through the network at maximum speed.
+> If
+> > miners had to include the hash of this flag in the next block, then all
+> > miners wait for this flag, and when it suddenly spread through the
+> network,
+> > all miners could simultaneously begin hashing the next block.
+>
+> What you describe in this part of your message can be done with no forks
+> whatsoever and I think that this is enough. Don't really see the reason for
+> any change in funding.
+>
+> The idea of sending out a block header is essentially what I called
+> "optimistic mining" and has been described in more detail in my blog here;
+> http://zander.github.io/posts/Innovation%20-%20OnlineScaling/
+>
+> The video explains with graphics too...
+>
+> You may find this interesting :)
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160726/f4924d63/attachment-0001.html>
+
+From millibitcoins at gmail.com  Tue Jul 26 18:31:36 2016
+From: millibitcoins at gmail.com (millibitcoin)
+Date: Tue, 26 Jul 2016 20:31:36 +0200
+Subject: [bitcoin-dev] BIP proposal: derived mnemonics
+Message-ID: <5797AC88.8030507@gmail.com>
+
+(not sure so sent again after subscribing (one use case added))
+
+Dear Bitcoin developers,
+
+Below is provided a draft BIP proposal for a master mnemonic sentence 
+from which other mnemonics sentences can be derived in a deterministic 
+non-reversible way (on an offline computer). This would make it much 
+easier to split funds into smaller fractions and use those in a 
+HD-wallet when appropriate (just by inserting 12 or more words), without 
+ever putting the master mnemonic at risk on an online computer. But 
+there are many more use cases.
+
+A reference implementation, specifically for use with a Trezor, has been 
+generated and can be found at: 
+http://thebitcoinecosystem.info/DerivedMnemonics.html
+
+I'm not a professional programmer or cryptographer, so the idea and 
+reference implementation will probably need a lot of reviewing but I do 
+think Bitcoin needs this extension and the corresponding ease of use and 
+improved security model.
+
+In the hope you like the idea,
+
+Regards,
+sumBTC
+
+
+<pre>
+   BIP: ???
+   Title: Derived mnemonics from a master mnemonic.
+   Author: sumBTC <millibitcoins at gmail.com>
+   Status: For Discussion
+   Type:
+   Created: 2016-07-24
+</pre>
+
+==Abstract==
+
+This BIP??? uses a master mnemonic sentence, as described in BIP39, for 
+the deterministic generation of derived mnemonic sentences. The derived 
+mnemonics are of the same format as the master mnemonic but can consist 
+of a higher or lower number of words.
+
+Binary seeds can then be generated for derived mnemonics (and master 
+mnemonic) as described in BIP39. Each of these seeds can be used to 
+generate deterministic wallets using BIP-0032 or similar methods.
+
+==Motivation==
+
+A mnemonic code or sentence is superior for human interaction as 
+described in BIP39 and can, for example, be written on paper or even 
+memorized. However, once a mnemonic has been used online, even through 
+the use of a hardware wallet, the mnemonic could be compromised. This 
+should be considered a bad practice from a security standpoint.
+
+We therefore propose the generation of a master mnemonic offline and 
+from this generate (also offline) multiple derived mnemonics in a 
+deterministic way for online use. The master mnemonic is never used 
+online and the master mnemonic cannot be obtained from the derived 
+mnemonics. Examples of use cases are described below.
+
+==Generating the master mnemonic==
+
+The master mnemonic is first derived as a standard mnemonic as described 
+in BIP39.
+
+==From master mnemonic to derived mnemonics==
+
+ From the master mnemonic a new string is created:
+
+string = MasterMnemonic + " " + Count + " " + Strength;
+
+Here, MasterMnemonic are the space separated words of the master 
+mnemonic. Count = 0, 1, 2 denotes the different derived mnemonics of a 
+given strength and Strength = numWords / 3 * 32, where numWords is the 
+number of words desired for the derived mnemonic and only integer 
+arithmetic is used in the calculation (e.g. for numWords = 14, Strength 
+= 128). Both Count and Strength are converted to strings.
+
+This string is then hashed using sha512:
+
+hash = sha512(string);
+
+and turned into a byte array:
+
+for (var i=0; i<strength/8; i++) {
+   byteArray[i] = (hash[Math.floor((i%64)/4)] >>> ((i%4)*8)) & 0b11111111;
+}
+
+This byte array is then used to generate a new mnemonic as shown in the 
+reference implementation using the method described in BIP39. The core 
+of the new code in the reference manual can be found by jumping to 
+"start: new code" in the reference software.
+
+A passphrase for the master mnemonic has the same effect on the derived 
+mnemoncis (so must be included).
+
+==Reference Implementation==
+
+The reference implementation generates addresses based on BIP44 for a 24 
+word master mnemonic and is available from
+
+http://thebitcoinecosystem.info/DerivedMnemonics.html
+
+or
+
+github (not yet)
+
+==Checking the derived mnemonics using Electrum==
+
+The displayed addresses in each of the reference implementations can be 
+easily checked using Electrum in the following manner:
+
+move the directory ~/.electrum to a backup directory.
+start Electrum and choose:
+Restore a wallet or import keys
+Hardware wallet
+Restore Electum wallet from device seed words
+TREZOR wallet
+Insert one of the mnemonics and check that the same addresses are 
+generated by Electrum
+
+Check the private keys:
+move the directory ~/.electrum to a backup directory.
+start Electrum and choose:
+Restore a wallet or import keys
+Standard wallet
+Import one of the private keys and check that the correct address has 
+been generated.
+
+Some checks should include a passphrase.
+
+==Examples of Use Cases==
+
+A person with 25 bitcoin splits funds using 5 derived mnemonics and 
+sends 5 bitcoins to the first address of each derived mnemonic. He can 
+then use a (hardware) HD-wallet and simply insert one of the derived 
+mnemonics to put only 5 bitcoins online and at risk at once. All funds 
+can be recovered from the master mnemonic.
+
+A person wants to give 10 bitcoin to each of his family members, giving 
+each participant a derived mnemonic and sending bitcoin to each of them. 
+The donating person can always recover the derived mnemonic if one of 
+his family members loses his derived mnemonic.
+
+For his Trezor wallet, someone wants to memorize only a 12 words master 
+seed but wants to insert a 24 words derived seed so a key logger on his 
+computer has 24! possibilities to check and not 12! (not a possibility 
+for the current reference implementation but trivial to add).
+
+From dev at jonasschnelli.ch  Tue Jul 26 20:10:15 2016
+From: dev at jonasschnelli.ch (Jonas Schnelli)
+Date: Tue, 26 Jul 2016 22:10:15 +0200
+Subject: [bitcoin-dev] BIP proposal: derived mnemonics
+In-Reply-To: <5797AC88.8030507@gmail.com>
+References: <5797AC88.8030507@gmail.com>
+Message-ID: <5797C3A7.5030600@jonasschnelli.ch>
+
+Hi
+
+
+> ==Generating the master mnemonic==
+> 
+> The master mnemonic is first derived as a standard mnemonic as described
+> in BIP39.
+
+
+
+> ==From master mnemonic to derived mnemonics==
+> 
+> From the master mnemonic a new string is created:
+> 
+> string = MasterMnemonic + " " + Count + " " + Strength;
+> 
+> Here, MasterMnemonic are the space separated words of the master
+> mnemonic. Count = 0, 1, 2 denotes the different derived mnemonics of a
+> given strength and Strength = numWords / 3 * 32, where numWords is the
+> number of words desired for the derived mnemonic and only integer
+> arithmetic is used in the calculation (e.g. for numWords = 14, Strength
+> = 128). Both Count and Strength are converted to strings.
+> 
+> This string is then hashed using sha512:
+> 
+> hash = sha512(string);
+
+1)
+My humble cryptographic understanding tells me that you should probably
+use sha512_hmac where you add an passphrase and a salt.
+
+2)
+Side-note: Bip39 does still use PBKDF2 with 2048 iterations which I
+personally consider "not enough" to protect a serious amount of funds.
+
+Also the checksum based on the predetermined wordlist has some security
+downsides over using a plain 32byte entropy (64hex chars) or a
+base58check encoded extended private master key.
+
+3)
+Another idea:
+What would speak against deriving a child key after bip32, lets say at
+m/88'/0'/n' and use the derived 256bits to encode your mnemonic?
+This would at least require your master mnemonic passphrase to derive a
+valid "child mnemonic".
+
+4)
+I'm still not convinced if we should encourage users to "only store and
+backup" the bip39 mnemonic.
+Reconstructing funds from a seed can be difficult especially if you
+don't have access to a trusted TX-indexed full node (~150GB of data
+required).
+Novice users might also underestimate the risk of losing metadata
+coupled with their transactions when they only store the wallet seed.
+
+</jonas>
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 819 bytes
+Desc: OpenPGP digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160726/d070c20b/attachment.sig>
+
+From martijn.meijering at mevs.nl  Tue Jul 26 20:58:00 2016
+From: martijn.meijering at mevs.nl (Martijn Meijering)
+Date: Tue, 26 Jul 2016 22:58:00 +0200
+Subject: [bitcoin-dev]  Reasons to add sync flags to Bitcoin
+Message-ID: <CAODYVYfciFGoVMKtOWs9PNkEJEt768KFZNO6s-qFhzQFchUTXw@mail.gmail.com>
+
+- Flags will be mined selfishly, and not published until the advantage
+   gained from withholding is less than the mining reward.  This effect may
+   kill the decentralization features, since big miners will be the only ones
+   that can selfish-mine flags.  Indeed, collusion would be encouraged... just
+   ship the flag to the miners you do business with, and no one else.   At the
+   expense of loss of flag revenue, your in-group would gain a massive
+   advantage in main-chain mining.
+
+---
+
+Is there a reason miners would be more likely to engage in selfish
+mining of sync flags than they are now with ordinary blocks?
+
+From tier.nolan at gmail.com  Tue Jul 26 21:45:14 2016
+From: tier.nolan at gmail.com (Tier Nolan)
+Date: Tue, 26 Jul 2016 22:45:14 +0100
+Subject: [bitcoin-dev] Reasons to add sync flags to Bitcoin
+In-Reply-To: <CAODYVYfciFGoVMKtOWs9PNkEJEt768KFZNO6s-qFhzQFchUTXw@mail.gmail.com>
+References: <CAODYVYfciFGoVMKtOWs9PNkEJEt768KFZNO6s-qFhzQFchUTXw@mail.gmail.com>
+Message-ID: <CAE-z3OUkRbKVEB17dRzgtm_Ojdy9Bf6tqwz=nopJEOO2-7+3qw@mail.gmail.com>
+
+On Tue, Jul 26, 2016 at 9:58 PM, Martijn Meijering via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+
+> Is there a reason miners would be more likely to engage in selfish
+> mining of sync flags than they are now with ordinary blocks?
+>
+
+
+This proposal has the same effect as adding mandatory empty blocks.
+
+POW targeted at 2 minutes means that the POW for the flag is 25% of the
+block POW.  That gives a flag every 2 minutes and a block every 8 minutes.
+
+It has the feature that the conversion rate from hashing power to reward is
+the same for the flags and the blocks.  A flag get 25% of the reward for
+25% of the effort.
+
+A soft fork to add this rule would have a disadvantage relative to a
+competing chain.  It would divert 20% of its hashing power to the flag
+blocks, which would be ignored by legacy nodes.  The soft fork would need
+55% of the hashing power to win the race.
+
+This isn't that big a deal if a 75% activation threshold is used.  It might
+be worth bumping it up to 80% in that case.
+
+This rule would mean that headers first clients would have to download more
+information to verify the longest chain.  If they only download the
+headers, they are missing 20% of the POW.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160726/ed137f92/attachment.html>
+
+From nickodell at gmail.com  Tue Jul 26 22:03:41 2016
+From: nickodell at gmail.com (Nick ODell)
+Date: Tue, 26 Jul 2016 16:03:41 -0600
+Subject: [bitcoin-dev] Reasons to add sync flags to Bitcoin
+In-Reply-To: <CACiOHGxpTEOzUBovuJstNEVQOpD+Yv0JivuyeOFsba_jhdyydw@mail.gmail.com>
+References: <CACiOHGxpTEOzUBovuJstNEVQOpD+Yv0JivuyeOFsba_jhdyydw@mail.gmail.com>
+Message-ID: <CANN4kmf32ozV=LGbOHrifRiSPX==Mb1uSnjqa2v2c43=HU3OBg@mail.gmail.com>
+
+Moral,
+
+Mining the sync flag isn't compatible with the payout structure of non
+hot-wallet pools like Eligius or decentralized pools like p2pool.
+Those need the ability to split a reward among multiple parties.
+Instead of giving an address to send the funds to, you could include
+the hash of the transaction allowed to spend the sync flag output.
+You'd have to zero the previous outpoint of the transaction before
+hashing, since you don't know what the hash of the coinbase ten blocks
+from now will be.
+
+
+On Tue, Jul 26, 2016 at 6:47 AM, Moral Agent via bitcoin-dev
+<bitcoin-dev at lists.linuxfoundation.org> wrote:
+> I posted this to /r/bitcoin yesterday but it got minimal comments. One uses
+> suggested I try the mailing list so here it is:
+>
+> The idea presented here could have the following benefits:
+>
+> 1. Improve mining decentralization
+> 2. Reduce variance in mining profitability
+> 3. Reduce or eliminate SPV mined blocks
+> 4. Reduce or eliminate empty blocks, smoothing out resource usage
+> 5. Reduce or eliminate the latency bottleneck on throughput
+> 6. Make transaction stuffing by miners be either obvious or costly
+> 7. Gives miners something to do while they wait for attractive transactions
+> to appear
+> 8. Can be easily done with a soft fork
+>
+> #Basic idea:
+>
+> Ideally, all miners would begin hashing the next block at exactly the same
+> time. Miners with a head start are more profitable, and the techniques that
+> help miners receive and validate blocks quickly create centralization
+> pressure.
+>
+> What if there was something that acted like the starting flag at a race,
+> which could suddenly wave and cause all of the miners to simultaneously
+> begin hashing the next block?
+>
+> #Implementation:
+>
+> Let a sync flag be a message consisting of:
+>
+> 1. Hash of the previous block.
+> 2. Bitcoin address
+> 3. Nonce
+>
+> This tiny message could propagate through the network at maximum speed. If
+> miners had to include the hash of this flag in the next block, then all
+> miners wait for this flag, and when it suddenly spread through the network,
+> all miners could simultaneously begin hashing the next block.
+>
+> The sync flag should not be produced too quickly. You want to give everyone
+> enough time to be ready to hash the next block. Let's say that the hash of
+> the sync flag is a proof of work that is targeted for 2 minutes.
+>
+> To fund this proof of work, the protocol is modified to demand that the
+> block produced 10 blocks after the sync flag must allocate 25% of the block
+> reward to the address published by the sync flag. In this way, sync flags
+> are produced in 2 minutes, and blocks are produced in 8 minutes, with 10
+> minutes total.
+>
+>
+> Illustration 1: https://s32.postimg.org/wzg0hs8lx/sync_flag.png)
+>
+> Illustration 2: https://s32.postimg.org/vc5y9yz4l/sync_flag2.png
+>
+>
+> #Explanation of reasons:
+>
+> **Improve mining decentralization**
+>
+> One factor driving centralization is the imperative miners have to achieve
+> low latency in receiving and validating blocks. To achieve low latency, it
+> helps a lot if you have expensive low-latency internet connections, curated
+> network topologies, and large pools that have a plausible chance of finding
+> consecutive blocks. If miners are expected (or forced) to validate a block
+> prior to mining on top of it, the rational end game would be to outsource
+> the validation step to a trusted third party specialist who can choose
+> optimal locations on the globe to serve their (multiple?) mining pool
+> clients. These are all less decentralized than the mining situation Satoshi
+> and others imagined.
+>
+> **Reduce variance in mining revenue**
+>
+> Currently, there are about 144 opportunities per day for a pool or solo
+> miner to see any revenue at all. With sync flags, that number doubles to
+> 288. Sync flags are only worth 25% of what a block is worth, but this still
+> represents a significant reduction in variance. This variance is one factor
+> causing solo miners to group into pools, and large pools to be more
+> attractive than small pools.
+>
+> **Reduce or eliminate SPV mined blocks**
+>
+> One way miners have sought to make
+> full-block-transmission-and-validation-latency irrelevant has been through
+> "SPV" mining or "Head-first" mining. There is some evidence that these
+> techniques may be widely used, and that badgering the miners about it is an
+> ineffective strategy to stop them.
+>
+> In SPV mining, a miner would simply accept any block header that shows the
+> correct proof of work. All other validation is entrusted to other miners.
+> This practice is quite dangerous as the SPV miners can wander off on some
+> invalid chain, taking SPV nodes with them. If this occurs during a soft
+> fork, these blind miners can also fool unupgraded fully validating nodes
+> into following them.
+>
+> "Head-first" mining means that miners start hashing as soon as they receive
+> the block header with the correct POW, but they simultaneously validate the
+> block, and abandon it if is not valid. I consider this to be pretty safe, as
+> it strictly limits the length of an invalid chain that can result from
+> mining without validating. However, "Head-first" mining can plausibly
+> generate 2 or 3 confirmations of an invalid block. It would be nice if such
+> confirmations did not happen.
+>
+> The sync flag technique is similar to head-first mining, but rather than
+> hashing the next block while they wait for transmission and validation of
+> the prior block, they hash the sync flag. Nodes can differentiate between
+> sync flags and blocks, and can ignore sync flags when counting
+> confirmations.
+>
+> **Reduce or eliminate empty blocks, smoothing out resource usage**
+>
+> Empty blocks are another consequence of SPV or Headfirst mining, because the
+> miner cannot safely include any transactions in the block they are hashing
+> until they have validated the prior block. By delaying the start of hashing
+> the next block until after validation, miners would not have this reason to
+> mine empty blocks.
+>
+> **Reduce or eliminate the latency bottleneck on throughput**
+>
+> Centralization pressure due to latency issues has been a major preoccupation
+> over the last year. If latency mattered much less, it could represent a
+> scalability improvement that could enable higher throughput.
+>
+> **Make transaction stuffing by miners be either obvious or costly**
+>
+> Currently, the entire block reward goes to the miner who mines it. One
+> unfortunate consequence of this is that it does not cost the miner anything
+> to covertly stuff the block with transactions. These transactions would pay
+> fees and be indistinguishable from ordinary transactions, but the fees are
+> paid by the miner and then immediately returned to the miner.
+>
+> With sync flags, the miner must share these transaction fees with the
+> address contained in the sync flag 10 blocks prior. This means that if the
+> miner gives the transactions a normal looking fee, they will incur a cost
+> that will be paid to the sync flag. If the miner wants to avoid this, they
+> must give their stuffing transactions a zero fee, which provides evidence
+> that they are stuffing.
+>
+> Also, when miners stuff with transactions using a zero fee, they cannot
+> manipulate the perception of how much fee it takes to get into a block.
+>
+> Note that miners could still try to covertly stuff blocks that will pay a
+> sync flag that they themselves created. if this is a big concern, it can be
+> addressed by forcing blocks to pay multiple sync flags.
+>
+> **Gives miners something to do while they wait for attractive transactions
+> to appear**
+>
+> From the Montreal scaling workshop last year, we have [this
+> talk](https://scalingbitcoin.org/montreal2015/presentations/Day1/13-miles-carlsten-Mind-the-Gap.pdf)
+> which worried that as the block subsidy reduced and transactions became a
+> more important fraction of miner revenue, it would be rational for miners to
+> turn off their mining equipment for a "gap" phase after a block is found, to
+> allow time to pass as more lucrative transactions entered the mempool.
+>
+> I don't know whether this will actually happen. The presence of a suitable
+> backlog of transactions would help prevent this dynamic from emerging. But
+> if such idling behavior was the optima mining strategy, it could create a
+> serious vulnerability. Idle hands are the devil's workshop as the saying
+> goes, and idle miners represent a pool of inert hashpower that is available
+> to rent for all kinds of destabilizing purposes. It would be better to put
+> those miners to profitable work mining a sync flag while they wait.
+>
+> Also, this creates a more efficient price discovery mechanism for
+> transactions, because you allow transactions paying high fees time to arrive
+> to the marketplace, rather than take whatever anyone is offering because all
+> the "good" transactions got gobbled up in the prior block.
+>
+> **Can be easily done with a soft fork**
+>
+> Although a hard fork would be more efficient, sync flags could be easily
+> implemented using a soft fork by introducing the following rule:
+>
+> Every block must include a transaction which pays 25% of the block reward to
+> the address given by the 10th previous sync flag, and commits to the hash of
+> the 1st previous sync flag.
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>
+
+From hoenicke at gmail.com  Wed Jul 27 10:39:36 2016
+From: hoenicke at gmail.com (Jochen Hoenicke)
+Date: Wed, 27 Jul 2016 10:39:36 +0000
+Subject: [bitcoin-dev] BIP proposal: derived mnemonics
+In-Reply-To: <5797C3A7.5030600@jonasschnelli.ch>
+References: <5797AC88.8030507@gmail.com> <5797C3A7.5030600@jonasschnelli.ch>
+Message-ID: <CANYHNmLot1+-LbisfrPRtgDPnofD7bnQ3By_pgT2RFvLHRm7Hg@mail.gmail.com>
+
+Jonas Schnelli via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org>
+schrieb am Di., 26. Juli 2016 um 22:10 Uhr:
+
+> Side-note: Bip39 does still use PBKDF2 with 2048 iterations which I
+> personally consider "not enough" to protect a serious amount of funds.
+>
+>
+But what are the alternatives?  Put an expensive processor and a decent
+amount of memory in every hardware wallet to support scrypt?  Use a million
+iterations and just wait 10 minutes after entering you passphrase?  Or
+compute the secret key on your online computer instead?
+
+Also, how many iterations are secure?  A million?  Then just add two random
+lower-case letters to the end of your passphrase and you have a better
+protection with 2048 iterations. If you want to be able to use your
+passphrase with cheap hardware and be protected against a high-end computer
+with multiple GPUs that is almost a mllion times faster, then you have to
+choose a good passphrase.  Or just make sure nobody steals your seed; it is
+not a brainwallet that is only protected by the passphrase after all.
+
+Regards,
+  Jochen
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160727/6744055a/attachment.html>
+
+From dev at jonasschnelli.ch  Wed Jul 27 10:53:24 2016
+From: dev at jonasschnelli.ch (Jonas Schnelli)
+Date: Wed, 27 Jul 2016 12:53:24 +0200
+Subject: [bitcoin-dev] BIP proposal: derived mnemonics
+In-Reply-To: <CANYHNmLot1+-LbisfrPRtgDPnofD7bnQ3By_pgT2RFvLHRm7Hg@mail.gmail.com>
+References: <5797AC88.8030507@gmail.com> <5797C3A7.5030600@jonasschnelli.ch>
+	<CANYHNmLot1+-LbisfrPRtgDPnofD7bnQ3By_pgT2RFvLHRm7Hg@mail.gmail.com>
+Message-ID: <579892A4.6030505@jonasschnelli.ch>
+
+
+> But what are the alternatives?  Put an expensive processor and a decent
+> amount of memory in every hardware wallet to support scrypt?  Use a
+> million iterations and just wait 10 minutes after entering you
+> passphrase?  Or compute the secret key on your online computer instead?
+
+What the Digital Bitbox team does, is, PBKDF2 the user entered
+passphrase on the computer with >20'000 iterations, then PBKDF2 again
+onchip with the 2048 rounds.
+If somebody manages to steal your backup (in that case a file/SDCard or
+printed PDF), it would at least required > 22'048 iterations to derive
+the key from a passphrase which I consider "stronger" then just using
+2048 iterations.
+
+> Also, how many iterations are secure?  A million?  Then just add two
+> random lower-case letters to the end of your passphrase and you have a
+> better protection with 2048 iterations.
+
+I guess you shouldn't delegate KDF security to the user. But sure, this
+could help as well. This is part of the UI.
+
+On the other hand, forcing the user to select a long/more-secure
+passphrase will very likely lead to many funds get lost behind
+encryption because of lost/forgotten passphrases.
+
+> If you want to be able to use
+> your passphrase with cheap hardware and be protected against a high-end
+> computer with multiple GPUs that is almost a mllion times faster, then
+> you have to choose a good passphrase.  Or just make sure nobody steals
+> your seed; it is not a brainwallet that is only protected by the
+> passphrase after all.
+
+Agree.
+But IMO this fact should not be an excuse to reduce/use low iterations
+during KDF (especially SHA2 based KDFs).
+
+</jonas>
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 819 bytes
+Desc: OpenPGP digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160727/9022ee3f/attachment.sig>
+
+From ethan.scruples at gmail.com  Wed Jul 27 14:42:32 2016
+From: ethan.scruples at gmail.com (Moral Agent)
+Date: Wed, 27 Jul 2016 10:42:32 -0400
+Subject: [bitcoin-dev] Reasons to add sync flags to Bitcoin
+In-Reply-To: <CANN4kmf32ozV=LGbOHrifRiSPX==Mb1uSnjqa2v2c43=HU3OBg@mail.gmail.com>
+References: <CACiOHGxpTEOzUBovuJstNEVQOpD+Yv0JivuyeOFsba_jhdyydw@mail.gmail.com>
+	<CANN4kmf32ozV=LGbOHrifRiSPX==Mb1uSnjqa2v2c43=HU3OBg@mail.gmail.com>
+Message-ID: <CACiOHGx_gzwy9O9Pz1mf8sRPL0vzfKVsi_dttSy-6tH_=fagHQ@mail.gmail.com>
+
+I made a repo to be a home for sync_flags here:
+https://github.com/moral-agent/sync_flags
+
+If you see any personally identifying information, please be a good sport
+and let me know. I'm a nobody, but I'd still prefer not to get doxxed.
+
+Two changes to the proposal (see repo for explanations)
+
+1. Sync flags now would have the same difficulty as blocks.
+2. Blocks now donate to 5 sync flags instead of 1
+
+I also added comments about selfish mining and invalid block spam.
+
+Response to replies:
+
+tomz at freedommail.ch: What is the advantage over optimistic mining?
+
+1. Sync flags can be somewhat smaller than block headers.
+2. Sync flags improve variance by doubling the number of chances to win
+3. Sync flags can be distinguished from normal blocks, so SPV clients can
+ignore them as confirmations.
+4. Sync flags reward all miners equally. Optimistic blocks have to be empty
+unless you mined the previous block, which damages decentralization.
+5. Sync flags result in fewer empty blocks, smoothing out resource usage
+6. Sync flags make transaction stuffing by miners either obvious or costly
+7. Sync flags give miners something to do while they wait for attractive
+transactions to appear.
+
+erik at q32.com: Flags will be selfish mined.
+
+I agree that flags would likely be selfish mined. I have modified the
+proposal to say that flags have the same POW target as blocks, so the
+selfish mining vulnerability should be equal to the current protocol.
+
+martijn.meijering at mevs.nl: Why expect more selfish mining?
+
+Because flags had small POW relative to blocks. After you find a block, why
+not hide it while you take a crack at the flag?
+
+tier.nolan at gmail.com: Effect is same as mandatory empty blocks.
+
+Not quite the same:
+
+1. Sync flags can be somewhat smaller than block headers.
+2. Sync flags can be distinguished from normal blocks, so SPV clients can
+ignore them as confirmations.
+3. Sync flags make transaction stuffing by miners either obvious or costly
+4. No one pays for empty blocks, except for the block subsidy. Some miners
+may choose to only mine the non-empty blocks, resulting in
+hashpower-for-rent to make mischief or hashpower that oscillates, creating
+a situation where empty blocks take longer to mine than full blocks.
+
+nickodell at gmail.com: Payout mechanism incompatible with certain mining pools
+
+Hopefully some kind of smart contract structure could be implemented as you
+suggested.
+
+
+On Tue, Jul 26, 2016 at 6:03 PM, Nick ODell <nickodell at gmail.com> wrote:
+
+> Moral,
+>
+> Mining the sync flag isn't compatible with the payout structure of non
+> hot-wallet pools like Eligius or decentralized pools like p2pool.
+> Those need the ability to split a reward among multiple parties.
+> Instead of giving an address to send the funds to, you could include
+> the hash of the transaction allowed to spend the sync flag output.
+> You'd have to zero the previous outpoint of the transaction before
+> hashing, since you don't know what the hash of the coinbase ten blocks
+> from now will be.
+>
+>
+> On Tue, Jul 26, 2016 at 6:47 AM, Moral Agent via bitcoin-dev
+> <bitcoin-dev at lists.linuxfoundation.org> wrote:
+> > I posted this to /r/bitcoin yesterday but it got minimal comments. One
+> uses
+> > suggested I try the mailing list so here it is:
+> >
+> > The idea presented here could have the following benefits:
+> >
+> > 1. Improve mining decentralization
+> > 2. Reduce variance in mining profitability
+> > 3. Reduce or eliminate SPV mined blocks
+> > 4. Reduce or eliminate empty blocks, smoothing out resource usage
+> > 5. Reduce or eliminate the latency bottleneck on throughput
+> > 6. Make transaction stuffing by miners be either obvious or costly
+> > 7. Gives miners something to do while they wait for attractive
+> transactions
+> > to appear
+> > 8. Can be easily done with a soft fork
+> >
+> > #Basic idea:
+> >
+> > Ideally, all miners would begin hashing the next block at exactly the
+> same
+> > time. Miners with a head start are more profitable, and the techniques
+> that
+> > help miners receive and validate blocks quickly create centralization
+> > pressure.
+> >
+> > What if there was something that acted like the starting flag at a race,
+> > which could suddenly wave and cause all of the miners to simultaneously
+> > begin hashing the next block?
+> >
+> > #Implementation:
+> >
+> > Let a sync flag be a message consisting of:
+> >
+> > 1. Hash of the previous block.
+> > 2. Bitcoin address
+> > 3. Nonce
+> >
+> > This tiny message could propagate through the network at maximum speed.
+> If
+> > miners had to include the hash of this flag in the next block, then all
+> > miners wait for this flag, and when it suddenly spread through the
+> network,
+> > all miners could simultaneously begin hashing the next block.
+> >
+> > The sync flag should not be produced too quickly. You want to give
+> everyone
+> > enough time to be ready to hash the next block. Let's say that the hash
+> of
+> > the sync flag is a proof of work that is targeted for 2 minutes.
+> >
+> > To fund this proof of work, the protocol is modified to demand that the
+> > block produced 10 blocks after the sync flag must allocate 25% of the
+> block
+> > reward to the address published by the sync flag. In this way, sync flags
+> > are produced in 2 minutes, and blocks are produced in 8 minutes, with 10
+> > minutes total.
+> >
+> >
+> > Illustration 1: https://s32.postimg.org/wzg0hs8lx/sync_flag.png)
+> >
+> > Illustration 2: https://s32.postimg.org/vc5y9yz4l/sync_flag2.png
+> >
+> >
+> > #Explanation of reasons:
+> >
+> > **Improve mining decentralization**
+> >
+> > One factor driving centralization is the imperative miners have to
+> achieve
+> > low latency in receiving and validating blocks. To achieve low latency,
+> it
+> > helps a lot if you have expensive low-latency internet connections,
+> curated
+> > network topologies, and large pools that have a plausible chance of
+> finding
+> > consecutive blocks. If miners are expected (or forced) to validate a
+> block
+> > prior to mining on top of it, the rational end game would be to outsource
+> > the validation step to a trusted third party specialist who can choose
+> > optimal locations on the globe to serve their (multiple?) mining pool
+> > clients. These are all less decentralized than the mining situation
+> Satoshi
+> > and others imagined.
+> >
+> > **Reduce variance in mining revenue**
+> >
+> > Currently, there are about 144 opportunities per day for a pool or solo
+> > miner to see any revenue at all. With sync flags, that number doubles to
+> > 288. Sync flags are only worth 25% of what a block is worth, but this
+> still
+> > represents a significant reduction in variance. This variance is one
+> factor
+> > causing solo miners to group into pools, and large pools to be more
+> > attractive than small pools.
+> >
+> > **Reduce or eliminate SPV mined blocks**
+> >
+> > One way miners have sought to make
+> > full-block-transmission-and-validation-latency irrelevant has been
+> through
+> > "SPV" mining or "Head-first" mining. There is some evidence that these
+> > techniques may be widely used, and that badgering the miners about it is
+> an
+> > ineffective strategy to stop them.
+> >
+> > In SPV mining, a miner would simply accept any block header that shows
+> the
+> > correct proof of work. All other validation is entrusted to other miners.
+> > This practice is quite dangerous as the SPV miners can wander off on some
+> > invalid chain, taking SPV nodes with them. If this occurs during a soft
+> > fork, these blind miners can also fool unupgraded fully validating nodes
+> > into following them.
+> >
+> > "Head-first" mining means that miners start hashing as soon as they
+> receive
+> > the block header with the correct POW, but they simultaneously validate
+> the
+> > block, and abandon it if is not valid. I consider this to be pretty
+> safe, as
+> > it strictly limits the length of an invalid chain that can result from
+> > mining without validating. However, "Head-first" mining can plausibly
+> > generate 2 or 3 confirmations of an invalid block. It would be nice if
+> such
+> > confirmations did not happen.
+> >
+> > The sync flag technique is similar to head-first mining, but rather than
+> > hashing the next block while they wait for transmission and validation of
+> > the prior block, they hash the sync flag. Nodes can differentiate between
+> > sync flags and blocks, and can ignore sync flags when counting
+> > confirmations.
+> >
+> > **Reduce or eliminate empty blocks, smoothing out resource usage**
+> >
+> > Empty blocks are another consequence of SPV or Headfirst mining, because
+> the
+> > miner cannot safely include any transactions in the block they are
+> hashing
+> > until they have validated the prior block. By delaying the start of
+> hashing
+> > the next block until after validation, miners would not have this reason
+> to
+> > mine empty blocks.
+> >
+> > **Reduce or eliminate the latency bottleneck on throughput**
+> >
+> > Centralization pressure due to latency issues has been a major
+> preoccupation
+> > over the last year. If latency mattered much less, it could represent a
+> > scalability improvement that could enable higher throughput.
+> >
+> > **Make transaction stuffing by miners be either obvious or costly**
+> >
+> > Currently, the entire block reward goes to the miner who mines it. One
+> > unfortunate consequence of this is that it does not cost the miner
+> anything
+> > to covertly stuff the block with transactions. These transactions would
+> pay
+> > fees and be indistinguishable from ordinary transactions, but the fees
+> are
+> > paid by the miner and then immediately returned to the miner.
+> >
+> > With sync flags, the miner must share these transaction fees with the
+> > address contained in the sync flag 10 blocks prior. This means that if
+> the
+> > miner gives the transactions a normal looking fee, they will incur a cost
+> > that will be paid to the sync flag. If the miner wants to avoid this,
+> they
+> > must give their stuffing transactions a zero fee, which provides evidence
+> > that they are stuffing.
+> >
+> > Also, when miners stuff with transactions using a zero fee, they cannot
+> > manipulate the perception of how much fee it takes to get into a block.
+> >
+> > Note that miners could still try to covertly stuff blocks that will pay a
+> > sync flag that they themselves created. if this is a big concern, it can
+> be
+> > addressed by forcing blocks to pay multiple sync flags.
+> >
+> > **Gives miners something to do while they wait for attractive
+> transactions
+> > to appear**
+> >
+> > From the Montreal scaling workshop last year, we have [this
+> > talk](
+> https://scalingbitcoin.org/montreal2015/presentations/Day1/13-miles-carlsten-Mind-the-Gap.pdf
+> )
+> > which worried that as the block subsidy reduced and transactions became a
+> > more important fraction of miner revenue, it would be rational for
+> miners to
+> > turn off their mining equipment for a "gap" phase after a block is
+> found, to
+> > allow time to pass as more lucrative transactions entered the mempool.
+> >
+> > I don't know whether this will actually happen. The presence of a
+> suitable
+> > backlog of transactions would help prevent this dynamic from emerging.
+> But
+> > if such idling behavior was the optima mining strategy, it could create a
+> > serious vulnerability. Idle hands are the devil's workshop as the saying
+> > goes, and idle miners represent a pool of inert hashpower that is
+> available
+> > to rent for all kinds of destabilizing purposes. It would be better to
+> put
+> > those miners to profitable work mining a sync flag while they wait.
+> >
+> > Also, this creates a more efficient price discovery mechanism for
+> > transactions, because you allow transactions paying high fees time to
+> arrive
+> > to the marketplace, rather than take whatever anyone is offering because
+> all
+> > the "good" transactions got gobbled up in the prior block.
+> >
+> > **Can be easily done with a soft fork**
+> >
+> > Although a hard fork would be more efficient, sync flags could be easily
+> > implemented using a soft fork by introducing the following rule:
+> >
+> > Every block must include a transaction which pays 25% of the block
+> reward to
+> > the address given by the 10th previous sync flag, and commits to the
+> hash of
+> > the 1st previous sync flag.
+> >
+> > _______________________________________________
+> > bitcoin-dev mailing list
+> > bitcoin-dev at lists.linuxfoundation.org
+> > https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+> >
+>
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160727/6ccd1a29/attachment-0001.html>
+
+From greg at xiph.org  Wed Jul 27 20:59:54 2016
+From: greg at xiph.org (Gregory Maxwell)
+Date: Wed, 27 Jul 2016 20:59:54 +0000
+Subject: [bitcoin-dev] BIP proposal: derived mnemonics
+In-Reply-To: <CANYHNmLot1+-LbisfrPRtgDPnofD7bnQ3By_pgT2RFvLHRm7Hg@mail.gmail.com>
+References: <5797AC88.8030507@gmail.com> <5797C3A7.5030600@jonasschnelli.ch>
+	<CANYHNmLot1+-LbisfrPRtgDPnofD7bnQ3By_pgT2RFvLHRm7Hg@mail.gmail.com>
+Message-ID: <CAAS2fgS-ObNbkP2PN6y+xJaxFnaz0sTSYiafCzjMtUv0sHjtxg@mail.gmail.com>
+
+On Wed, Jul 27, 2016 at 10:39 AM, Jochen Hoenicke via bitcoin-dev
+<bitcoin-dev at lists.linuxfoundation.org> wrote:
+> Jonas Schnelli via bitcoin-dev <bitcoin-dev at lists.linuxfoundation.org>
+> schrieb am Di., 26. Juli 2016 um 22:10 Uhr:
+>>
+>> Side-note: Bip39 does still use PBKDF2 with 2048 iterations which I
+>> personally consider "not enough" to protect a serious amount of funds.
+>>
+>
+> But what are the alternatives?  Put an expensive processor and a decent
+> amount of memory in every hardware wallet to support scrypt?  Use a million
+> iterations and just wait 10 minutes after entering you passphrase?  Or
+> compute the secret key on your online computer instead?
+>
+> Also, how many iterations are secure?  A million?  Then just add two random
+> lower-case letters to the end of your passphrase and you have a better
+> protection with 2048 iterations. If you want to be able to use your
+> passphrase with cheap hardware and be protected against a high-end computer
+> with multiple GPUs that is almost a mllion times faster, then you have to
+> choose a good passphrase.  Or just make sure nobody steals your seed;
+
+Jochen, two alternatives were raised in public discussion:
+
+Use a scheme which supports delegatable hardening-- (there are two
+broad classes proposed, one where the delegated party learns
+information that would let them bypass the part of the hardening they
+perform but only that part, and another where the delegation is
+information theoretically private.)
+
+or
+
+Eschew the pretextual 'hardening' that serves no purpose but to cause
+users to think the scheme is more secure than it is, and which makes
+the system more complex to implement.
+
+Both were rejected by the authors of that spec.
+
+> it is
+> not a brainwallet that is only protected by the passphrase after all.
+
+This ignores the history of that spec and the widespread use. Because
+of the design, the check value can't be computed without a fixed
+dictionary, and many people do use it as a brainwallet-- which is what
+that BIP originally specified, in fact.
+
+From ethan.scruples at gmail.com  Thu Jul 28 16:41:48 2016
+From: ethan.scruples at gmail.com (Moral Agent)
+Date: Thu, 28 Jul 2016 12:41:48 -0400
+Subject: [bitcoin-dev] Reasons to add sync flags to Bitcoin
+In-Reply-To: <CACiOHGxpTEOzUBovuJstNEVQOpD+Yv0JivuyeOFsba_jhdyydw@mail.gmail.com>
+References: <CACiOHGxpTEOzUBovuJstNEVQOpD+Yv0JivuyeOFsba_jhdyydw@mail.gmail.com>
+Message-ID: <CACiOHGx6+wW_6iShPvRQWHHXsrdSq7yv3_hxc0xcPzuqPUHuOA@mail.gmail.com>
+
+If there is concern about the
+block-with-valid-header-but-invalid-transactions-spam-attack, I have a
+strategy using sync flags that may drastically reduce the problem.
+
+Sync flags documented here:
+
+https://github.com/moral-agent/sync_flags/blob/master/README.md)
+
+The strategy to defeat the above attack is illustrated here:
+
+https://s32.postimg.org/e94tqdqat/sync_flag_invalid_block.png
+
+The key is to relax the requirement that a flag commit to a completely
+valid block. The flag is valid if it commits to a valid block header, even
+if the block body is invalid.
+
+>From the perspective of an individual miner, they can safely commence
+mining a flag the moment they obtain (or discover) a valid block header.
+
+As soon as the spam is discovered, miners can choose to either abandon the
+flag and return to mining on the previous block, or they can continue
+mining on the flag.
+
+It's difficult for me to game out which of these strategies would be
+preferable. My first thought is that the miners should have the incentive
+to mine whichever option has the fewest miners, which should result in a
+50/50 split.
+
+However, the miners who continue mining the flag have a chance of ending up
+in a situation where they mine the flag before anyone mines a valid block.
+If this happens, it is sub-optimal for them. They can start mining for the
+next valid block but if someone else broadcasts a valid block header they
+will be in the same pickle that miners under the current protocol are: they
+must either keep mining for a valid block, or SPV mine the newly arrived
+block while they do validation. The third option, of mining a flag, is not
+available to them, because the flag has already been mined for this cycle.
+
+As a result of the above, it may be most rational for miners to (upon
+learning that they are mining a flag on top of an invalid block) split
+their hashpower unevenly between the flag and continuing to mine for a
+valid block. The hashpower split reflects their estimates of the cost of
+the above negative outcome. I think the split would be pretty close to
+50/50, but deviations from 50/50 would not necessarily be bad. For example,
+if they split 52/48, with more hashpower toward finding the valid block
+instead of the flag, then that decreases the likelyhood that the flag will
+be discovered before the next valid block, which is good for all of the
+miners. So it's a nice positive feedback.
+
+*****
+
+This approach mostly neutralizes the harm done by the (currently very rare)
+invalid block spam attack. As a kind of amazing side effect, the work done
+to produce the spam is incorporated into the blockchain cumulative Proof of
+Work, and the spammer is not paid for this contribution.
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160728/cd41259c/attachment.html>
+
+From leo at LeoWandersleb.de  Thu Jul 28 21:07:29 2016
+From: leo at LeoWandersleb.de (Leo Wandersleb)
+Date: Thu, 28 Jul 2016 23:07:29 +0200
+Subject: [bitcoin-dev] Committed bloom filters for improved wallet
+ performance and SPV security
+In-Reply-To: <20160511202933.GR20063@mcelrath.org>
+References: <71d822e413ac457a530e1c367811cc24@cock.lu>
+	<20160511200648.GQ20063@mcelrath.org>
+	<20160511202933.GR20063@mcelrath.org>
+Message-ID: <307a1ca0-5554-a14e-fd3b-aace7d7c2233@LeoWandersleb.de>
+
+gmaxwell just made me aware of this mail thread [0]. Some days ago I had
+independently and naively started implementing "something similar" [1].
+
+My version totally ignored the commitment and signing part but I'm pretty sure
+that 12GB is overkill. My code is currently broken and I have no time to work on
+it much but I thought it might be helpful to chime in.
+
+At this point in time the difference between 80GB and 3GB (as my current 1.5GB
+of only outputs would suggest if I had covered the inputs) or even 12GB makes
+the difference of being able to store it on a phone, vs. not being able to. 80GB
+"compressed" to 3GB is not that bad at all. Unfortunately, with segWit this will
+be worse, with the higher transaction count per MB.
+
+Regards,
+
+Leo
+
+[0]
+https://www.reddit.com/r/Bitcoin/comments/4v28jl/how_have_fungiblity_problems_affected_you_in/d5ux6aq
+[1] https://github.com/Giszmo/TransactionFinder
+
+On 05/11/2016 10:29 PM, Bob McElrath via bitcoin-dev wrote:
+> Eerrrr....let me revise that last paragraph.  That's 12 *GB* of filters at
+> today's block height (at fixed false-positive rate 1e-6.  Compared to block
+> headers only which are about 33 MB today.  So this proposal is not really
+> compatible with such a wallet being "light"...
+>
+> Damn units...
+>
+> Bob McElrath via bitcoin-dev [bitcoin-dev at lists.linuxfoundation.org] wrote:
+>> I like this idea, but let's run some numbers...
+>>
+>> bfd--- via bitcoin-dev [bitcoin-dev at lists.linuxfoundation.org] wrote:
+>>> A Bloom Filter Digest is deterministically created of every block
+>> Bloom filters completely obfuscate the required size of the filter for a desired
+>> false-positive rate.  But, an optimal filter is linear in the number of elements
+>> it contains for fixed false-positive rate, and logarithmic in the false-positive
+>> rate.  (This comment applies to a RLL encoded Bloom filter Greg mentioned, but
+>> that's not the only way)  That is for N elements and false positive rate
+>> \epsilon:
+>>
+>>     filter size = - N \log_2 \epsilon
+>>
+>> Given that the data that would be put into this particular filter is *already*
+>> hashed, it makes more sense and is faster to use a Cuckoo[1] filter, choosing a
+>> fixed false-positive rate, given expected wallet sizes.  For Bloom filters,
+>> multiply the above formula by 1.44.
+>>
+>> To prevent light clients from downloading more blocks than necessary, the
+>> false-positive rate should be roughly less than 1/(block height).  If we take
+>> the false positive rate to be 1e-6 for today's block height ~ 410000, this is
+>> about 20 bits per element.  So for todays block's, this is a 30kb filter, for a
+>> 3% increase in block size, if blocks commit to the filter.  Thus the required
+>> size of the filter commitment is roughly:
+>>
+>>     filter size = N \log_2 H
+>>
+>> where H is the block height.  If bitcoin had these filters from the beginning, a
+>> light client today would have to download about 12MB of data in filters.  My
+>> personal SPV wallet is using 31MB currently.  It's not clear this is a bandwidth
+>> win, though it's definitely a win for computing load on full nodes.
+>>
+>>
+>> [1] https://www.cs.cmu.edu/~dga/papers/cuckoo-conext2014.pdf
+>>
+>> --
+>> Cheers, Bob McElrath
+>>
+>> "For every complex problem, there is a solution that is simple, neat, and wrong."
+>>     -- H. L. Mencken 
+>>
+>>
+>>
+>> !DSPAM:5733934b206851108912031!
+>
+>
+>> _______________________________________________
+>> bitcoin-dev mailing list
+>> bitcoin-dev at lists.linuxfoundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+>>
+>>
+>> !DSPAM:5733934b206851108912031!
+> --
+> Cheers, Bob McElrath
+>
+> "For every complex problem, there is a solution that is simple, neat, and wrong."
+>     -- H. L. Mencken 
+>
+>
+>
+> _______________________________________________
+> bitcoin-dev mailing list
+> bitcoin-dev at lists.linuxfoundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev
+
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 473 bytes
+Desc: OpenPGP digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160728/17064a1c/attachment.sig>
+
+From truthcoin at gmail.com  Sat Jul 30 23:18:36 2016
+From: truthcoin at gmail.com (Paul Sztorc)
+Date: Sat, 30 Jul 2016 19:18:36 -0400
+Subject: [bitcoin-dev] Holdup on Block Alerts / Fraud Proofs ?
+Message-ID: <1f12e7bd-72d0-3cd9-735c-10689cff29f3@gmail.com>
+
+Dear list,
+
+As we know, it would be desirable for Alice, running an SPV client, to tip (say $5) anyone who can prove to her that a given block has invalid content.
+
+If no one takes these tips, then this is weak evidence that the entire block is valid. Alice gets validation, full nodes can get paid...this idea goes back to Satoshi's whitepaper.
+
+In my view, "alerts" are relatively straightforward: a new OP CODE (details below) st. the txn only succeeds if it references invalid block content on a "pretender block".
+
+However, my background reading seems to reveal that "fraud proofs" (as they are now called) require some kind of tremendous engineering overhaul. Can anyone point me to these large problem(s)?
+
+Regards,
+Paul Sztorc
+
+
+------------------------------------
+
+Fraud Proof, Simple (?)
+
+
+1. "OP FraudProof", which:
+	1. Contains arguments [a] block number (from Alice), [b] block header, and [c] merkle path from header to an invalid transaction*.
+	2. Checks to see if the provided header _is_ in the position which Alice requested.
+	2. Checks to see if the header _is_ valid (ie, has sufficient work).
+	3. Checks to see if the merkle path _does_ lead from the header to "something invalid"*.
+
+2. This OP Code can then be used in a transaction of the form:
+	Inputs:
+		1 from Alice
+		0.2 from X**
+	Output:
+		1.2 to Alice, timelocked
+		(or)
+		1.2 to X, OP FraudProof .
+
+
+3. Alice could sign this txn and circulate it, waiting for "X" to add the second signature. 
+
+"Eric", for example, might sign. As soon as Alice get's Eric's signature, she [1] assumes the block *is* invalid, and [2] stops offering to buy FraudProofs on it.
+
+If Eric does not deliver the fraud proof, Alice gets her money back + 0.2 BTC from Eric (for wasting her time). Alice can't lose -- she either buys a fraud proof for 1, or she gets a free 0.2.
+
+Eric can't lose either. Either he doesn't sign (and nothing happens), or he places himself in a position to trade a FraudProof for 1 BTC.
+
+- FraudProof can use "OP Equal" to request fraud for a certain block.
+- This can all happen through the lightning network.
+
+* "invalid transaction" is defined either [1] as a script which fails, or [2] a double-spend (headers/paths to 2 txns spending the same input). This definition does not catch bad coinbase transactions, but this doesn't concern me. Those outputs aren't spendable for 100 blocks, and anyway, SPV clients could be programmed to never accept them (it would be annoying, but possible).
+
+** For simplicity, I assume that "FraudProof sellers" will pre-identify themselves (and their unspent outputs, etc, by making them "watching only" or whatever).
+
+---
+
+Now, I wouldn't describe this as a "weekend project", but I wouldn't describe it as an "engineering overhaul" either. Just a new OP Code, and code to create / scan for these "Alert Transactions". So, if the idea is 5+ years old, what's the hold up?
+
+I've also heard that segwit will help, but don't understand why.
+
+
+
+From kanzure at gmail.com  Sun Jul 31 01:31:56 2016
+From: kanzure at gmail.com (Bryan Bishop)
+Date: Sat, 30 Jul 2016 20:31:56 -0500
+Subject: [bitcoin-dev] Holdup on Block Alerts / Fraud Proofs ?
+In-Reply-To: <1f12e7bd-72d0-3cd9-735c-10689cff29f3@gmail.com>
+References: <1f12e7bd-72d0-3cd9-735c-10689cff29f3@gmail.com>
+Message-ID: <CABaSBaz_JBFmcuGy6jFJAGX_3_xHhg_A_Mg_TLvYwgx4PMnyBQ@mail.gmail.com>
+
+On Sat, Jul 30, 2016 at 6:18 PM, Paul Sztorc via bitcoin-dev <
+bitcoin-dev at lists.linuxfoundation.org> wrote:
+>
+> I've also heard that segwit will help, but don't understand why.
+>
+
+There are some helpful discussions that happened over here:
+https://botbot.me/freenode/bitcoin-core-dev/2015-12-28/?msg=56907496&page=2
+
+- Bryan
+http://heybryan.org/
+1 512 203 0507
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160730/c3679f1e/attachment.html>
+
+From jl2012 at xbt.hk  Sun Jul 31 02:03:11 2016
+From: jl2012 at xbt.hk (Johnson Lau)
+Date: Sat, 30 Jul 2016 22:03:11 -0400 (EDT)
+Subject: [bitcoin-dev] BIP114 MAST updated
+Message-ID: <1514704510.183612.1469930591099@privateemail.com>
+
+I have published a new version for BIP114 MAST. It's a bit more complicated with some new features:
+
+1. It allows different parties in a contract not to expose their scripts to each other until redemption.
+
+2. It includes a field to indicate the script language version so new opcodes could be added without touching the version byte nor the witness program.
+
+You can find the updated BIP and code at:
+
+https://github.com/bitcoin/bips/blob/master/bip-0114.mediawiki
+
+https://github.com/jl2012/bitcoin/tree/bip114v2
+
+
+The old version:
+
+https://github.com/bitcoin/bips/blob/7478ee3260c0d3c0cef39233931b307691764edc/bip-0114.mediawiki
+
+https://github.com/jl2012/bitcoin/tree/segwit_mast
+-------------- next part --------------
+An HTML attachment was scrubbed...
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160730/cef1c311/attachment.html>
+
+From luke at dashjr.org  Sun Jul 31 05:18:18 2016
+From: luke at dashjr.org (Luke Dashjr)
+Date: Sun, 31 Jul 2016 05:18:18 +0000
+Subject: [bitcoin-dev] Holdup on Block Alerts / Fraud Proofs ?
+In-Reply-To: <1f12e7bd-72d0-3cd9-735c-10689cff29f3@gmail.com>
+References: <1f12e7bd-72d0-3cd9-735c-10689cff29f3@gmail.com>
+Message-ID: <201607310518.20489.luke@dashjr.org>
+
+On Saturday, July 30, 2016 11:18:36 PM Paul Sztorc via bitcoin-dev wrote:
+> In my view, "alerts" are relatively straightforward: a new OP CODE (details
+> below) st. the txn only succeeds if it references invalid block content on
+> a "pretender block".
+> 
+> However, my background reading seems to reveal that "fraud proofs" (as they
+> are now called) require some kind of tremendous engineering overhaul. Can
+> anyone point me to these large problem(s)?
+
+Essentially this comes down to attackers being able to construct a block for 
+which invalidity cannot be proven. While you could always show a proof for an 
+invalid transaction within a well-formed block, you cannot show a proof that a 
+block is not well-formed. For example, the merkle tree that ought to represent 
+a set of transactions may be corrupted in such a manner that the transaction 
+paying Alice can have a SPV proof made, but the links in the merkle path have 
+no known data (transactions) behind them. This could even be a perfectly valid 
+block, but with some of the transactions withheld until it is stale - full 
+nodes and miners cannot accept it without knowing the entire block's 
+transactions. The only solution to this I am aware of, is for Alice to be told 
+"hey, block XYZHASH is incomplete and cannot be checked", and then Alice 
+demands the full block from the attacker. But of course this makes it trivial 
+to DoS Alice by giving her bogus incomplete-block claims and forcing her to 
+use the same bandwidth as a full node - which is a major problem if she lacks 
+the bandwidth to run a full node (presumably her reason for using SPV in the 
+first place).
+
+Luke
+
+From laanwj at gmail.com  Sun Jul 31 13:44:12 2016
+From: laanwj at gmail.com (Wladimir J. van der Laan)
+Date: Sun, 31 Jul 2016 15:44:12 +0200
+Subject: [bitcoin-dev] Bitcoin Core 0.13.0 release candidate 2 available
+Message-ID: <20160731134412.GA7172@amethyst.visucore.com>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Binaries for bitcoin Core version 0.13.0rc2 are available from:
+
+    https://bitcoin.org/bin/bitcoin-core-0.13.0/test.rc2/
+
+Source code can be found on github under the signed tag
+
+    https://github.com/bitcoin/bitcoin/tree/v0.13.0rc2
+
+This is a release candidate for a new major version release, bringing new
+features, bug fixes, as well as other improvements.
+
+Preliminary release notes for the release can be found at
+
+    https://github.com/bitcoin/bitcoin/blob/0.13/doc/release-notes.md
+
+Release candidates are test versions for releases. When no critical problems
+are found, this release candidate will be tagged as 0.13.0.
+
+Please report bugs using the issue tracker at github:
+
+    https://github.com/bitcoin/bitcoin/issues
+
+Notable changes since rc1:
+
+### Build system
+- - #8373 `1fe7f40` Fix OSX non-deterministic dmg (theuni)
+- - #8358 `cfd1280` Gbuild: Set memory explicitly (default is too low) (MarcoFalke)
+
+### GUI
+- - #8407 `45eba4b` Add dbcache migration path (jonasschnelli)
+
+### Wallet
+- - #8378 `ebea651` Move SetMinVersion for FEATURE_HD to SetHDMasterKey (pstratem)
+- - #8390 `73adfe3` Correct hdmasterkeyid/masterkeyid name confusion (jonasschnelli)
+- - #8206 `18b8ee1` Add HD xpriv to dumpwallet (jonasschnelli)
+- - #8389 `c3c82c4` Create a new HD seed after encrypting the wallet (jonasschnelli)
+
+### P2P protocol and network code
+- - #8408 `b7e2011` Prevent fingerprinting, disk-DoS with compact blocks (sdaftuar)
+
+### Consensus
+- - #8412 `8360d5b` libconsensus: Expose a flag for BIP112 (jtimon)
+
+### Mining
+- - #8362 `86edc20` Scale legacy sigop count in CreateNewBlock (sdaftuar)
+
+### Block and transaction handling
+- - #8381 `f84ee3d` Make witness v0 outputs non-standard (jl2012)
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBCgAGBQJXngBiAAoJEHSBCwEjRsmmS5kIAMFiXFua9ruR8Vwu1fNgnWTb
+X4tsNOdPScm7jwsFavcwygqZQlDNDURjcocQFcehHgEickBrk6eaplTuB4VJidPG
+Aqw+nLrd6M//Ohy+7eke7aCg5/QV7poplM3glwow4gQfoSBvL0ywMEhWEzGL7EPH
+FH5pyY9o4QZw5wGdvMWxvYVTLPZkm0W2cSWCHZ0WgzWvTkZ7aMzSQ5F5TXPfjzED
+DNuQQRMm9H1H3LJkmWAwjCXLzKNMzjmefLujyEII388s6UoWnA1ufosqb1kMqL+h
+kuEelzef4cMBZEvHgfzsvlLmba2DLr7xhwudd3HK2NHSmO/wAUdhbQOQSts9NoY=
+=rN68
+-----END PGP SIGNATURE-----
+
+From tomh at thinlink.com  Sun Jul 31 18:01:18 2016
+From: tomh at thinlink.com (Tom Harding)
+Date: Sun, 31 Jul 2016 11:01:18 -0700
+Subject: [bitcoin-dev] Proposal: Hard fork opt-out bits
+Message-ID: <26b3141b-1e7b-05fd-317b-e03b28beb4db@thinlink.com>
+
+
+Your thoughts are sought on this simple proposal to allow transaction
+authors to restrict execution to fewer than all blockchain forks where
+the transaction would otherwise be valid.
+
+
+Proposal
+
+Node implementations select a bit from among the upper 8 bits of the
+transaction version space to enforce as a hard fork opt-out bit.
+
+To specify that a transaction NOT be mined by nodes that enforce a
+particular bit, authors set that bit in the transaction version.
+Opt-out is enforced by consensus among nodes enforcing each bit.
+
+An implementation will relay, process and mine transactions that opt out
+of other blockchain forks; just not those that opt out of its own fork.
+
+
+Notes
+
+Example: Via soft fork, all implementations may begin enforcing hard
+fork opt-out bit 30.  Post soft fork, setting this bit would make a
+transaction invalid, unless a fork emerges that has stopped enforcing
+bit 30.
+
+Example: BIP109 implementations may stop enforcing bit 30 and begin
+enforcing bit 28 when the BIP109 hard fork is activated for a chain they
+are tracking.
+
+Enforcing more than one hard fork opt-out bit would imply that an
+implementation is actively participating in building more than one
+blockchain fork, and therefore providing a way to opt out of each.
+
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: signature.asc
+Type: application/pgp-signature
+Size: 819 bytes
+Desc: OpenPGP digital signature
+URL: <http://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20160731/7b1a2154/attachment.sig>
+
