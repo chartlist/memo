@@ -1,5 +1,7 @@
-const apiHost = "http://localhost:23485" // + window.location.hostname
-const baseUrl = "http://localhost:5000"
+//const apiHost = "http://localhost:23485" // + window.location.hostname
+//const baseUrl = "http://localhost:5000"
+const apiHost = "https://openchart.org" // + window.location.hostname
+const baseUrl = "https://openchart.org"
 const maillistArchivePage = {
     searchArchiveFromApi: function () {
             const keywords = document.getElementById('archive-search-text').value
