@@ -25,6 +25,8 @@ var APICommand = cli.Command{
 	Usage:  " run api",
 }
 
+var index bleve.Index
+
 func runAPI(ctx *cli.Context) {
 
 	if config.GetBool("api.production") {
@@ -205,6 +207,7 @@ func getHistoricalMempool(c *gin.Context) {
 }
 
 func searchSpecialArchives(c *gin.Context) {
+	fmt.Println("enter search...")
 	keywords := c.Param("keywords")
 	if keywords == "" {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -212,14 +215,7 @@ func searchSpecialArchives(c *gin.Context) {
 		})
 		return
 	}
-	index, err := bleve.Open("bitcoin.archive.db")
-	if err != nil {
-		fmt.Println("bleve.Open err:", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "bleve open err",
-		})
-		return
-	}
+
 	query := bleve.NewQueryStringQuery(keywords)
 	searchRequest := bleve.NewSearchRequest(query)
 	searchRequest.Size = math.MaxInt
@@ -330,4 +326,12 @@ func getCachedMempoolEntries(c *gin.Context) {
 	}
 	c.Header("Content-Type", "application/json; charset=utf-8")
 	c.String(http.StatusOK, entries)
+}
+
+func init() {
+	var err error
+	index, err = bleve.Open("bitcoin.archive.db")
+	if err != nil {
+		panic(err.Error())
+	}
 }

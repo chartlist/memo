@@ -1,9 +1,11 @@
-const apiHost = "https://openchart.org" // + window.location.hostname
-const baseUrl = "https://openchart.org"
+const apiHost = "http://localhost:23485" // + window.location.hostname
+const baseUrl = "http://localhost:5000"
 const maillistArchivePage = {
-    searchArchiveFromApi: async function () {
+    searchArchiveFromApi: function () {
             const keywords = document.getElementById('archive-search-text').value
-            axios.get(apiHost+'/api/archiveSearch/'+keywords).then(function (response) {
+            document.getElementById("archiveList").value = ""
+        console.log("keywords:",keywords)
+        axios.get(apiHost+'/api/archiveSearch/'+keywords).then(function (response) {
                 console.log("result:",response.data)
                 var items = response.data
                 var myList = document.getElementById("archiveList");
@@ -18,7 +20,10 @@ const maillistArchivePage = {
                     myList.appendChild(listItem);
                 }
 
+            }).catch(function (error) {
+                console.log(error)
             })
+        console.log("searchArchiveFromApi end")
     }
 }
 window.onload = function () {
